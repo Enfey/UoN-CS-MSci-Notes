@@ -202,5 +202,232 @@ typedef struct InputObject {
 	For each input `Symbol`
 		`binding` $\in$ `{STB_GLOBAL, STB_WEAK}` -> insert or update in GST
 		Mark undefined symbols as unresolved, `definition == null`
+		Set defined symbols when definition located.
+2. **Resolve undefined symbols** 
+	For all undefined symbols in all `InputFile`s:
+		Lookup by name in **GST**, if found and has definition:
+			set `symbol -> resolved = global_symbol`
+	If `resolved -> definition == NULL)`
+		If libraries are available, search and load the defining object, update **GST** to complete entry and set `resolved`
+3. **Relocation handling**
+	It should be noted that relocation entries point to index of symbol table for their respective file. To derive context from a symbol where a definition not immediately visible, should perform `reloc->symbol = reloc->symbol->resolved->definition` where `resolved != NULL`
 ##### 3. Storage Allocation
+1. **Classify sections by runtime properties**
+	Determine `SHF_ALLOC`
+	Determine access flags ($RWX$)
+	Determine alignment `sh_addralign`
+	Determine size
+	Determine whether loaded from file or zeroed in memory
+2. **Form permissions groups/segments(`PT_LOADS`)**
+	Initial grouping via *page permissions*:
+	- Read + Execute - `.text`
+	- Read Only - `.rodata`
+	- Read + Write - `.data, .rel/a`
+	- Read + Write but zero initialised - `.bss`
+	- Pages that are both W and X avoided for security purposes.
+3. **Order sections within each group**
+	The linker picks a conventional ordering of the sections of each permission group such that they can be arranged logically.
+	![[Pasted image 20251106121541.png]]
+	Often akin to this. Ensures predictable addresses and ensures that early executing code like `.init` lies close to main `.text. 
+	Related sections kept contiguous to exploit spatial locality. Segments identified by segment type constant such as `PT_LOAD`, `PT_DYNAMIC`, `PT_GNU_RELRO`.
+4. **Assign virtual addresses and file offsets**
+	Assume page size of `0x1000`
+	Assume load base address of `0x00008000`
+	Start with first loadable segment e.g., RX
+	Align to next 4KB boundary
+	Assign `p_vaddr = base_addr`
+	Assign `p_offset` = `file_offset_after_headers`
+	For each section in this segment:
+		Align its start to alignment requirement
+		Place sequentially in memory
+		Advance `current_addr` and `current_offset` accordingly to monitor address space progression for future assignments. 
+		Continue until all segments written. 
 ##### 4. Applying relocations
+1. **Walk through each `InputObject` with relocations**
+	For each `Relocation`
+```C
+//Pseudo C
+Elf32_Addr *location = (Elf32_Addr *)(section->data + reloc->offset);
+
+Symbol *sym = relocation->symbol
+
+Elf32_Addr S = sym->section->vaddr + sym->value
+Elf32_Addr A = relocation->addend
+Elf32_Addr P = section->vaddr + reloc->offset
+
+switch (relocation->type){
+	case (R_ARM_ABS32):
+		*location = S + A;
+		break;
+	// etc
+}
+```
+
+## Global Symbol Table
+Linker often opt to keep internal global symbol table keeping entry for every global symbol referenced or defined in any input file, extracts global symbols and adds to master table. Managed using hash table with chaining. 
+
+```c
+struct glosym {
+	struct glosym *link;
+	char *name; // actual string name
+	long value; // aligned relative address to the start of the section
+	struct nlist *refs; // linked list of entries in local symbol tables where symbol appears as definition or ref
+	int max_common_size; // common blocks
+	char defined;
+	char referenced; 
+	unsigned char multiply_defined; // handle multiple defs
+}
+```
+Provided in book.
+
+For each input file:
+- Read symbol table
+- For each global/weak symbol
+	- Look up its name in global symbol table
+		- If not found, create new `glosym` entry
+	- Add this module's reference/definition to the symbol's refs chain. 
+
+As symbols are added:
+- If symbol defined, `defined = 1`
+- If symbol referenced, `referenced = 1`
+- If defined in multiple files (error checking or common block), `multiply_defined = 1`
+- Every global symbol in table, ha list of occurrences
+
+Each module relocations refer to symbols via file-level symbol table. Must construct a vector of pointers, as in, each entry in module's local symbol table is replaced with a pointer to the corresponding global symbol table entry. 
+
+Can just follow `glosym` pointer and use its `value` field in relocation. 
+
+
+## Special Symbols
+Names used in object file symbol tables and in linking are often not the same names used in source programs from which obj files were derived. 
+
+Three reasons:
+1. Avoiding name collisions
+2. Name overloading(same name, different parameters)
+3. Type checking
+Name of turning source program names into object file names = **name mangling**, derived from need to resolve unique names to programming entities. 
+
+
+### Name Mangling
+Old object formats used names from source program as the names in the object file, perhaps truncating long names. Collisions occurred with reserved names. People had to avoid reserved names, but this was fragile. 
+
+
+Name mangling approach taken, C procedure names initially modified with a leading underscore such that `main` became `_main.` No longer needed in C, ELF has more structured symbol table with rich metadata for equality testing. Since C has no overloading, each external identifier already unique at link time, can resolve directly using literal names. Even main just linked to `crt1.o` which simply declares reference to main, which is resolved by linker. 
+
+#### Name Mangling in C++
+C++ supports features that C does not, including: 
+- Templates(generics)
+- Function overloading
+- Classes and member functions
+- Namespaces
+Simple symbol name not enough to uniquely identify function or method. 
+
+E.g., 
+```C++
+void print(int);
+void print(double);
+```
+Valid code, but at linker level without mangling, would result in name collision. For 1 global symbol, results in 2 strong definitions and a linker error.; 
+
+Many names are mangled in C++ to preserve semantics, generally only concerned with global/weak symbols to preserve uniqueness to ensure correct name binding and resolution.
+
+Variable names outside of C++ classes not mangled at alls. 
+
+Function names not associated with classes mangled to encode the types of arguments by appending `__F` and a string of letters representing argument types and type modifiers. 
+
+```c++
+func(float, int, unsigned char) -> func__FfiUc
+```
+
+Class names considered types and are encoded as length of the class name followed by name such as `4Pair`. When a class name includes internal classes across multiple levels (a 'qualified' name), it is encoded starting with the letter `Q`, followed by a digit indicating the number of levels. For example, the name `First::Second::Third` becomes `Q35First6Second5Third`.
+
+Class member functions are encoded as the function name, two underscores, the encoded class name, then F and the arguments so `cl::fn(void)` becomes `fn__2clFv.
+
+Since mangled names can be long, two shortcut encodings for functions with multiple arguments of the same type. The code `Tn` means same type as the `nth` argument. and `Nnm` means `n` arguments of the type as the `mth` argument. A function `segment(Pair, Pair)` would be `segment__F4PairT1` and a function `trapezoid(Pair, Pair, Pair, Pair)` would be `trapezoid__F4PairN31` (non-member functions).
+
+
+#### Link-Time Type Checking with Mangled Names
+Process, linker enforces type checking across modules, via type info encoded in mangled names. 
+
+When object file calls function defined in another object, call refers to mangled symbol for that function signature. Linker matches undefined references against defined symbols for their mangled names. 
+
+If a mangled name reference is produced in an object file and a definition cannot be found that matches the type string for the reference, an error is reported. Enforces strong typing by not just relying on names. 
+
+
+### Weak External and other kinds of symbols
+Object file formats like ELF can qualify global reference/definition as weak or strong. 
+
+Three main symbol bindings in ELF:
+- `STB_LOCAL`
+	Have a value of 0. Defined by rule, not visible outside object file containing their definition. Can have local symbols with same name across multiple object files. All entries with `STB_LOCAL` binding placed before `STB_GLOBAL` and `STB_WEAK` entries. To facilitate this distinction, `.symtab`, `.sh_info` section header member holds symbol table index for first non-local symbol.
+- `STB_GLOBAL`
+	- Have value of 1. Visible to all object files being linked. Link editors do not permit multiple definitions of `STB_GLOBAL`. Primary linking rule is that one file's definition of global symbol, satisfies another files undefined reference to that same symbol.
+- `STB_WEAK`
+	- Have value of 2. Resemble global symbols, but carry lower precedence. 
+	- If defined global symbol exists with same name as weak symbol, link editor honours global definition, ignores weak one. No error. 
+	- If weak symbol is referenced but undefined i.e., weak reference where `st_shndx = SHN_UNDEF`, link editor does not extract archive members. Given a 0 value. 
+	- Weak symbols allowing linking to proceed even if reference remains unsatisfied. They can be employed to provide fallback/default definitions. 
+	- Compilers like GCC and clang support marking a symbol weak using `__attribute__((weak))` or `#pragma weak symbol`.
+## Maintaining debugging information
+Modern compilers support source language debugging, can debug object code by referring to source program function and variable names. compilers support this by putting information in the object file that provides a mapping from source line numbers to object code addresses as well as information that describes all of the functions, variables, types, and structures used in the source program.
+
+#### Line Number Information
+To support breakpoints, single-stepping and stack tracebacks, compilers generate a mapping from program addresses to source line numbers. 
+
+Each line of generated code has a line number entry generated, giving the file scoped line number and the beginning address of the corresponding object code. If the program address lies between two line number entries, the debugger reports it as being the lower of the two line numbers. 
+
+DWARF lets the compiler map each byte of object code back to a source line, while other techniques may just specify approximate locations. 
+#### Symbol Information
+Compilers generate debug symbols describing the names, types, and locations variables, functions, and structures. Needs to encode type definitions so that debugger can correctly format all of the subfields in a structure or union. 
+
+The symbol information is an implicit or explicit tree, with top-level entries for types, functions, and variables, and nested entries for fields, local variables, and blocks. Special markers track variable scope and lifetime within function e.g., `begin block` and `end block` markers referring to line numbers allowing the debugger to identify what variables are in scope at each point in the program.
+
+Location information for symbols is complex, the location of a static variable is just a fixed memory address, local variables typically stack allocated and accessed at offset from frame pointer. If register allocated the debugger must know which register holds the variable at which instruction. In heavily optimising compilers, compiler may compute values on the fly or eliminate them; the debugger in this case can only approximate. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Exercises
+- What should a linker do if two modules in different libraries define the same symbol? Is it an error?
+	- A few things to note.
+	- If this is the case between 2 different libraries, then yes this will generate a linker error. Provided 2 strong definitions are provided that resolve to the same symbol name, there will no way to distinguish which one to choose. 
+	- However, if one definition is weak, and the other is strong, the linker chooses the strong one. 
+	- For shared object linking, symbol interposition is valid - if your binary defines a name, and the shared object also defines a name, the local definition is preferred even if both strong. Thus can override symbols in shared libraries
+- Library symbol directories generally only include defined global symbols. Would it be useful to include undefined global symbols as well? 
+	- I feel that library symbol directories including undefined global symbols is relatively redundant. The point of querying the index is to obtain the object that provides the definition resolving your undefined reference. Providing undefined global symbols increases the search space exponentially whilst only providing the benefit of making dependencies visible earlier in the name resolution chain. When objects that satisfy undefined references are linked in, their symbol table with all its undefined references/globals will be added to the GST regardless, iterating until a fixed point, thus it is unreasonable to slow down the search for defined global symbols when undefined globals will be encountered shortly thereafter. 
+- When sorting object files via lorder and tsort, possible that tsort won't be able to come up with total order for the files, when will this happen, and is it a problem. 
+	- lorder analyses dependency pairs
+	- tsort performs topological sort on dependency graph to produce a link order where dependencies come before dependents
+	- tsort fails if there are circular dependencies between libraries
+- Some library formats put the directory at the front of the library while others put it at the end. What practical difference does it make?
+	- Must seek to the end to find and read directory. Not in predictable spot each time, must seek to end according to metadata but no functional difference otherwise. 
+- Describe situations where weak externals and weak definitions are useful. 
+	- Providing weak definitions:
+		- Providing an interface
+			- Libraries may provide weak defaults that can be overridden either by user, or by linker authority depending on runtime context. 
+		- Providing fallback definition
+			- Can supply a weak definition as a fallback in case no global one is found to dominate it. 
+	- Providing weak externals
+		- Providing optional features:
+			- A module may call a function for example, that may or may not exist, if no such function is linked, the weak reference resolves to null/0, and the code still runs.
+
+
+
+

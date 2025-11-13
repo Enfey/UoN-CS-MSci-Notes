@@ -125,5 +125,9 @@ During the above process, the linker also notes which symbols will be resolved a
 	In the context of C, unitialised symbols are global variables that are not yet placed in any section, linker sees multiple common symbols, emits common symbol entries in the symbol table, and treats them all as single variable, merging them into a single allocation in .bss, resolved to same address. Uses the largest size amongst all definitions, and the strictest alignment. This saves memory, otherwise each module's reference would go to its own address; use one memory slot and the program behaves as if theres truly one global variable as intended. 
 	Furthermore, it turns out common symbols behave simiarlly to weak symbols, they can be overridden by a strong definition in another object or a shared library, e.g., int buffer_size, int buffer_size = 1024, allowing interfacing with libraries without changing code.
 
+## ASLR
+### Classic Model
+### Middle of Address space model
 
+### How ASLR is exerted
 

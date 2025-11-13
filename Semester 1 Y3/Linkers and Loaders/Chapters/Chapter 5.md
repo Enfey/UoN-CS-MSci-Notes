@@ -203,12 +203,23 @@ Classify sections by runtime properties
 	- Read + Write - `.data`, `.rel/a`, etc
 	- Read + Write but zero initialised `.bss`
 		- Avoid creating pages that are both W and X for security purposes. 
-4. Order sections within each group
+4. **Order sections within each group**
 	The linker picks a conventional ordering of the sections of each permission group such that they can be arranged logically.
-	- Text segment: ELF header & program headers, then `.interp`, `.init`, `.text`, `.rodata` etc
-	- Data segment: remember mapped twice, at end of text too, so starts exactly one page after last text page, `.data`, small data sections.
-	- BSS: right after data in memory. 
-	- Once output address computed with respect to alignment for given section, update `Symbol -> value = section_base_address + symbol->value`
+	![[Pasted image 20251106121541.png]]
+	Often akin to this. Ensures predictable addresses and ensures that early executing code like `.init` lies close to main `.text. 
+	Related sections kept contiguous to exploit spatial locality. Segments identified by segment type constant such as `PT_LOAD`, `PT_DYNAMIC`, `PT_GNU_RELRO`.
+5. **Assign virtual addresses and file offsets**
+	Assume page size of `0x1000`
+	Assume load base address of `0x00008000`
+	Start with first loadable segment e.g., RX
+	Align to next 4KB boundary
+	Assign `p_vaddr = base_addr`
+	Assign `p_offset` = `file_offset_after_headers`
+	For each section in this segment:
+		Align its start to alignment requirement
+		Place sequentially in memory
+		Advance `current_addr` and `current_offset` accordingly to monitor address space progression for future assignments. 
+		Continue until all segments written. 
 #### Applying relocations
 - Walk through each `InputSection` with relocations
 	- For each `Relocation
