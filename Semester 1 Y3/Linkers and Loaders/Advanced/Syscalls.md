@@ -1,0 +1,3 @@
+# mmap()
+# execve()
+# ptrace()
