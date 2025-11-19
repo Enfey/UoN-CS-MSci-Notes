@@ -1,0 +1,129 @@
+# Conversational AI architectures
+A typical pipeline includes:
+1. **Preprocessing** → tokenisation, normalisation
+    
+2. **Representation** → e.g., Bag of Words
+    
+3. **Natural Language Understanding (NLU)**
+    - Identifies intents, extracts meaning
+4. **Dialogue Management**
+    - Handles state tracking, memory, external system calls
+5. **Natural Language Generation (NLG)**
+    - Produces the final system response
+A useful agent must:
+- track **state** (conversation progress, user info),
+- potentially use **memory**,
+- interact with **external systems,**
+- **learn/improve** over time.
+
+## Architectures for Conversational Agents
+
+### Rule-Based Systems
+- Traditional paradigm, uses pattern matching and hand written rules
+- Dialogue manager behaves as a state machine
+- Pros: Predictable, Reliable, Interpretable
+- Cons: Not robust, Not scalable
+### Retrieval-Based systems
+- Instead of generating text, select best possible response from an existing known corpus
+	- Key technique here is searching
+- Types of retrieval based systems include 
+	- Simple matching e.g., BOW
+	- Neural retrieval modes
+- Pros: Response quality, Grounding(comes from real database)
+- Cons: No novelty and not very flexible, Lack of context sensitivity
+
+### Generative Models
+- Use neural language models to produce responses
+- Has evolved significantly over time
+	- RNNs, LSTMs
+	- Transformers/LLMs
+- Pros: Flexible, good contextual awareness
+- Cons: Not grounded(may hallucinate), can be inconsistent, require significant data
+### Hybrid Systems - Retrieval Augmented Generation
+- Combination of retrieval and generative models, aiming to provide grounding to generative models
+	![[Pasted image 20251119212133.png]]
+- Pros: Contextual, Grounded, Flexible
+- Cons: Still inconsistent, Data intensive, Hard to implement correctly.
+## Hybrid Systems - Cognitive Architectures
+- More advanced agent frameworks capable of reasoning, planning, memory, tool use, and interacting with systems.
+	![[Pasted image 20251119212315.png]]
+- Pros: Flexible, Context-aware, Grounded, Interacts with a system
+- Cons: Data intensive, Extremely hard to implement, Consistency issues remain
+# Human in the Loop AI systems
+- Traditional ML focuses on full automation, but this has limits:
+	- Models saturate on benchmark datasets
+	- Specialise too much
+	- Suffer from "concept drift"
+		- The statistical properties of the target variable change over time in unforeseen ways.
+	- Cannot adapt efficiently due to overspecialisation
+	- Often unsafe without oversight
+- Human in the loop means that humans participate in:
+	- Training
+	- Tuning
+	- Labelling
+	- Correcting
+	- Evaluating
+	- Interpreting
+- The notion is that by keeping humans in the process, move beyond the limitations of full automation
+
+## Interpretability
+- Interpretability of model and results builds **trust** (built via how mistakes are handled, not via success) and enables:
+	- sanity-checking results (e.g., human expert checks e.g., doctor),
+	- accountability,
+	- debugging the inference process, 
+	- understanding model errors
+- However, what does interpretable mean?
+- Interpretable by whom?
+- And at what cost (performance, complexity, time)?
+### Taxonomy of Interpretability
+#### Intrinsic vs Post-Hoc
+- **Intrinsic**: interpretability is a property of the model
+- **Post-Hoc**: we interpret a prediction after the fact
+#### Model-Specific vs Model-Agnostic
+- **Model-Specific**: interpretation methods tied to particular models
+- **Model-Agnostic**: interpretation methods applicable to any model
+
+#### Local vs Global
+- **Local**: interpret one prediction at a time.
+- **Global**: interpret the entire model
+
+### Examples of Intrinsically Interpretable models
+- **Decision Trees**
+	- Model classification as a finite sequence of discrete decisions
+	- Easy to interpret until tree reaches explosive depth
+	- Learned through algorithms that seep to minimise information entropy
+	 ![[Pasted image 20251119225506.png]]
+- K-Nearest-Neighbours
+	- Classifies based on distances
+	- Interpretability is trivial unless the space is very high dimensional
+	![[Pasted image 20251119225522.png]]
+
+
+### Model-Agnostic methods
+- Interpretation methods applicable to any model
+#### Global Surrogate Models
+- Train an interpretable model e.g., decision tree to approximate the predictions of a black box model
+- E.g., Train SVM on $(X,Y)$
+- Classify a dataset, giving $(X, \hat{Y}$)
+- Train decision tree on $(X, \hat{Y}$)
+- If the accuracy of the decision tree is acceptable, use it to explain the decisions of the SVM.
+- Goal of the surrogate model is to approximate the black box.
+#### Local Surrogate Models
+- Used to explain individual predictions of black box machine learning models
+	- Why did the model make this specific prediction?
+	- What effect did this specific feature value have on the prediction?
+- Best known is **LIME** - "Locally Interpretable Model Estimation"
+	- Generate perturbed versions of one example
+	- Sample artificial datapoints near a prediction and fit a linear model through it
+	- Use that l,linear model to interpret the prediction
+	- 
+
+#### Explaining with Examples
+- Typically model agnostic techniques
+- Work by selecting instances to provide explanations
+- Can be used to show 
+	- Implicit decision boundary (counterfactual explanation, adversarial examples)
+	- Representative instances and unrepresented examples (prototypes/criticisms)
+	- Which instances have the have the highest influence on model parameters
+
+##Finish off tomorrow
