@@ -1,4 +1,4 @@
-z# Type
+# Type
 > A type is an abstract category that specifies a set of properties held in common by all its members.
 
 A type can be specified either by membership e.g., defining a range of values, or by rules e.g., defining a structure with specific fields. 

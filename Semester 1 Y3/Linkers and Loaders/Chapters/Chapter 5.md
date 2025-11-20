@@ -101,7 +101,6 @@ We use this to construct an entry into an ELF input representation semi-equivale
 typedef struct GlobalSymbol {
     char *name;
     Symbol *definition;          // points to resolved definition
-    Symbol **references;         // optional list of refs
     uint32_t num_refs;
 } GlobalSymbol;
 
@@ -120,6 +119,7 @@ typedef struct Symbol {
 	uint8_t binding; 
 	uint8_t type;                  
     uint8_t visibility;      
+    struct Symbol *resolved;   // point to global def
 } Symbol;
 
 typedef struct InputSection {
@@ -134,6 +134,8 @@ typedef struct InputSection {
     
     uint64_t vaddr;
     uint64_t offset;
+    OutputSection *outSec;
+    uint64_t output_offset;
 } InputSection;
 
 typedef struct InputFile {
@@ -188,6 +190,10 @@ typedef struct InputFile {
 	Else report linker error.
 3. Relocs
 	Redirect relocation entries to point to entries in global symbol table, rather than local entries. `reloc->symbol = reloc->symbol->resolved->definition` where `resolved != NULL`
+	OR alternative
+	`Symbol *final = reloc->symbol->resolved;`
+	`apply_relocation(reloc, final);`
+
 
 It should be noted that it is entirely valid to build a fully complete GST rather than mixing the completion of the GST with the resolution of names across modules. One may choose to add everything to the GST, then search libraries to resolve undefined symbols, and then resolve the symbols provided from the original linker input. Both methods are completely valid. 
 #### Storage Allocation

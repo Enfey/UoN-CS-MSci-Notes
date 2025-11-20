@@ -1,4 +1,4 @@
-Lab focuses on using BoW representation in order to build a **classifier**, Make use of SciKit-Learn to do this. 
+, Lab focuses on using BoW representation in order to build a **classifier**, Make use of SciKit-Learn to do this. 
 
 ## Model Building
 First step is to build our bag-of-word representation, by applying the CountVectoriser and TfidfTransformer to our training data. 

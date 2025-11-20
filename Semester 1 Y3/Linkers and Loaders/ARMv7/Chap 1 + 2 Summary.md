@@ -145,7 +145,7 @@ The PC is heavily involved in address formation. R15 holds the PC.
 
 Branch instructions (B and BL) calculate the branch target address **relative** to the PC. 
 
-When an instruction is executed, the PC holds the address of the instruction plus 8 in ARM state (or +4 in Thumb state)??????
+When an instruction is executed, the PC holds the address of the instruction plus 8 in ARM state (or +4 in Thumb state)
 
 For BL instructions, the linker needs to ensure the branch offset (a 24 bit immediate offset, shifted left by two bits for word alignment in ARM state), is sufficient for the destination. If distance is too great, the linker must introduce glue code or indirect branching via a literal pool (type of address pool). 
 
