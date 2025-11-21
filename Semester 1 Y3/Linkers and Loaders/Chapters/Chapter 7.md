@@ -347,11 +347,6 @@ Dynamic relocations will be added here later.
 
 ## Relinkable and relocatable output formats
 
-## Other relocation formats
-### Chained references
-### Bitmaps
-### Special Segments
-
 
 
 ## Exercises
