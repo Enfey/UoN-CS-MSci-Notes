@@ -61,7 +61,7 @@ If relocation is truly needed, then heroic binary-rewriting techniques will be r
 ## Position independent code and position independent executables 
 
 ### Position independent code
-Code that can execute correctly regardless of the absolute address at which it is loaded. It avoids embedding absolute addresses in instructions or data; it instead uses PC-relative addressing or indirection through a table like the **GOT.** Total enforcement of this will yield a **Position Independent Executable(PIE)**. This notion permits sharing of code among a number of processes, we talk more about this in [[Chapter 9]].
+Code that can execute correctly regardless of the absolute address at which it is loaded. It avoids embedding absolute addresses in instructions or data; it instead uses PC-relative addressing or indirection through a table like the **`.got`.** Total enforcement of this will yield a **Position Independent Executable(PIE)**. This notion permits sharing of code among a number of processes, we talk more about this in [[Chapter 9]].
 ### Position independent executables
 This refers to an an executable object constructed such that it can be loaded at any base address. For $*nix$ this manifests as an `ET_DYN` object that is used as a main program. PIE enables ASLR of the executable image, and enables shared libs. Separates compile/link-time address assumptions from runtime, but such executables rely heavily on load-time relocation. 
 
@@ -72,89 +72,205 @@ The above exist for a few related reasons:
 - **Security (ASLR)**
 	If the main executable is built as a PIE, the loader can place it at a randomised base, raising the bar for memory corruption exploits. 
 - **ABI & Tooling simplicity**
-	Using PIC/PIE standardises how code obtains addresses: either PC-relative addressing or through a small per-object table. This avoids needing different calling conventions for PIC vs non-PIC. However, we pay cost for the received benefits; function prologues and epilogues now have to save and restore a GOT register, PIC code is bigger and slower than non-PIC code, and the load-time relocations increase startup time. 
+	Using PIC/PIE standardises how code obtains addresses: either PC-relative addressing or through a small per-object table. This avoids needing different calling conventions for PIC vs non-PIC. However, we pay cost for the received benefits; function prologues and epilogues now have to save and restore a `.got` register, PIC code is bigger and slower than non-PIC code, and the load-time relocations increase startup time. 
 
 
 ### Implementation techniques (ELF)
 
 #### Global Offset Table
-The global offset table is a per-object array of pointers instantiated by the linker to support PIC. Its purpose is to break the dependency between code and absolute addresses. Instead of embedding the final address of a symbol in the instruction stream, PIC code utilising the GOT loads the address indirectly through a slot in the GOT.
+The global offset table is a per-object array of pointers instantiated by the linker to support PIC. Its purpose is to break the dependency between code and absolute addresses. Instead of embedding the final address of a symbol in the instruction stream, PIC code utilising the `.got` loads the address indirectly through a slot in the `.got`.
 
-In ELF objects, the GOT is placed by the linker in the .got and .got.plt sections, which belong to the data segment (PT_LOAD with PF_W enabled). This is chosen as the GOT must be writable, and the GOT must be close to the code. The linker will also emit a synthetic symbol `_GLOBAL_OFFSET_TABLE_` representing the absolute virtual base address of the GOT which will be resolved at load-time. The way this symbol is used varies.
+In ELF objects, the `.got` is placed by the linker in the `.got` and `.got.plt` sections, which belong to the data segment (`PT_LOAD` with `PF_W` enabled). This is chosen as the `.got` must be writable, and the `.got` must be close to the code. The linker will also emit a synthetic symbol `_GLOBAL_OFFSET_TABLE_` representing the absolute virtual base address of the `.got` which will be resolved at load-time. The way this symbol is used varies.
 
-In static ET_EXEC, the GOT does not appear, all addresses are fixed and known at link-time. In ET_EXEC with dynamic linking, the GOT is needed for external symbols defined in shared libraries. ET_DYN with static linking, holds the absolute runtime addresses of references (often for data and function pointers in code). ET_DYN with dynamic linking holds the absolute runtime addresses of all external symbols and is used as central lookup table by runtime loader to enable communication with other components.
+In static `ET_EXEC`, the `.got` does not appear, all addresses are fixed and known at link-time. In `ET_EXEC` with dynamic linking, the `.got` is needed for external symbols defined in shared libraries. `ET_DYN` with static linking, holds the absolute runtime addresses of references (often for data and function pointers in code). `ET_DYN` with dynamic linking holds the absolute runtime addresses of all external symbols and is used as central lookup table by runtime loader to enable communication with other components.
 
-On architectures without rich PC-rel addressing, PIC uses GOT heavily.
-##### How GOT references are generated
-PIC capable compilers emit relocation-annotated instructions whenever a symbol must be referenced through the GOT. For ARM the usual pattern is:
-1. Emit a literal pool entry that will hold the GOT's absolute address
+On architectures without rich PC-rel addressing, PIC uses `.got` heavily.
+##### How `.got` references are generated
+PIC capable compilers emit relocation-annotated instructions whenever a symbol must be referenced through .`.got` . For ARM the usual pattern is:
+1. Emit a literal pool entry that will hold the `.got`'s absolute address
 2. Emit a PC-relative LDR instruction to read that literal
-3. The assembler attaches a GOT related relocation at the literal, such that the word will be filled with the absolute address of the GOT.
-4. At static link time, the static linker relocates the literal with a PC-relative offset to the GOT entry (for GOT-PC relocations) or the absolute address of a GOT slot (in PIE/DL this is relocated again once the load-bias and final GOT address is known. )
+3. The assembler attaches a `.got` related relocation at the literal, such that the word will be filled with the absolute address of the `.got`.
+4. At static link time, the static linker relocates the literal with a PC-relative offset to the `.got` entry (for `.got`-PC relocations) or the absolute address of a `.got` slot (in PIE/DL this is relocated again once the load-bias and final `.got` address is known. )
 
-##### Creating the GOT
-During the link-step, all input relocations are processed. The GOT creation proceeds as follows:
-1. Collect GOT-related relocations
+##### Creating the `.got`
+During the link-step, all input relocations are processed. The `.got` creation proceeds as follows:
+1. **Collect `.got`-related relocations**
 	These include:
-	- **R_ARM_GOT_PREL** - compute pc-relative offset of a symbol's GOT entry, $GOT_{sym} + A - P$ 
-	- **R_ARM_GOT32** - rewrite word to contain absolute virtual address of GOT slot for $sym$, $GOT_{sym} + A$
-	- **R_ARM_GOTPC** - compute the pc-relative offset of the GOT base address itself $GOT_{base} + A - P$ 
-	or their architectural equivalents. Each relocation indicates 'this instruction expects symbol $S$ to be accessed via the GOT'.
-2. Allocate GOT entries
-	The linker creates the .got section and assigns each unique symbol referenced through the GOT its own slot. The slot holds a pointer which the loader will fill with the symbol's runtime address. ARM uses separate relocations for GOT-relative addresses (GOTOFF) vs actual GOT entries.
-3. Emit dynamic relocation entries
-	Generate relocation entries in the output binary's dynamic relocation sections. For every unique external symbol that received a GOT slot, the static linker performs the following:
-	1. Select relocation type
-		for GOT entries that hold the absolute address of a data symbol, this is typically R_ARM_GLOB_DAT. For entries related to function calls via the PLT, its typically R_ARM_JUMP_SLOT.
-	2. Select offset
-		The linker records the virtual address of the newly allocated GOT slot as the r_offset field in the dynamic relocation entry to indicate where the final address should be written. 
-	3. Set the symbol index
+	- **R_ARM_GOT_PREL** - compute pc-relative offset of a symbol's `.got` entry, $.GOT_{sym} + A - P$ 
+	- **R_ARM_GOT32** - rewrite word to contain absolute virtual address of `.got` slot for $sym$, $.GOT_{sym} + A$
+	- **R_ARM_GOTPC** - compute the pc-relative offset of the `.got` base address itself $.GOT_{base} + A - P$ 
+	or their architectural equivalents. Each relocation indicates 'this instruction expects symbol $S$ to be accessed via the `.got`.
+2. **Allocate `.got` entries**
+	The linker creates the .`.got` section and assigns each unique symbol referenced through the `.got` its own slot. The slot holds a pointer which the loader will fill with the symbol's runtime address. ARM uses separate relocations for `.got`-relative addresses (`.got`OFF) vs actual `.got` entries.
+3. **Emit dynamic relocation entries**
+	Generate relocation entries in the output binary's dynamic relocation sections. For every unique external symbol that received a `.got` slot, the static linker performs the following:
+	1. **Select relocation type**
+		for `.got` entries that hold the absolute address of a data symbol, this is typically R_ARM_GLOB_DAT. For entries related to function calls via the PLT, its typically R_ARM_JUMP_SLOT, and this entry will belong in a runtime writable subsection called `.got.plt`
+	2. **Select offset**
+		The linker records the virtual address of the newly allocated `.got` slot as the r_offset field in the dynamic relocation entry to indicate where the final address should be written. 
+	3. **Set the symbol index**
 		Sets the symbol index of the symbol $S$ into the r_info field to tell what address to look up. 
 
-##### GOTOFF
- For local static variables which are not exported for linking, we may choose to provide `GOTOFF` style access, that is instead of providing a GOT entry, the code stores the variable at an offset from the GOT base. We could do this with data as the relative distance between code and data won't change, but this provides a uniform access model, and some ISAs have limitations on their offsets for PC-relative addressing, with the GOT we can ensure the data is not farther than the instruction range allows.
-##### Advanced GOT facts
+##### `GOTOFF`
+ For local static variables which are not exported for linking, we may choose to provide `GOTOFF` style access, that is instead of providing a `.got` entry, the code stores the variable at an offset from the `.got` base. We could do this with data as the relative distance between code and data won't change, but this provides a uniform access model, and some ISAs have limitations on their offsets for PC-relative addressing, with the `.got` we can ensure the data is not farther than the instruction range allows.
+##### Advanced `.got` 
 
-###### The undecided nature of GOT entries
+###### The undecided nature of `.got` entries
 When one compiles with -fpic, the compiler cannot safely determine:
 - Whether a global variable reference will remain local after linking
 - Whether the symbol could be interposed by another shared object or library
 	- Symbol interposition is the ability for a symbol reference in a shared object to be resolved at runtime to a different definition than the one that exists in the same shared object. Only symbols that are STB_GLOBAL with default visibility, or reside in shared objects can be interposed and are said to be 'pre-emptible'
-Because of this uncertainty, the compiler **always** generates references as if they require a GOT entry, even when the the definition is in the same source file, and even if the symbol turns out to be static, non-interposable, and/or resolvable at link-time. 
+Because of this uncertainty, the compiler **always** generates references as if they require a `.got` entry, even when the the definition is in the same source file, and even if the symbol turns out to be static, non-interposable, and/or resolvable at link-time. 
 
-The linker must later determine the true nature of the symbol. If it later found to be non-preemptible, the linker can often suppress the dynamic relocation and use a cheaper relative relocations instead, perhaps rewriting the access to be GOTOFF, or resolving it entirely at link-time traditionally. This is known as **GOT relaxation.** We detail another potential optimisation below.
+The linker must later determine the true nature of the symbol. If it later found to be non-preemptible, the linker can often suppress the dynamic relocation and use a cheaper relative relocations instead, perhaps rewriting the access to be `.got`OFF, or resolving it entirely at link-time traditionally. This is known as **`.got` relaxation.** We detail another potential optimisation below.
 
 ###### Code transformation
-For non-preemptible symbols, the GOT indirection becomes functionally unnecessary. For example, on x86-64:
+For non-preemptible symbols, the `.got` indirection becomes functionally unnecessary. For example, on x86-64:
 ```C
-movq var@GOTPCREL(%rip), %rax
+movq var@`.got`PCREL(%rip), %rax
 movl (%rax), %eax
 ```
-There is an extra memory-load from the GOT slot. The symbol's address is fixed relative to the object's base. Some ABIs like `x86-64` define GOT optimisation (e.g., using relocations like `R_X86-64_REX_GOTPCRELX`), allowing a linker to detect that the GOT indirection is unnecessary based on whether the symbol is non-preemptible, and permitting a rewrite for non-p using a PC-relative load instead.
+There is an extra memory-load from the `.got` slot. The symbol's address is fixed relative to the object's base. Some ABIs like `x86-64` define `.got` optimisation (e.g., using relocations like `R_X86-64_REX_`.got`PCRELX`), allowing a linker to detect that the `.got` indirection is unnecessary based on whether the symbol is non-preemptible, and permitting a rewrite for non-p using a PC-relative load instead.
 ```C
 movl var(%rip), %eax
 ```
 
 #### Procedure Linkage Table
-This is an ELF mechanism for dynamic function calls. It supports lazy binding, resolving function addresses only when first called, and provide a workaround for the fact that PC-relative calls to external functions are impossible in fully dynamic code without some indirection.
+This is an ELF mechanism for dynamic function calls. Its primary function is to allow PIC to call functions in shared libraries without knowing their final addresses at link-time. It implements lazy binding, that is, the deferring of resolution of external function addresses until those functions are actually called for the first time, significantly reducing program startup time. This table is a helper to the workaround that PC-relative calls to shared-library functions are impossible in without some indirection at run-time. The PLT works in a collaborative capacity with the `.got` as will be demonstrated below.
 
+The `PLT` is placed in an ELF object as the `.plt` section. The PLT header `PLT[0]` serves as the **resolver stub**, that is, the entry point to the dynamic linker's resolution logic. When execution lands here, it pushes identifying information onto the stack(or uses specific registers, depending on architecture) and then jumps to the dynamic linker's runtime resolution routine e.g., `_dl_runtime_resolve`. This transfers control from the program to the dynamic linker. For every unique external function called by the module, there is a dedicated PLT stub. 
 
+Though it should be noted, the interpretation of the PLT depends on the architecture heavily. 
 
-Each dynamically linked function has a PLT entry in the .plt section. When code first calls an external function, the linker redirects this call to the corresponding PLT entry. The PLT entry's first instruction jumps indirectly to the function's address stored in a specific slot in the GOT/PLT section. Initially, GOT[N] does not hold the function's real address; it holds the address of a special resolver stub within the dynamic linker
+##### First calls
+When code first calls an external function e.g., `call printf@plt`, the linker redirects this call to the corresponding `PLT` entry. The `PLT` entry's first instruction jumps indirectly to the function's corresponding slot in the `.got.plt`. The `.got.plt` is a subsection of the `.got` reserved for PLT-related entries, and each PLT entry has a corresponding entry in `.got.plt[N]` that initially contains a pointer to `.plt[0]`, set by the static linker.  Once the `PLT` header transfers control to the dynamic linker, the linker uses the relocation offset (pushed as an argument) to find the correct relocation entry. It then performs a symbol lookup to find the function's true absolute runtime address, $S$. The dynamic linker overwrites the content of `.plt.got[N]` with by exacting the relocation operation implied e.g., `R_ARM_JUMP_SLOT`. Execution can then resume.
+
+##### Future calls
+The program calls the function again. The PLT jumps indirectly, executing  `jmp *.got[N]`. Since `.got[N]` now holds the functions true absolute address, the indirect jump transfers control directly to the function's entry point.
+
+##### Additional info:  [[RELRO]], eager binding
+Only the `.got.plt` entries are updated during lazy binding. This leaves the `.got.plt` writable for an arbitrary amount of time; exposing valuable attack surface for binary exploitation. Eager binding and [[RELRO]]aim to solve this issue.
+
+During startup, before ld.so transfers control to the component, the dynamic linker resolves relocations. If eager binding is requested explicitly, the dynamic linker resolves all R_ARM_JUMP_SLOT or equivalent relocations immediately. Each `.got.plt` slot is then guaranteed to hold the address of the target function, at the cost of increased startup time. Full `RELRO` transitions the `.`.got`.plt` region into the read-only segment via `mprotect()` calls to make `.got.plt` immutable for the remainder of execution. 
+
+There are a few ways to request eager binding depending on toolchain:
+- Link-time flags
+	`Wl, -z, now` - forces non-lazy binding
+	`Wl, -z, bindnow` - synonym for `-z now`
+	`Wl, -z, relro -Wl, -z, now` - Full RELRO with eager binding
+- Runtime flags
+	`LD_BIND_NOW=1` - environmental variable understood by `ld.so`, equivalent to forcing `-z now` but applied at runtime, triggering eager binding if the binary was statically linked without `-z now`.
+- ELF flags
+	Some toolchains set `DF_BIND_NOW` in the ELF dynamic flags, which has the same effect as `-z now`
+It should be noted that `.got` has the `SHF_WRITE` flag, and traditionally it is also always writable, despite only containing relocations which are eagerly resolved. [[RELRO]] will also place this into `PT_GNU_RELRO` if the flag is invoked.
 #### PC-relative addressing
 > Addressing mode where the target memory address is calculated by taking the current instruction address ($PC, rip$ etc) and adding a displacement that is encoded as an immediate. 
 
 ### Caveats
 Discussed briefly again here for clarity.
 - **Extra indirection** 
-	Global variables which are pre-emptible are accessed via the GOT, and function calls which are external in shared object, or calls to pre-emptible global functions are via the PLT. Each memory access adds an additional load.
+	Global variables which are pre-emptible are accessed via the `.got`, and function calls which are external in shared object, or calls to pre-emptible global functions are via the PLT. Each memory access adds an additional load.
 - **Startup overhead**
-	For full [[RELRO]]'d GOT, there is a noticeable increase in startup time as all symbols must be resolved before the program starts execution.
+	For full [[RELRO]]'d `.got`, there is a noticeable increase in startup time as all symbols must be resolved before the program starts execution.
 - **Code size**
-	- GOT/PLT accesses may require multiple instructions, especially on RISC and 'unorthodox architectures'.
+	- `.got`/PLT accesses may require multiple instructions, especially on RISC and 'unorthodox architectures'.
 - **Slower first-calls** 
-	Lazy binding.
+	Lazy binding, but this is essentially a tradeoff for faster startup. You have either one or the other, not both. 
 
-## Bootloading
+## Bootstrap loading
+Up to now, discussions have presumed there is already on OS or at least a program loader as a kernel component. The chain of programs being loaded by other programs must begin somewhere. The question then arises: how is the first program loaded into the computer?
 
-## Overlays
+The answer is that one needs a chain of increasingly capable loaders.
+Early stages run with minimal CPU state, tiny memory, and zero drivers; later stages progressively add capabilities (DRAM init, paging, filesystem drivers, crypto, etc). A single monolithic loader cannot live in the MBR, so booting is a staged process that trades off the minimal trusted code in ROM against larger, more flexible loader code on disk. 
+
+### `x86` staged bootstrap - Legacy BIOS
+CPU begins in `real-mode`. BIOS stored at fixed addresses in ROM, typically at `0xFFFFFFF0h` for `x86` processors - this is known as the **Reset Vector**. Traditionally firmware performs `POST` and device initialisation searching for the boot device and reading the first sector (512 bytes) known as the `MBR` - the **Master Boot Record.** The `MBR` contains a small first-stage loader (446 bytes) and partition table. It precedes the first partition. Because of size limits, it typically just loads the a slightly larger second stage loader from a well-known location e.g., `GRUB stage2`. 
+
+The larger **bootloader** lives in unpartitioned space, or on disk files. and can contain file system drivers (`FAT`, `ext4` etc), configuration parsing, and more. It loads the kernel image (often `vmlinuz`) and an `initramfs`, and passes boot options. The kernel image is commonly compressed, known as `vmlinuz`, and the loader decompresses it into memory. On `x86`, the boot protocol historically includes a small `real-mode` setup header that establishes protected or long mode before jumping into the kernel proper. The kernel extracts `initrafmf`s, enables paging and other devices, mounts root via `initfrafms` and starts `init`(`PID 1`)or `systemd`. From initialising the kernel, programs can be loaded, program loaders are kernel components. 
+
+### x86 detailed bootstrap - UEFI
+On x86-64 the CPU resets into a legacy-compatible state, but the firmware immediately switches to 32-bit and then 64-bit mode extremely early. [Long Mode](https://en.wikipedia.org/wiki/Long_mode) is active before any before any bootloader runs. TODO.
+
+### User-space bootstrap
+When the kernel `execve(2)`s a user program, the user-space bootstrap is as follows:
+1. Kernel maps program segments 
+	`PT_LOAD` segmets are mapped into the address space, for `ET_EXEC` the addresses are fixed; for `ET_DYN` the kernel maps with a random base, see [[ASLR]].
+2. `PT_INTERP`
+	The kernel maps the interpreter and transfers control to it if it exists, otherwise the kernel jumps directly into `_start` of the binary, transferring control to `crtx.o` which ultimately calls `main()`.
+3. Kernel prepares initial stack
+	Adds `argc` , `argv[]`, `envp[]`, and auxilary vectors `auxv`.
+4. Dynamic linker responsibilities
+	Build `link_map`, `DT_NEEDED` resolution, `mmap()` DSOs
+	Compute `load_bias` for each object
+	Apply relocations with an ordering, filling `.got` and `.got.plt` entries as required.
+	Initialise TLS, call `.init_array` constructors, and then jump to `_start`. 
+
+#### Explanation of the lack of ARM example
+Generally more fragmented than x86 as ARM hardware is not standardised, but the general principles of bootstrapping loader remain the same, what the stages perform may just look slightly different. 
+
+## Overlays (memory, historical, and how to somewhat achieve them now)
+> Overlays are a memory management technique in which a program's code and/or data is partitioned into distinct **modules**, only a subset of which - the resident set - is kept in physical memory at any given time. The working set of a program at time $t$ is the subset of overlay modules required to execute the currently active control paths. Formally, let $\mathcal{M} = \{\mathcal{M}_1, ... \mathcal{M}_n\}$ denote the set of overlay modules of a program. The overlay system enforces: $$ W_{t} \Subset R_{t} \Subset \mathcal{M}, \ \ \ \forall{t}$$
+> Where:
+> 	$W_t$ is the **working set** at time $t$,
+> 	$R_t$ is the resident set at time $t$. 
+
+Prior to paging and virtual memory, overlays allowed programs to have a virtual memory footprint large than physical memory, by ensuring that only the working set resides in RAM at once, or satisfying some other constraint. 
+
+### Tree-Overlays
+Overlay method whereby overlay modules are organised into a hierarchy such that only a minimal amount of code must reside in memory at any given time. Widely used before virtual memory was common and still relevant in memory-constrained embedded systems.
+
+![[Pasted image 20251126210801.png]]
+
+The above is a **tree of overlay segments**, where each node contains some code or data that constitutes part of the program image. 
+
+The **root segment** is always resident. It contains the program entry point, startup code, and global/persistent data. A generic **overlay segment** is a group of routines and optionally private data that can be loaded and unloaded together. Only one child in a **sibling group/segment** can reside in RAM at the same time. The **path** is the sequence of segments from **root to target segment.** To execute a routine in a leaf segment, the **overlay manager** must ensure all segments along the path are loaded into memory. Upward calls do not require overlay operations. 
+
+#### Defining Tree Overlays and Implementation of overlays
+Defining tree overlays happens at link-time - overlays are entirely a software trick managed by the linker and a runtime overlay manager. The goal is to organise the programs into segments and specify which parts of code share memory, such that the overlay manager can perform effectively at runtime. 
+
+
+##### Linker Script Definition - GCC and LLVM
+LD and LLD support overlays via linker scripts. They use the `OVERLAY` command to distinguish between:
+- `VMA` - Where the code executes.
+- `LMA` - Where the overlay segment is stored.
+
+An example GCC linker script is provided below:
+```C
+SECTIONS {
+    /* Root */
+    .text : { *(.text) }
+
+    /* Overlay definition */
+    OVERLAY : NOCROSSREFS {
+        .overlay_A { *(.overlay_A_code) }
+        .overlay_B { *(.overlay_B_code) }
+    } > RAM AT > FLASH
+}
+```
+##### Implementation of Overlays
+A small runtime kernel is included in the root segment, which acts as a runtime system for unloading and loading overlay segments on demand. 
+
+Calls to routines in overlays are replaced with a jump to glue code which saves processor state, and redirects to the overlay manager, passing a token indicating which segment is needed. A segment table entry may look like this:
+
+```C
+typedef struct segtab {
+	const void*    flash_addr;
+	void*          p_addr;
+	size_t         size;
+	int            is_present;
+	int            sibling_group;
+} segtab;
+```
+For a downward call:
+1. Check if the target segment is loaded
+2. If not loaded:
+	Load it from the ROM/Flash into `p_addr`
+	Unload conflicting siblings in the same memory region
+	Update `is_present` flag in `segtab`.
+3. Jump to target routine
+
+
+
+
+
+

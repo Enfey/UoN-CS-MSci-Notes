@@ -230,24 +230,6 @@ x86 predominantly uses relative addressing for control flow within the current a
 4. Intersegment control flow 
 	Unconditional jumps and calls can include a **full 6 byte segment/offset address** directly within the instruction, or calculate the address where this 6 byte target address is stored. Push both the return address and the caller's segment number, to permit valid return, and facilitate intersegment calls. 
 
-
-
-
-#### ARM7TDMI
-General purpose 32 bit microprocessor to be used for our linker and loader. RISC principles. 
-
-
-##### Address Bus and Memory Interface Signals
-
-##### Alignment and Natural Boundaries
-
-##### Register based addressing and relocation. 
-
-##### ISA Foibles
-
-
-##### Debug and Hardware Foibles
-
 #### Paging and virtual memory
 **Paging** uses fixed partitioningand relocation to devise a non-contiguous memory management scheme. Paging hardware divides a program's address space into fixed size pages, and divides the physical memory of the computer into page frames of the same size ranging from 512 bytes to 1GB. 
 
