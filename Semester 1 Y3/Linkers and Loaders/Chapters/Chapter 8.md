@@ -105,11 +105,11 @@ During the link-step, all input relocations are processed. The `.got` creation p
 3. **Emit dynamic relocation entries**
 	Generate relocation entries in the output binary's dynamic relocation sections. For every unique external symbol that received a `.got` slot, the static linker performs the following:
 	1. **Select relocation type**
-		for `.got` entries that hold the absolute address of a data symbol, this is typically R_ARM_GLOB_DAT. For entries related to function calls via the PLT, its typically R_ARM_JUMP_SLOT, and this entry will belong in a runtime writable subsection called `.got.plt`
+		For `.got` entries that hold the absolute address of a data symbol, this is typically **R_ARM_GLOB_DAT**. For entries related to function calls via the PLT, its typically **R_ARM_JUMP_SLOT**, and this entry will belong in a runtime writable subsection called `.got.plt`
 	2. **Select offset**
-		The linker records the virtual address of the newly allocated `.got` slot as the r_offset field in the dynamic relocation entry to indicate where the final address should be written. 
+		The linker records the virtual address of the newly allocated `.got` slot as the `r_offset` field in the dynamic relocation entry to indicate where the final address should be written. 
 	3. **Set the symbol index**
-		Sets the symbol index of the symbol $S$ into the r_info field to tell what address to look up. 
+		Sets the symbol index of the symbol $S$ into the `r_info` field to tell what address to look up. 
 
 ##### `GOTOFF`
  For local static variables which are not exported for linking, we may choose to provide `GOTOFF` style access, that is instead of providing a `.got` entry, the code stores the variable at an offset from the `.got` base. We could do this with data as the relative distance between code and data won't change, but this provides a uniform access model, and some ISAs have limitations on their offsets for PC-relative addressing, with the `.got` we can ensure the data is not farther than the instruction range allows.

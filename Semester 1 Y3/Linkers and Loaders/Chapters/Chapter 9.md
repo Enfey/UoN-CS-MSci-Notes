@@ -128,8 +128,80 @@ When loading a shareable object, the system shall analyse version definition dat
 Each object and dependency shall be tested in turn. If a symbol definition is missing and the `vna_flag` bit for `VER_FLG_WEAK` is not set, the loader shall return an error and exit. If the `vna_flags` bit for `VER_FLG_WEAK` is set, the loader shall issue a warning and continue operation.
 
 #### Symbol resolution
-Where symbol versioning is active, symbol resolution becomes stricter. When the static linker builds the consumer object and sees a required versioned symbol from a shared library, it constructs `.gnu.version` and `.gnu.version_r` and the entailing structures.
 
-### Shared library structure
+Where symbol versioning is active, symbol resolution becomes stricter. 
+Definition testing is thus extended beyond a simple match of symbol name strings; the version of the reference must also equal the name of the definition. A number of steps are taken to achieve this. 
 
-### Creating shared libraries
+The static linker constructs the `.gnu.version` and `.gnu.version_r` and entailing structures when building the consumer object and seeing a required versioned symbol from a shared/static library. If the consumer object further exports versioned symbols, then the `gnu.version_d` is instantiated, with entailing structures.
+
+The linker uses the same index from `.dynsym`, parallel to `SHT_GNU_versym` (`.gnu.version`). This index permits the acquirement of name data via `.dynstr`, and acquirement of the version requirement string from `vn_name` (offset) within the `Elfxx_Verneed` array, likewise, the corresponding definition string is retrieved from the `Elfxx_Verdef` table (via `Elfxx_Verdaux` `vda_name` offset into `.dynstr` (or `sh_link`)) in the library being linked against. 
+
+Additionally, if the high-order bit (bit 15) of the version symbol is set, in the section `.gnu.version` (containing `Elfxx_Half` array) for that symbol, then the static linker shall ignore the symbol's presence in the object during the build process. Designed to prevent new applications from linking against obsolete versions of a function. 
+
+When an object with a reference and an object with a reference and an object with a definition are being linked, the following rules shall govern the result:
+
+1. The object with reference and the object with the definitions both use versioning. All described matching is processed in this case. A fatal error shall be triggered when no matching definition can be found in the object whose name is one referenced by the `vn_name` element in the `Elfxx_Verneed` array.
+2. The object with the reference does not export any versions, while the object with the definitions does. In this instance, the linker attempts to resolve safely by restricting the search to the 'base definition'. These are definitions with index numbers 1 or 2, which represent the default, public face of the definition. 
+3. The object with the reference uses versioning, but the object with the definitions specifies none. A matching symbol shall be accepted in this case. A fatal error will occur in a unique case. When the consumer object is constructed, records exact file name of needed library into 
+4. Neither the object with the reference nor the object with the definitions use versioning. The behaviour in this instance shall default to pre-existing name resolution rules. 
+
+### Startup sequence for shared libs
+When loading a sharable object, version definition data from the loaded object is analyzed to assure that it meets the version requirements of the calling object. The dynamic loader retrieves the entries in the caller's `Elfxx_Verneed` array and attempts to find matching definition information in the loaded `Elfxx_Verdef` table.
+
+Each object and dependency is tested in turn. If a symbol definition is missing, the loader returns an error. A warning is issued instead of a hard error when the `vna_flags` bit for `VER_FLG_WEAK` is set in the `Elfxx_Vernaux` entry.
+
+When the versions referenced by undefined symbols in the loaded object are found, version availability is certified. The test completes without error and the object is made available.
+### Shared library structure and Creation
+`ET_DYN` is the `e_type` specified for **shared objects** (`.so`) and for **position-independent executables** (PIEs). An `ET_DYN` file is *relocatable at load time* - the loader maps its `PT_LOAD` segments to some arbitrary base address and applies relocations specified in the `rel.dyn` and `rela.dyn` sections, as emitted by the static linker. The typical static linker strategy is to link the object to load at address zero, emit relocations that the runtime loader will apply, set up the dynamic tables (`.dynamic/.dynsym/.dynstr.rel/a.*, .gnu.hash or .hash, .got, .got.plt, .plt` etc). At runtime, ASLR and its entropy determine the actual base of the `ET_DYN` object.
+
+#### Linking View
+Generally, the following sections are generally created. Certain sections will be elaborated on more in [[Chapter 10]] and beyond, otherwise, we are already familiar.
+- `.text`
+- `.rodata`
+- `.bss`
+- `.dynsym`
+- `.dynstr`
+- `.rel/a.dyn`
+- `.plt`
+- `.got` (and `.got.plt`)
+- `.hash` or `.gnu.hash`
+	Discussed in chapter 10
+- `.dynamic`
+	We will discuss this here as it is extremely relevant.
+	If an object file participates in dynamic linking (most shared libraries will), then it will contain the  `.dynamic`, and as a ready .so its program header table will contain the `.dynamic` section in a segment with type  `PT_DYNAMIC`. A synthetic symbol `_DYNAMIC` is emitted by the static linker to label the section, whose value is the virtual address of .dynamic relative to the DSO's own load-base, relocating via the load-time delta and load-time. The section contains an array of the following structures:
+  ```C
+  typedef struct {
+	Elf32_Sword	d_tag;
+   	union {
+   		Elf32_Word	d_val;
+   		Elf32_Addr	d_ptr;
+	} d_un;
+} Elf32_Dyn;
+
+extern Elf32_Dyn	_DYNAMIC[];
+```
+	For each object with this type, `d_tag` controls the interpretation of `d_un`.
+	`d_val`
+		These objects represent integer values with various interpretations.
+	`d_ptr`
+		These objects represent program virtual addresses. The dynamic linker computes actual addresses based on the original file value and the memory base address. For consistency, files do not contain relocation entries to correct addresses in the dynamic structure.
+	![](Pasted%20image%2020251202211040.png)
+	For `dt_tag`. If a tag is marked mandatory, the dynamic linking array for an ABI-conforming file must have an entry of that type.
+	`DT_NULL` marks the end of the `_DYNAMIC` array.
+	`DT_NEEDED`
+	`DT_SONAME`
+	`DT_FLAGS` holds flag values specific to the object being loaded. 
+		`DF_ORIGIN` - signifies the object being loaded may make reference to the $ORIGIN substitution string (look at this)
+		`DF_SYMBOLIC`
+		`DF_TEXTREL`
+		`DF_BINDNOW`
+		`DF_STATIC_TLS`
+- `.init`, `.fini`, `.init_array`, `.fini_array`, `.preinit_array`.
+- `.tdata`/`.tbss`
+- `.gnu.version`, `.gnu.version_d`, `.gnu.version_r`.
+
+#### Execution View
+
+### Linking with shared libs and Running Program
+
+### The malloc hack and other shared lib problems
