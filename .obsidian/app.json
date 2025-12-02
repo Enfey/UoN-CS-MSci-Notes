@@ -1,3 +1,5 @@
 {
-  "promptDelete": false
+  "promptDelete": false,
+  "readableLineLength": true,
+  "useMarkdownLinks": true
 }
