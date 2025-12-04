@@ -172,12 +172,27 @@ Generally, the following sections are generally created. Certain sections will b
 	
 	I am led to believe that assemblers only emit primitive relocations that the linker then has to 'promote/specialise' when it has more information e.g., cannot find matching function in static libs and other objects, must be provided by shared lib, so emits `PLT` relocation at the offset the function appears in, and adds that relocation to the `.rel/a.plt` section and adds auxilary information in the `.dynamic` section. 
 - `.plt`
-	The static linker is responsible for constructing a PLT area. PLT0 is emitted; the resolver entry that will eventually point to the dynamic linker's resolution routine entry point. This will be relocated, as `PLT_0` points to a `.got.plt` entry. `PLT_0` implementation is architecture specific but always present. We emit one `PLT` entry per external function needing lazy binding; that is stub code that jumps indirectly using its `.got.plt` slot. The stub is position-independent and typically identical across similar symbols except for the `.got.plt` slot referenced. We emit relocations, one per `PLT/GOT` entry. Here, this relocation targets the `.got.plt` slot. On $ARM$, this relocation type is typically `R_ARM_JUMP_SLOT`. We emit `.dynsym`/`.dynstr` entries for referenced symbols, and write the corresponding `DT_JMPREL`, `DT_PLTRELSZ`, `DT_PLTREL` entries in `.dynamic` so the loader knows where `.rel/a.plt` lives, its size, and the type of relocations it holds. It should be noted that when the linker sees a PLT generating relocation, it checks whether the referenced symbol is pre-emptible/interposable, if it is not, then the relocation can be resolved at link-time, and there will be no PLT entry for that symbol. 
+	The static linker is responsible for constructing a PLT area. PLT0 is emitted; the resolver entry that will eventually point to the dynamic linker's resolution routine entry point. This will be relocated, as `PLT_0` points to a `.got.plt` entry. `PLT_0` implementation is architecture specific but always present. We emit one `PLT` entry per external function needing lazy binding; that is stub code that jumps indirectly using its `.got.plt` slot. The stub is position-independent and typically identical across similar symbols except for the `.got.plt` slot referenced. We emit relocations, one per `PLT/GOT` entry. Here, this relocation targets the `.got.plt` slot. On $ARM$, this relocation type is typically `R_ARM_JUMP_SLOT`. We emit `.dynsym`/`.dynstr` entries for referenced symbols, and write the corresponding `DT_JMPREL`, `DT_PLTRELSZ`, `DT_PLTREL` entries in `.dynamic` so the loader knows where `.rel/a.plt` lives, its size, and the type of relocations it holds. It should be noted that when the linker sees a PLT generating relocation, it checks whether the referenced symbol is pre-emptible/interposable, if it is not, then the relocation can be resolved at link-time, and there will be no PLT entry for that symbol. It should further be noted that entries `.got.plt[1]` and `.got.plt[2]` are reserved, for a pointer to `link_map` and a base/offset for computing relocation index, respectively.
 	
 	The conceptual layout of $ARM$'s PLT is described below:
 	```C
-	```
+	; PLT[K]
+	ldr   r12, [pc, #offset_to_literal]   ; load literal that encodes address of .got.plt[k]
+    add   r12, pc, r12                    ; r12 = address of .got.plt[k]
+    ldr   r12, [r12]                      ; r12 = *(.got.plt[k])  (either resolver stub address or final func)
+    bx    r12                             ; branch to resolver stub or directly to function
+    .word (address_of_gotplt_k - (.+8))   ; literal used by ldr above (PC-rel)
 	
+	;PLT[0]
+	ldr   r12, [pc, #offset_got0]    ; r12 = .got.plt[0] (holds pointer to resolver trampoline / ld.so stub)
+    add   r12, pc, r12               ; r12 = absolute address of resolver trampoline
+    ldr   r1,  [pc, #offset_got1]    ; r1 = .got.plt[1] (module/link_map info offset)
+    add   r1, pc, r1                 ; r1 = absolute link_map pointer (or base)
+    ldr   r0,  [pc, #offset_got2]    ; r0 = .got.plt[2] (holds base index or other info)
+    add   r0, pc, r0                 ; r0 = absolute base pointer / relocation base (or r0 contains relocation index)
+    bx    r12                        ; jump to _dl_runtime_resolve (r12)
+	```
+	Because of the 1-1 mapping between `.plt` and `.got.plt`,the relocation index is known and can be embedded directly in the `PLT` stub to refer to the correct relocation entry in `.rel/a.plt`. This is embedded either as an immediate constant or loaded into a register, such that when control passes from `.plt` -> `.got.plt` -> `.plt[0]` -> `resolver` that the correct symbol can have its address resolved and placed into the corresponding .`got.plt` entry.
 - `.got` (and `.got.plt`)
 	During the link-step, all input relocations are processed. The `.got` creation proceeds as follows:
 	1. **Collect `.got`-related relocations**
@@ -197,8 +212,16 @@ Generally, the following sections are generally created. Certain sections will b
 		3. **Set the symbol index**
 			Sets the symbol index of the symbol $S$ into the `r_info` field to tell what address to look up. 
 - `.hash` or `.gnu.hash`
-	This supports 
-- `.rel/a.plt`
+	A hash table of Elf32_Word objects exists to support dynamic symbol lookup. A loader uses one of the aforementioned, or can use both for compatibility.
+	`.hash`
+		Sequence of 32 bit words.
+		`u32 nbucket` - number of buckets (chosen by linker, heuristic)
+		`u32 nchain` - usually equal to number of entries in `.dynsym`
+		`u32 buckets[nbucket]` - holds the first symbol index in that bucket, or 0 if empty, 
+		`u32 chains[nchain]`
+		
+	`.gnu.hash`
+		
 - `.dynamic`
 	We will discuss this here as it is extremely relevant.
 	If an object file participates in dynamic linking, then it will contain the  `.dynamic`, and as a ready `.so` its program header table will contain the `.dynamic` section in a segment with type  `PT_DYNAMIC`. A synthetic symbol `_DYNAMIC` is emitted by the static linker to label the section, whose value is the virtual address of `.dynamic` relative to the DSO's link-time base, relocating via the load-time delta at load-time. The `.dynamic` section/segment is used almost entirely by the dynamic linker. The section contains an array of the following structures:
@@ -272,11 +295,16 @@ extern Elf32_Dyn	_DYNAMIC[];
 		`DF_STATIC_TLS`
 	`DT_INIT_ARRAY`, `DT_FINI_ARRAY`, `DT_INIT_ARRAYSZ`, `DT_FINI_ARRAYSZ`,  `DT_PREINIT_ARRAY`, `DT_PREINIT_ARRAYSZ`
 - `.init`, `.fini`, `.init_array`, `.fini_array`, `.preinit_array`.
-		
+	**`.preinit_array`**: array of function pointers executed _only for the executable_ (ET_EXEC) very early, before any other initializers. Shared libraries’ `.preinit_array` entries are not called when those libraries are loaded at process startup (they are only considered for executables). (Used rarely, early init.)
+	**`.init`**: legacy single function (constructor) entry — invoked before `.init_array` entries for that object (historically). Many toolchains still create it for backward compat.
+	**`.init_array`**: modern mechanism - array of pointers to constructor functions. Linker collects `__attribute__((constructor))` functions and compiler-generated ctors and writes their addresses into `.init_array` in the order the linker establishes.
+	**`.fini_array`**: array of destructor pointers, executed in reverse order at unload/exit.
+	**`.fini`**: legacy single destructor function.
+	The linker is responsible for collection per-object `.init_array` and `.fini_array` input sections from object files, concatenating them, and emitting corresponding entries with relevant tags in .dynamic
 - `.tdata`/`.tbss`
-		
+	See [Thread-local Storage](Thread-local%20Storage.md)
 - `.gnu.version`, `.gnu.version_d`, `.gnu.version_r`.
-	
+	Described earlier.
 
 #### Execution View
 
