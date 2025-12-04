@@ -255,7 +255,7 @@ If the place contains an instruction, the immediate field for the instruction is
 
 For example:
 ```C
-0x1000: BL sym
+0x1000: CALL sym
 ```
 An `REL` relocation `R_ARM_CALL` is generated for `0x1000`. One extracts the signed 24-bit immediate from bits `[23:0]` of the $BL$ encoding. This is shifted twice to yield a byte displacement. After sign extension, this yields our addend. Then, `V = (S + A) - P`.
 
@@ -341,15 +341,19 @@ Dynamic relocations will be added here later.
  	ADD r0, r0, #imm2
  	LDR r1, [r0, #imm3]
  	```
- 	`ABS(V)` is decomposed into groups. `G0` is the low chunk, `G1` is the next chunk, `G2` is the chunk after that. Each instruction gets one chunk. One starts with Y = ABS(V). Find the highest non-zero bits that fit into G0 and extract them into G0. Subtract G0 from Y, and repeat. If leftover bits remain, check overflow. Overflow checking is performed on the highest numbe Group relocations appear as ARM immediates are limited. 
+ 	`ABS(V)` is decomposed into groups. `G0` is the low chunk, `G1` is the next chunk, `G2` is the chunk after that. Each instruction gets one chunk. One starts with Y = ABS(V). Find the highest non-zero bits that fit into G0 and extract them into G0. Subtract G0 from Y, and repeat. If leftover bits remain, check overflow. Overflow checking is performed on the highest number Group relocations appear as ARM immediates are limited. 
  	
 
 
 ## Relinkable and relocatable output formats
 
-## Other relocation formats
-### Chained references
-### Bitmaps
-### Special Segments
 
 
+## Exercises
+Why does a SPARC linker check for address overflow when relocating branch addresses doing the high and low parts of the addresses in a SETHI sequence?
+	When performing a relocation at an offset for a branch instruction, I would assume the SPARC linker performs address overflow ensuring that the result of the relocation computation before it is result masked, will fit into the immediate for that instruction, otherwise the branch instruction will not work. I would imagine that address overflow is not performed for the relocation computation derived at a SETHI instruction, as the high 22 bits are masked out regardless, and will be valid, the same for low 10 bits. The result of the computation will at most be 32 bits, as this is the max size of the relocation type in 32 bit ELF and other object formats, as such there is a guarantee that patching the whole address into this relocation, a type of group relocation, that overflow cannot occur. Although if there are leftover bits, this would suggest overflow, so the linker must verify that the computed address will fit, and silently drop the top bits if not, rather than trigger an error or generate a veneer. The details of this are probably subject to the actual relocation type. More about validating the address width as being 32 bit rather than ensuring will fit into immediate, as will be masked anyway. 
+References to symbols that are pseudo registers and thread local storage are resolved as offsets from the start of the segment, while normal symbol references are resolved as absolute addresses, why?
+	Pseudo register symbols are those that mark base addresses used for addressing modes. For example $gp$ on MIPS is a global pointer base, points to 64K block of memory in heap that holds constants and global variables. These registers are not real objects, simply reference points for computing offsets. TLS symbols represent per-thread variables. `__thread int x`, the address of `x` is different in each thread, so the linker cannot know its absolute address at static link time. TLS symbols are referenced relative to a per-thread TLS segment base at runtime. Normal global symbols have one copy in the entire program, and are often fixed and resolved at link-time. Resolutions, are thus involving absolute addresses which can be determined at link-time, and subsequent relocations can be computed from these absolute addresses. Thus given that TLS and Pseudo register symbols do not have fixed, global addresses and instead relative to some base, the result of relocation operation is an offset according to the thread base or psuedo-register, rather than ever producing an absolute address or PC relative address that does not need to be modified beyond link-time. At runtime, the final address to be patched at the relocation is computed once the base register (thread pointer, GP, GOT base etc) is assigned to its concrete runtime value, necessitating a more complex form of relocation. 
+
+We said that $a.out$ and $ECOFF$ relocation doesn't handle references like $A - B$ where $A$ and $B$ are both global symbols. Can you come up with a way to fake it?
+	One, this relocation may be needed at run-time to compute boundaries. If A marks the start of some collection type and B marks the start of the next data structure, then A - B is the size of the data structure for A. If the final value isn't known yet, may require a relocation. PIC code, may need this to express relative distance between two objects which do not yet have assigned addresses. Given the above, relocations in a.out and ECOFF only permit relocations of the form `value = S + A` or `value = S + A - P`. The trick is make A and B be in the same section, compute their delta which is known at link-time. One emits a relocation choosing A as the relocation target, and encodes the addend as -offset_B, now fits the allowed form and computes the required operation. 
