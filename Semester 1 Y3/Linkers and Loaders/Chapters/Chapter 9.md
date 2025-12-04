@@ -159,16 +159,49 @@ Generally, the following sections are generally created. Certain sections will b
 - `.text`
 - `.rodata`
 - `.bss`
-- `.dynsym`
-- `.dynstr`
+- `.dynsym` and `.dynstr`
+	These form the symbol database the dynamic linker uses to resolve symbols at runtime. `.dynsym` is a compact symbol table for dynamic linking and `.dynstr` holds symbol names referenced by `.dynsym`'s `st_name` field.
+	
+	The static linker is responsible for collecting exported symbols, these are symbols with `STB_GLOBAL` or `STB_WEAK` binding and `STV_DEFAULT` or `STV_PROTECTED`(non-interposable) visibility, which are needed by other DSOs or a consumer and are placed into `.dynsym`. The linker is further responsible for deciding an ordering of symbols, as GNU hash expects symbols sorted for the chain part. `st_name` is pointed to `.dynstr` and `st_value` is set to the virtual address relative to the object base, or 0 for undefined symbols. The `st_info` and `st_other` fields are set accordingly.
+	
+	We do not have the restriction of static-link only pipelines whereby a symbol with binding `STB_GLOBAL` without a corresponding definition would trigger a link-time error - DSOs expect many of their symbols to be resolved at runtime from other DSOs, so it is perfectly fine for `.dynsym` to contain undefined symbols. A relocation entry is simply emitted for it, where this will be a `.got/.got.plt` relocation. 
 - `.rel/a.dyn`
+	Contains the catenated general dynamic relocations. That is those that are data relocations, GOT entry relocations, TLS relocations, and all those not pertaining to dynamic PLT relocations; those have their own section prescribed.
+- `.rel/a.plt`
+	Contains the relocations associated solely with the procedure linkage table. That is, the relocations that point to .got.plt entries. The reason for this separation is that the dynamic linker can ignore them during process initialisation if lazy binding is enabled. If eager binding is enabled, then `.rel/a.dyn` and `.rel/a.plt` may merge. The static linker is responsible for instantiating this table by inspecting relocation types, and adding relocation entries to this table which relate to the `PLT`, on ARM this is `R_ARM_JUMP_SLOT` for dynamic relocations. 
+	
+	I am led to believe that assemblers only emit primitive relocations that the linker then has to 'promote/specialise' when it has more information e.g., cannot find matching function in static libs and other objects, must be provided by shared lib, so emits `PLT` relocation at the offset the function appears in, and adds that relocation to the `.rel/a.plt` section and adds auxilary information in the `.dynamic` section. 
 - `.plt`
+	The static linker is responsible for constructing a PLT area. PLT0 is emitted; the resolver entry that will eventually point to the dynamic linker's resolution routine entry point. This will be relocated, as `PLT_0` points to a `.got.plt` entry. `PLT_0` implementation is architecture specific but always present. We emit one `PLT` entry per external function needing lazy binding; that is stub code that jumps indirectly using its `.got.plt` slot. The stub is position-independent and typically identical across similar symbols except for the `.got.plt` slot referenced. We emit relocations, one per `PLT/GOT` entry. Here, this relocation targets the `.got.plt` slot. On $ARM$, this relocation type is typically `R_ARM_JUMP_SLOT`. We emit `.dynsym`/`.dynstr` entries for referenced symbols, and write the corresponding `DT_JMPREL`, `DT_PLTRELSZ`, `DT_PLTREL` entries in `.dynamic` so the loader knows where `.rel/a.plt` lives, its size, and the type of relocations it holds. It should be noted that when the linker sees a PLT generating relocation, it checks whether the referenced symbol is pre-emptible/interposable, if it is not, then the relocation can be resolved at link-time, and there will be no PLT entry for that symbol. 
+	
+	The conceptual layout of $ARM$'s PLT is described below:
+	```C
+	```
+	
 - `.got` (and `.got.plt`)
+	During the link-step, all input relocations are processed. The `.got` creation proceeds as follows:
+	1. **Collect `.got`-related relocations**
+		These include:
+		- **R_ARM_GOT_PREL** - compute pc-relative offset of a symbol's `.got` entry, $.GOT_{sym} + A - P$ 
+		- **R_ARM_GOT32** - rewrite word to contain absolute virtual address of `.got` slot for $sym$, $.GOT_{sym} + A$
+		- **R_ARM_GOTPC** - compute the pc-relative offset of the `.got` base address itself $.GOT_{base} + A - P$ 
+		or their architectural equivalents. Each relocation indicates 'this instruction expects symbol $S$ to be accessed via the `.got`.
+	2. **Allocate `.got` entries**
+		The linker creates the .`.got` section and assigns each unique symbol referenced through the `.got` its own slot. The slot holds a pointer which the loader will fill with the symbol's runtime address. ARM uses separate relocations for `.got`-relative addresses (`.got`OFF) vs actual `.got` entries.
+	3. **Emit dynamic relocation entries**
+		Generate relocation entries in the output binary's dynamic relocation sections. For every unique external symbol that received a `.got` slot, the static linker performs the following:
+		1. **Select relocation type**
+			For `.got` entries that hold the absolute address of a data symbol, this is typically **R_ARM_GLOB_DAT**. For entries related to function calls via the PLT, its typically **R_ARM_JUMP_SLOT**, and this entry will belong in a runtime writable subsection called `.got.plt`
+		2. **Select offset**
+			The linker records the virtual address of the newly allocated `.got` slot as the `r_offset` field in the dynamic relocation entry to indicate where the final address should be written. 
+		3. **Set the symbol index**
+			Sets the symbol index of the symbol $S$ into the `r_info` field to tell what address to look up. 
 - `.hash` or `.gnu.hash`
-	Discussed in chapter 10
+	This supports 
+- `.rel/a.plt`
 - `.dynamic`
 	We will discuss this here as it is extremely relevant.
-	If an object file participates in dynamic linking (most shared libraries will), then it will contain the  `.dynamic`, and as a ready .so its program header table will contain the `.dynamic` section in a segment with type  `PT_DYNAMIC`. A synthetic symbol `_DYNAMIC` is emitted by the static linker to label the section, whose value is the virtual address of .dynamic relative to the DSO's own load-base, relocating via the load-time delta and load-time. The section contains an array of the following structures:
+	If an object file participates in dynamic linking, then it will contain the  `.dynamic`, and as a ready `.so` its program header table will contain the `.dynamic` section in a segment with type  `PT_DYNAMIC`. A synthetic symbol `_DYNAMIC` is emitted by the static linker to label the section, whose value is the virtual address of `.dynamic` relative to the DSO's link-time base, relocating via the load-time delta at load-time. The `.dynamic` section/segment is used almost entirely by the dynamic linker. The section contains an array of the following structures:
   ```C
   typedef struct {
 	Elf32_Sword	d_tag;
@@ -187,18 +220,63 @@ extern Elf32_Dyn	_DYNAMIC[];
 		These objects represent program virtual addresses. The dynamic linker computes actual addresses based on the original file value and the memory base address. For consistency, files do not contain relocation entries to correct addresses in the dynamic structure.
 	![](Pasted%20image%2020251202211040.png)
 	For `dt_tag`. If a tag is marked mandatory, the dynamic linking array for an ABI-conforming file must have an entry of that type.
-	`DT_NULL` marks the end of the `_DYNAMIC` array.
+	
+	`DT_NULL`
+		An entry with a `DT_NULL` tag marks the end of the `_DYNAMIC`array. 
+	`DT_STRSZ`, `DT_SYMENT`, `DT_SYMTAB`, `DT_STRTAB`
+		These tags describe the dynamic symbol table `.dynsym` and its string table `.dynstr`
+		`DT_SYMTAB` 
+			An entry with a `DT_SYMTAB` tag holds the address of `.dynsym` after it has been laid out. 
+		`DT_SYMENT`
+			An entry with a `DT_SYMENT` tag holds the size, in bytes, of a symbol table entry. Linker sets it to `sizeof(Elf32/64_Sym)`
+		`DT_STRTAB`
+			An entry with the `DT_STRTAB` tag holds the address of `.dynstr`, this holds symbol names, library names, and other strings the dynamic linker may need.
+		`DT_STRSZ`
+			An entry with the `DT_STRSZ` tag holds the size, in bytes, of `.dynstr` after it has been laid out.
 	`DT_NEEDED`
+		An entry with the `DT_NEEDED` tag holds the string table offset of a null-terminated string, yielding the name of a needed shared library. The offset is an index into the table recorded in the `DT_STRTAB` code. The dynamic array may contain multiple entries with this type. These entries' relative order is significant, though their relation to entries of other types is not. 
+		FILL IN MORE OF THIS according to 'shared object dependencies'
 	`DT_SONAME`
-	`DT_FLAGS` holds flag values specific to the object being loaded. 
-		`DF_ORIGIN` - signifies the object being loaded may make reference to the $ORIGIN substitution string (look at this)
+		An entry with the `DT_SONAME` tag holds the `.dynstr` offset of a null-terminated string, giving the name of the shared object. The offset is an index into whatever table is recorded in the `DT_STRTAB` entry. 
+	`DT_RELA`, `DT_RELASZ`, `DT_RELAENT`, `DT_REL`, `DT_RELSZ`, `DT_RELENT`
+		These tags describe the general dynamic relocation section
+		`.rel/a.dyn`. 
+		`DT_RELA`
+			An entry with the tag `DT_RELA` holds the address of the dynamic relocation table `.rela.dyn`. An object file may have multiple relocation sections that emit dynamic relocations of type `Elf32_Rela`. When building the relocation table, the link editor catenates those sections to form a single table such that the dynamic linker only sees one table. If this element is present, it must also have the following 2 sections.
+		`DT_RELASZ`
+			An entry with the tag `DT_RELASZ` holds the total size, in bytes, of the `DT_RELA` relocation table
+		`DT_RELAENT` 
+			An entry with the tag `DT_RELAENT` holds the size, in bytes, of the `DT_RELAENT` relocation entry.
+		`DT_REL`
+			An entry with the tag of `DT_REL` holds the address of the dynamic relocation table `.rel.dyn`. It is otherwise similar to `DT_RELA`. If this element is present, it must also have the following 2 sections.
+		`DT_RELSZ`
+			An entry with the tag `DT_RELSZ` holds the total size, in bytes, of the `DT_REL` relocation table.
+		`DT_RELENT`
+			An entry with the tag `DT_RELENT` holds the size, in bytes, of 
+	`DT_JMPREL`, `DT_PLTRELSZ`, `DT_PLTREL`, `DT_PLTGOT`
+		These tags describe the relocation entries associated solely with the procedure linkage table `.rel/a.plt`.
+		`DT_JMPREL`
+			An entry with the tag `DT_JMPREL` holds the address of relocation entries associated solely with the procedure linkage table. If this entry is present, the related entries of types `DT_PLTRELSZ` and `DT_PLTREL` must also be present. 
+		`DT_PLTRELSZ`
+			An entry with the tag `DT_PLTRELSZ` holds the total size, in bytes, of the relocation entries associated with the procedure linkage table.
+		`DT_PLTREL`
+			An entry with the tag `DT_PLTREL` specifies the type of relocation entry to which the procedure linkage table refers. The `d_val` member holds `DT_REL` or `DT_RELA`, as appropriate. All relocations in a procedure linkage table must use the same relocation type. 
+		`DT_PLTGOT`
+			An entry with the tag `DT_PLTGOT` holds an address associated with the procedure linkage table and/or the global offset table. Interpreted according to architecture.
+	`DT_HASH`, `DT_GNU_HASH`
+	`DT_FLAGS`
+		`DF_ORIGIN`
 		`DF_SYMBOLIC`
 		`DF_TEXTREL`
 		`DF_BINDNOW`
 		`DF_STATIC_TLS`
+	`DT_INIT_ARRAY`, `DT_FINI_ARRAY`, `DT_INIT_ARRAYSZ`, `DT_FINI_ARRAYSZ`,  `DT_PREINIT_ARRAY`, `DT_PREINIT_ARRAYSZ`
 - `.init`, `.fini`, `.init_array`, `.fini_array`, `.preinit_array`.
+		
 - `.tdata`/`.tbss`
+		
 - `.gnu.version`, `.gnu.version_d`, `.gnu.version_r`.
+	
 
 #### Execution View
 
