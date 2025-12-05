@@ -295,12 +295,7 @@ extern Elf32_Dyn	_DYNAMIC[];
 		`DF_STATIC_TLS`
 	`DT_INIT_ARRAY`, `DT_FINI_ARRAY`, `DT_INIT_ARRAYSZ`, `DT_FINI_ARRAYSZ`,  `DT_PREINIT_ARRAY`, `DT_PREINIT_ARRAYSZ`
 - `.init`, `.fini`, `.init_array`, `.fini_array`, `.preinit_array`.
-	**`.preinit_array`**: array of function pointers executed _only for the executable_ (ET_EXEC) very early, before any other initializers. Shared libraries’ `.preinit_array` entries are not called when those libraries are loaded at process startup (they are only considered for executables). (Used rarely, early init.)
-	**`.init`**: legacy single function (constructor) entry — invoked before `.init_array` entries for that object (historically). Many toolchains still create it for backward compat.
-	**`.init_array`**: modern mechanism - array of pointers to constructor functions. Linker collects `__attribute__((constructor))` functions and compiler-generated ctors and writes their addresses into `.init_array` in the order the linker establishes.
-	**`.fini_array`**: array of destructor pointers, executed in reverse order at unload/exit.
-	**`.fini`**: legacy single destructor function.
-	The linker is responsible for collection per-object `.init_array` and `.fini_array` input sections from object files, concatenating them, and emitting corresponding entries with relevant tags in .dynamic
+	
 - `.tdata`/`.tbss`
 	See [Thread-local Storage](Thread-local%20Storage.md)
 - `.gnu.version`, `.gnu.version_d`, `.gnu.version_r`.
