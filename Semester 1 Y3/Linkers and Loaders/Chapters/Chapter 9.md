@@ -250,6 +250,8 @@ Generally, the following sections are generally created. Certain sections will b
 		An entry with the `DT_NEEDED` tag holds the string table offset of a null-terminated string, yielding the name of a needed shared library. The offset is an index into the table recorded in the `DT_STRTAB` code. The dynamic array may contain multiple entries with this type. These entries' relative order is significant, though their relation to entries of other types is not. More details are described [further on](#Shared%20Object%20Dependencies).
 	`DT_SONAME`
 		An entry with the `DT_SONAME` tag holds the `.dynstr` offset of a null-terminated string, giving the name of the shared object. The offset is an index into whatever table is recorded in the `DT_STRTAB` entry. 
+	`DT_RUNPATH`
+		An entry with the `DT_RUNPATH` tag holds the string table offset of a NUL-terminated library search path string. The offset is an index into the table recorded in the `DT_STRTAB` entry.
 	`DT_RELA`, `DT_RELASZ`, `DT_RELAENT`, `DT_REL`, `DT_RELSZ`, `DT_RELENT`
 		These tags describe the general dynamic relocation section
 		`.rel/a.dyn`. 
@@ -299,8 +301,36 @@ Generally, the following sections are generally created. Certain sections will b
 - `.gnu.version`, `.gnu.version_d`, `.gnu.version_r`.
 	Described earlier.
 #### Shared Object Dependencies
-	
+When a link editor processes an archive library, it extracts library members and copies them into the output object file. These statically linked services are available during execution without involving the dynamic linker. Shared objects must also provide services, and the dynamic linker must attach the proper shared object files to the process image for execution, mapped `RO` and `COW` for writable data pages.
 
+ When the dynamic linker maps a consumer object into memory, it inspects the `DT_NEEDED` entries of the dynamic structure to identify the shared objects that are needed to supply the program's services. By repeatedly connecting referenced shared objects and their dependencies, the dynamic linker constructs a complete process image. When resolving symbolic references, the dynamic linker examines the symbol tables with a breadth-first search. That is, it first looks at the symbol table of the executable program itself, then at the symbol tables of the `DT_NEEDED` entries (in the order they appear in `.dynamic)`, and the `DT_NEEDED` entries of those libraries (second-level), in order, and so on and so forth. This ensures the first-found definition in that traversal is used for symbol interposition and definition, unless `DF_SYMBOLIC` or visibility rules alter precedence. Shared object files must be readable by the process; no other permissions are required.
+	Even when a shared object is referenced multiple times in the dependency list, the dynamic linker will connect the object only once to the process. 
+
+##### Names and Path Searching
+Names in the dependency list are either copies of `DT_SONAME` strings or the path names of shared objects used to construct the full process image. For example, if the link editor builds an executable file using one shared object's references with a `DT_SONAME` entry of `lib1` and another shared object with the path name `/usr/lib/lib2`, the executable will contain `lib1` and `/usr/lib/lib2` in its `DT_NEEDED` entries. 
+
+If a shared object name has one or more slash (`/`) characters anywhere in the name, the dynamic linker uses that string directly as the path name from which to retrieve a library name.
+
+###### Resolving Library Names Without Direct Paths
+Three facilities specify shared object path searching:
+
+1.  `DT_RUNPATH`
+	The dynamic array entry with `DT_RUNPATH` yields a string that holds a list of directories, delimited by colons (`:`). For example, the string `/home/dir/lib:/home/dir2/lib:` tells the dynamic linker to search first the directory `/home/dir/lib`, then `/home/dir2/lib` and then the current directory to find directories.
+2. `LD_LIBRARY_PATH`
+	A variable called `LD_LIBRARY PATH` in the process environment, passed in `envp` array (array of character pointers to NUL-terminated strings, which constitute the environment for the new process image). This may hold a list of directories, optionally followed by a semicolon, and another directory list. It informs the dynamic linker of paths to search that may deviate from system default library directories. The following values would be equivalent to the `DT_RUNPATH` example:
+	`LD_LIBRARY_PATH=/home/dir/usr/lib:/home/dir2/usr/lib:`
+	`LD_LIBRARY_PATH=/home/dir/usr/lib;/home/dir2/usr/lib:`
+	`LD_LIBRARY_PATH=/home/dir/usr/lib:/home/dir2/usr/lib:;`
+	Some programs such as the link editor may treat the lists before and after the semi-colon differently, however the dynamic linker does not.
+3. **Default system library directories**
+	If the other two groups of directories fail to locate the desired library, the dynamic linker searches the default directories, `/usr/lib` or other such directories may be specified by the ABI supplement for a given processor. 
+When the dynamic linker is searching for shared objects, it is not a fata error if an ELF file with the wrong attributes is encountered in the search e.g., `e_ident[16]` fields are not as required. The dynamic linker exhaustively searches all candidate directories until compatible library is found or all options are exhausted.
+
+For security reasons, the dynamic linker ignores `LD_LIBRARY_PATH` for [setuid](https://man7.org/linux/man-pages/man2/setuid.2.html)/[setgid](https://man7.org/linux/man-pages/man2/setgid.2.html) programs. These run with elevated privileges. Allowing `LD_LIBRARY_PATH` to influence library loading would let unprivileged users inject malicious libraries.
+##### Substitution Sequences
+When a string provided by dynamic array entries with the `DT_NEEDED` or `DT_RUNPATH` tags and in pathnames passed as parameters to the [dlopen()](https://man7.org/linux/man-pages/man3/dlopen.3.html), a dollar sign (`$`) introduces substitution sequence. This sequence consists of `$` immediately followed by either longest *name* sequence or a name contained within left and right braces (`{`) and (`}`). A name is a sequence of bytes that start with either a letter or an underscore followed by zero or more letters, digits, and underscores. If a dollar sign is not immediately followed by a name  or brace-enclosed name, the behaviour of the dynamic linker is unspecified. 
+
+If the name is `ORIGIN` then the substitution sequence is by the dnamic linker with the absolute pathname of the directory in which the object containing the substitution sequence originated. Moreover, the pathname will contain no symbolic links or `.` or `..`. Otherwise, when the name is not origin, the behaviour of the dynamic 
 ### Execution View
 
 ### Linking with shared libs and Running Programs
