@@ -100,7 +100,6 @@ Conceptually, the the on-disk layout of `.gnu.hash` is as follows:
 	last = cursor[b] - 1
 	chain[last] |= 1u   // set low bit = end of chain
 	```
-
 ## Usage
 1. **Compute GNU hash for requested name**
 	`uint32_t h = gnu_hash(name);`

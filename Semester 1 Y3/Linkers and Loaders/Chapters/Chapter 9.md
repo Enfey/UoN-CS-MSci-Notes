@@ -152,7 +152,7 @@ Each object and dependency is tested in turn. If a symbol definition is missing,
 
 When the versions referenced by undefined symbols in the loaded object are found, version availability is certified. The test completes without error and the object is made available.
 ### Shared library structure and Creation
-`ET_DYN` is the `e_type` specified for **shared objects** (`.so`) and for **position-independent executables** (PIEs). An `ET_DYN` file is *relocatable at load time* - the loader maps its `PT_LOAD` segments to some arbitrary base address and applies relocations specified in the `rel.dyn` and `rela.dyn` sections, as emitted by the static linker. The typical static linker strategy is to link the object to load at address zero, emit relocations that the runtime loader will apply, set up the dynamic tables (`.dynamic/.dynsym/.dynstr.rel/a.*, .gnu.hash or .hash, .got, .got.plt, .plt` etc). At runtime, ASLR and its entropy determine the actual base of the `ET_DYN` object.
+`ET_DYN` is the `e_type` specified for **shared objects** (`.so`) and for **position-independent executables** (PIEs). An `ET_DYN` file is *relocatable at load time* - the loader maps its `PT_LOAD` segments to some arbitrary base address and applies relocations specified in the `rel.dyn` and `rela.dyn` sections, as emitted by the static linker. The typical static linker strategy is to link the object to load at address zero, emit relocations that the runtime loader will apply, set up the dynamic tables (`.dynamic/.dynsym/.dynstr.rel/a.*, .gnu.hash or .hash, .got, .got.plt, .plt` etc). At runtime, ASLR and its entropy determine the actual base of the `ET_DYN` object. 
 
 #### Linking View
 Generally, the following sections are generally created. Certain sections will be elaborated on more in [[Chapter 10]] and beyond, otherwise, we are already familiar. $Arm$ and other manufacturers often supply their own sections, some of which relate to dynamic linking and shared libraries. See [ARM specifics for linking](ARM%20specifics%20for%20linking.md) for more information. 
@@ -212,22 +212,22 @@ Generally, the following sections are generally created. Certain sections will b
 		Limitations such as poor performance on "false" lookups i.e., lookups where the symbol does not exist requires a linear traversal of the chain for that bucket until the end is hit motivated the creation of a more modern serialised format to aid symbol lookup. 
 	`.gnu.hash`
 		Section with type `SHT_GNU_HASH` containing a more efficient hash table format than `.hash`, referenced by `DT_GNU_HASH`. One of the most prevalent augmentations is the inclusion of a [bloom filter](https://en.wikipedia.org/wiki/Bloom_filter), a space-efficient probabilistic data structure that is used to test set membership. It can be used to guarantee that a symbol is not present in a file. This is used prior to hash lookup to determine if the symbol is found in the object or not. `.gnu.hash` further stores hash values (or at least metadata derived from them) alongside bucket/chain entries to avoid redundant string comparisons where possible. Also, `.dynsym`is sorted into hash order, such that memory access tends to be adjacent and monotonically increasing to exploit memory locality for improved cache behaviour. For formatting reasons and the slight complexity, the discussion of the algorithms surrounding `.gnu.hash` will be deferred to [GNU Hash](GNU%20Hash.md).
-- `.dynamic`
-	We will discuss this here as it is extremely relevant.
-	If an object file participates in dynamic linking, then it will contain the  `.dynamic`, and as a ready `.so` its program header table will contain the `.dynamic` section in a segment with type  `PT_DYNAMIC`. A synthetic symbol `_DYNAMIC` is emitted by the static linker to label the section, whose value is the virtual address of `.dynamic` relative to the DSO's link-time base, relocating via the load-time delta at load-time. The `.dynamic` section/segment is used almost entirely by the dynamic linker. The section contains an array of the following structures:
-  ```C
-  typedef struct {
-	Elf32_Sword	d_tag;
-   	union {
-   		Elf32_Word	d_val;
-   		Elf32_Addr	d_ptr;
-	} d_un;
-} Elf32_Dyn;
+- `.dynamic`  
+  We will discuss this here as it is extremely relevant.  
+  If an object file participates in dynamic linking, then it will contain the `.dynamic`, and as a ready `.so` its program header table will contain the `.dynamic` section in a segment with type `PT_DYNAMIC`. A synthetic symbol `_DYNAMIC` is emitted by the static linker to label the section, whose value is the virtual address of `.dynamic` relative to the DSO's link-time base, relocating via the load-time delta at load-time. The `.dynamic` section/segment is used almost entirely by the dynamic linker. The section contains an array of the following structures:
+    ```c
+    typedef struct {
+        Elf32_Sword d_tag;
+        union {
+            Elf32_Word d_val;
+            Elf32_Addr d_ptr;
+        } d_un;
+    } Elf32_Dyn;
 
-extern Elf32_Dyn	_DYNAMIC[];
-```
-	For each object with this type, `d_tag` controls the interpretation of `d_un`.
-	`d_val`
+    extern Elf32_Dyn _DYNAMIC[];
+    ```
+  For each object with this type, `d_tag` controls the interpretation of `d_un`.  
+  `d_val`
 		These objects represent integer values with various interpretations.
 	`d_ptr`
 		These objects represent program virtual addresses. The dynamic linker computes actual addresses based on the original file value and the memory base address. For consistency, files do not contain relocation entries to correct addresses in the dynamic structure.
@@ -247,8 +247,7 @@ extern Elf32_Dyn	_DYNAMIC[];
 		`DT_STRSZ`
 			An entry with the `DT_STRSZ` tag holds the size, in bytes, of `.dynstr` after it has been laid out.
 	`DT_NEEDED`
-																							An entry with the `DT_NEEDED` tag holds the string table offset of a null-terminated string, yielding the name of a needed shared library. The offset is an index into the table recorded in the `DT_STRTAB` code. The dynamic array may contain multiple entries with this type. These entries' relative order is significant, though their relation to entries of other types is not. 
-		FILL IN MORE OF THIS according to 'shared object dependencies'
+		An entry with the `DT_NEEDED` tag holds the string table offset of a null-terminated string, yielding the name of a needed shared library. The offset is an index into the table recorded in the `DT_STRTAB` code. The dynamic array may contain multiple entries with this type. These entries' relative order is significant, though their relation to entries of other types is not. More details are described [further on](#Shared%20Object%20Dependencies).
 	`DT_SONAME`
 		An entry with the `DT_SONAME` tag holds the `.dynstr` offset of a null-terminated string, giving the name of the shared object. The offset is an index into whatever table is recorded in the `DT_STRTAB` entry. 
 	`DT_RELA`, `DT_RELASZ`, `DT_RELAENT`, `DT_REL`, `DT_RELSZ`, `DT_RELENT`
@@ -294,13 +293,15 @@ extern Elf32_Dyn	_DYNAMIC[];
 		`DF_STATIC_TLS`
 			If the flag with the name `DF_STATIC_TLS` with value `0x10` is set the dynamic linker is instructed to reject attempts to load this object dynamically. It indicates that this object requires **static** [Thread-local Storage](Thread-local%20Storage.md)(see for more details).
 - `.init`, `.fini`, `.init_array`, `.fini_array`, `.preinit_array`.
-	Mostly related to C++ and some C code. They will not be discussed here. 
+	See [Initialisers and Finalisers](Initialisers%20and%20Finalisers.md)
 - `.tdata`/`.tbss`
 	See [Thread-local Storage](Thread-local%20Storage.md)
 - `.gnu.version`, `.gnu.version_d`, `.gnu.version_r`.
 	Described earlier.
+#### Shared Object Dependencies
+	
 
-#### Execution View
+### Execution View
 
 ### Linking with shared libs and Running Programs
 
