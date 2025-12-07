@@ -1,4 +1,4 @@
-# Shared libraries
+# Shared libraries and Dynamic Linking
 > A shared library (often called a Dynamic Link Library or Dynamic Shared Object) is a PIE executable that is loaded and linked at runtime, intended to be shared amongst multiple programs simultaneously, rather than being copied into the executable at static-link time. 
 
 Shared libraries necessitate `PIE`s; for ELF this amounts to an `ET_DYN` object, the reason for this is that it ensures the library can be mapped into the address space at any address without requiring drastic load-time relocation. 
@@ -15,7 +15,7 @@ A more subtle issue arises when the library is present but has changed since the
 
 Modern platforms have mostly solves this issue. Shared libraries are loaded at runtime, and symbol addresses are resolved entirely at runtime via the `.got` and `.plt`. This allows much more freedom for updating libraries as references are symbolic and not absolute and can easily be rectified at runtime.
 ### Address space management
-From now, we no longer refer to 'static shared libraries'. The advent of PIE executables and ASLR nullified many of the issues surrounding address space management for shared libraries. Between the formers and the paging system, one is able to load a shared library at an arbitrary address, where the loader and the runtime linker are responsible for handling any relocation automatically. This generally amounts to assigning a random load-base and filling in the `.got` and lazily (or eagerly) filling in the `.plt` for a given shared object. This is relatively mechanical. There is some small runtime overhead for this scheme as discussed in the [[Chapter 8|prior chapter]].
+From now, we no longer refer to 'static shared libraries'. The advent of PIE executables and [ASLR](ASLR.md) nullified many of the issues surrounding address space management for shared libraries. Between the formers and the paging system, one is able to load a shared library at an arbitrary address, where the loader and the runtime linker are responsible for handling any relocation automatically. This generally amounts to assigning a random load-base and filling in the `.got` and lazily (or eagerly) filling in the `.plt` for a given shared object. This is relatively mechanical. There is some small runtime overhead for this scheme as discussed in the [[Chapter 8|prior chapter]].
 
 
 ### Library and Symbol Versioning
@@ -155,14 +155,14 @@ When the versions referenced by undefined symbols in the loaded object are found
 `ET_DYN` is the `e_type` specified for **shared objects** (`.so`) and for **position-independent executables** (PIEs). An `ET_DYN` file is *relocatable at load time* - the loader maps its `PT_LOAD` segments to some arbitrary base address and applies relocations specified in the `rel.dyn` and `rela.dyn` sections, as emitted by the static linker. The typical static linker strategy is to link the object to load at address zero, emit relocations that the runtime loader will apply, set up the dynamic tables (`.dynamic/.dynsym/.dynstr.rel/a.*, .gnu.hash or .hash, .got, .got.plt, .plt` etc). At runtime, ASLR and its entropy determine the actual base of the `ET_DYN` object.
 
 #### Linking View
-Generally, the following sections are generally created. Certain sections will be elaborated on more in [[Chapter 10]] and beyond, otherwise, we are already familiar.
+Generally, the following sections are generally created. Certain sections will be elaborated on more in [[Chapter 10]] and beyond, otherwise, we are already familiar. $Arm$ and other manufacturers often supply their own sections, some of which relate to dynamic linking and shared libraries. See [ARM specifics for linking](ARM%20specifics%20for%20linking.md) for more information. 
 - `.text`
 - `.rodata`
 - `.bss`
 - `.dynsym` and `.dynstr`
 	These form the symbol database the dynamic linker uses to resolve symbols at runtime. `.dynsym` is a compact symbol table for dynamic linking and `.dynstr` holds symbol names referenced by `.dynsym`'s `st_name` field.
 	
-	The static linker is responsible for collecting exported symbols, these are symbols with `STB_GLOBAL` or `STB_WEAK` binding and `STV_DEFAULT` or `STV_PROTECTED`(non-interposable) visibility, which are needed by other DSOs or a consumer and are placed into `.dynsym`. The linker is further responsible for deciding an ordering of symbols, as GNU hash expects symbols sorted for the chain part. `st_name` is pointed to `.dynstr` and `st_value` is set to the virtual address relative to the object base, or 0 for undefined symbols. The `st_info` and `st_other` fields are set accordingly.
+	The static linker is responsible for collecting exported symbols, these are symbols with `STB_GLOBAL` or `STB_WEAK` binding and `STV_DEFAULT` or `STV_PROTECTED`(non-interposable) visibility, which are needed by other DSOs or a consumer and are placed into `.dynsym`. Much of this is accomplished in generic static-link pipelines via the aggregation of symbols into a '*Global Symbol Table*'. The linker is further responsible for deciding an ordering of symbols, as GNU hash expects symbols sorted for the chain part. `st_name` is pointed to `.dynstr` and `st_value` is set to the virtual address relative to the object base, or 0 for undefined symbols. The `st_info` and `st_other` fields are set accordingly.
 	
 	We do not have the restriction of static-link only pipelines whereby a symbol with binding `STB_GLOBAL` without a corresponding definition would trigger a link-time error - DSOs expect many of their symbols to be resolved at runtime from other DSOs, so it is perfectly fine for `.dynsym` to contain undefined symbols. A relocation entry is simply emitted for it, where this will be a `.got/.got.plt` relocation. 
 - `.rel/a.dyn`
@@ -174,25 +174,8 @@ Generally, the following sections are generally created. Certain sections will b
 - `.plt`
 	The static linker is responsible for constructing a PLT area. PLT0 is emitted; the resolver entry that will eventually point to the dynamic linker's resolution routine entry point. This will be relocated, as `PLT_0` points to a `.got.plt` entry. `PLT_0` implementation is architecture specific but always present. We emit one `PLT` entry per external function needing lazy binding; that is stub code that jumps indirectly using its `.got.plt` slot. The stub is position-independent and typically identical across similar symbols except for the `.got.plt` slot referenced. We emit relocations, one per `PLT/GOT` entry. Here, this relocation targets the `.got.plt` slot. On $ARM$, this relocation type is typically `R_ARM_JUMP_SLOT`. We emit `.dynsym`/`.dynstr` entries for referenced symbols, and write the corresponding `DT_JMPREL`, `DT_PLTRELSZ`, `DT_PLTREL` entries in `.dynamic` so the loader knows where `.rel/a.plt` lives, its size, and the type of relocations it holds. It should be noted that when the linker sees a PLT generating relocation, it checks whether the referenced symbol is pre-emptible/interposable, if it is not, then the relocation can be resolved at link-time, and there will be no PLT entry for that symbol. It should further be noted that entries `.got.plt[1]` and `.got.plt[2]` are reserved, for a pointer to `link_map` and a base/offset for computing relocation index, respectively.
 	
-	The conceptual layout of $ARM$'s PLT is described below:
-	```C
-	; PLT[K]
-	ldr   r12, [pc, #offset_to_literal]   ; load literal that encodes address of .got.plt[k]
-    add   r12, pc, r12                    ; r12 = address of .got.plt[k]
-    ldr   r12, [r12]                      ; r12 = *(.got.plt[k])  (either resolver stub address or final func)
-    bx    r12                             ; branch to resolver stub or directly to function
-    .word (address_of_gotplt_k - (.+8))   ; literal used by ldr above (PC-rel)
-	
-	;PLT[0]
-	ldr   r12, [pc, #offset_got0]    ; r12 = .got.plt[0] (holds pointer to resolver trampoline / ld.so stub)
-    add   r12, pc, r12               ; r12 = absolute address of resolver trampoline
-    ldr   r1,  [pc, #offset_got1]    ; r1 = .got.plt[1] (module/link_map info offset)
-    add   r1, pc, r1                 ; r1 = absolute link_map pointer (or base)
-    ldr   r0,  [pc, #offset_got2]    ; r0 = .got.plt[2] (holds base index or other info)
-    add   r0, pc, r0                 ; r0 = absolute base pointer / relocation base (or r0 contains relocation index)
-    bx    r12                        ; jump to _dl_runtime_resolve (r12)
-	```
 	Because of the 1-1 mapping between `.plt` and `.got.plt`,the relocation index is known and can be embedded directly in the `PLT` stub to refer to the correct relocation entry in `.rel/a.plt`. This is embedded either as an immediate constant or loaded into a register, such that when control passes from `.plt` -> `.got.plt` -> `.plt[0]` -> `resolver` that the correct symbol can have its address resolved and placed into the corresponding .`got.plt` entry.
+	As mentioned in a previous chapter, the interpretation of `.plt` is architecture-specific. See [ARM specifics for linking](ARM%20specifics%20for%20linking.md) for more information. 
 - `.got` (and `.got.plt`)
 	During the link-step, all input relocations are processed. The `.got` creation proceeds as follows:
 	1. **Collect `.got`-related relocations**
@@ -212,16 +195,23 @@ Generally, the following sections are generally created. Certain sections will b
 		3. **Set the symbol index**
 			Sets the symbol index of the symbol $S$ into the `r_info` field to tell what address to look up. 
 - `.hash` or `.gnu.hash`
-	A hash table of Elf32_Word objects exists to support dynamic symbol lookup. A loader uses one of the aforementioned, or can use both for compatibility.
+	A hash table of Elf32_Word objects exists to support *dynamic symbol lookup*. Doing a plain linear search over potentially thousands of symbols, especially for relocation resolution at load-time, would be slow. A hash table is constructed at static link-time and stored in a serialised format within the object to aid lookup. A loader uses one of the aforementioned, or can use both for compatibility.
 	`.hash`
 		Sequence of 32 bit words.
-		`u32 nbucket` - number of buckets (chosen by linker, heuristic)
-		`u32 nchain` - usually equal to number of entries in `.dynsym`
-		`u32 buckets[nbucket]` - holds the first symbol index in that bucket, or 0 if empty, 
-		`u32 chains[nchain]`
-		
+		`u32 nbucket` - number of buckets (chosen by linker, heuristic).
+		`u32 nchain` - number of chain entries (equal to number of entries in `.dynsym`).
+		`u32 buckets[nbucket]` - entry contains symbol index of first symbol in that bucket, if 0 lookup fails. 
+		`u32 chain[nchain]` - entry contains, for each symbol index $i$, $chains[i]$ = next symbol index in same bucket, linked-list.
+			1. **The [ELF hash function](https://refspecs.linuxfoundation.org/elf/gabi4+/ch5.dynamic.html#hash) generates an integer**
+				`x = elf_hash("sym_name");
+			2. **Compute bucket index**
+				`bucket_index = [x % nbucket];
+			3. **Lookup** 
+				`y = buckets[bucket_index]`
+				`y` is an index into `.dynsym` **and** the `chain[nchain]` array. Should `y == STN_UNDEF(0)`, the bucket is empty. If the bucket does not contain desired result, follow chains array until match is found.
+		Limitations such as poor performance on "false" lookups i.e., lookups where the symbol does not exist requires a linear traversal of the chain for that bucket until the end is hit motivated the creation of a more modern serialised format to aid symbol lookup. 
 	`.gnu.hash`
-		
+		Section with type `SHT_GNU_HASH` containing a more efficient hash table format than `.hash`, referenced by `DT_GNU_HASH`. One of the most prevalent augmentations is the inclusion of a [bloom filter](https://en.wikipedia.org/wiki/Bloom_filter), a space-efficient probabilistic data structure that is used to test set membership. It can be used to guarantee that a symbol is not present in a file. This is used prior to hash lookup to determine if the symbol is found in the object or not. `.gnu.hash` further stores hash values (or at least metadata derived from them) alongside bucket/chain entries to avoid redundant string comparisons where possible. Also, `.dynsym`is sorted into hash order, such that memory access tends to be adjacent and monotonically increasing to exploit memory locality for improved cache behaviour. For formatting reasons and the slight complexity, the discussion of the algorithms surrounding `.gnu.hash` will be deferred to [GNU Hash](GNU%20Hash.md).
 - `.dynamic`
 	We will discuss this here as it is extremely relevant.
 	If an object file participates in dynamic linking, then it will contain the  `.dynamic`, and as a ready `.so` its program header table will contain the `.dynamic` section in a segment with type  `PT_DYNAMIC`. A synthetic symbol `_DYNAMIC` is emitted by the static linker to label the section, whose value is the virtual address of `.dynamic` relative to the DSO's link-time base, relocating via the load-time delta at load-time. The `.dynamic` section/segment is used almost entirely by the dynamic linker. The section contains an array of the following structures:
@@ -241,9 +231,9 @@ extern Elf32_Dyn	_DYNAMIC[];
 		These objects represent integer values with various interpretations.
 	`d_ptr`
 		These objects represent program virtual addresses. The dynamic linker computes actual addresses based on the original file value and the memory base address. For consistency, files do not contain relocation entries to correct addresses in the dynamic structure.
-	![](Pasted%20image%2020251202211040.png)
-	For `dt_tag`. If a tag is marked mandatory, the dynamic linking array for an ABI-conforming file must have an entry of that type.
 	
+	For `dt_tag`. If a tag is marked mandatory, the dynamic linking array for an ABI-conforming file must have an entry of that type.
+	![](Pasted%20image%2020251206223514.png)
 	`DT_NULL`
 		An entry with a `DT_NULL` tag marks the end of the `_DYNAMIC`array. 
 	`DT_STRSZ`, `DT_SYMENT`, `DT_SYMTAB`, `DT_STRTAB`
@@ -257,7 +247,7 @@ extern Elf32_Dyn	_DYNAMIC[];
 		`DT_STRSZ`
 			An entry with the `DT_STRSZ` tag holds the size, in bytes, of `.dynstr` after it has been laid out.
 	`DT_NEEDED`
-		An entry with the `DT_NEEDED` tag holds the string table offset of a null-terminated string, yielding the name of a needed shared library. The offset is an index into the table recorded in the `DT_STRTAB` code. The dynamic array may contain multiple entries with this type. These entries' relative order is significant, though their relation to entries of other types is not. 
+																							An entry with the `DT_NEEDED` tag holds the string table offset of a null-terminated string, yielding the name of a needed shared library. The offset is an index into the table recorded in the `DT_STRTAB` code. The dynamic array may contain multiple entries with this type. These entries' relative order is significant, though their relation to entries of other types is not. 
 		FILL IN MORE OF THIS according to 'shared object dependencies'
 	`DT_SONAME`
 		An entry with the `DT_SONAME` tag holds the `.dynstr` offset of a null-terminated string, giving the name of the shared object. The offset is an index into whatever table is recorded in the `DT_STRTAB` entry. 
@@ -287,15 +277,24 @@ extern Elf32_Dyn	_DYNAMIC[];
 		`DT_PLTGOT`
 			An entry with the tag `DT_PLTGOT` holds an address associated with the procedure linkage table and/or the global offset table. Interpreted according to architecture.
 	`DT_HASH`, `DT_GNU_HASH`
+		These tags describe the hash table structures used to support *dynamic symbol lookup*.
+		`DT_HASH`
+			An entry with the tag `DT_HASH` holds the address of the symbol hash table. This hash table refers to the symbol table referenced by the `DT_SYMTAB` element
+		`DT_GNU_HASH`
+			An entry with the tag `DT_GNU_HASH` holds the address of the GNU symbol hash table. See [GNU Hash](GNU%20Hash.md) for more details.
 	`DT_FLAGS`
 		`DF_ORIGIN`
+			A flag with the name `DF_ORIGIN`
 		`DF_SYMBOLIC`
+			If the flag with the name `DF_SYMBOLIC` with value `0x2` is set then the dynamic linker's symbol resolution algorithm for references within the library is changed. Instead of starting a symbol search with the executable file the dynamic linker starts from the shared object itself. If the shared object fails to supply the referenced symbol, the dynamic linker then searches the executable file, and other shared objects as usual.
 		`DF_TEXTREL`
+			If the flag with the name `DF_TEXTREL` with value `0x4` is set then one or more relocations might request modifications to a non-writable segment; the dynamic linker must prepare accordingly and provide temporary write permissions. This can prevent marking the text segment as immutable in some cases.
 		`DF_BINDNOW`
+			If the flag with the name `DF_BINDNOW` with value `0x8` is set then all `.got.plt` relocations are to be resolved at load-time eagerly, rather than lazily on first call. The presence of this entry takes precedence over all directives to use lazy binding for this object. 
 		`DF_STATIC_TLS`
-	`DT_INIT_ARRAY`, `DT_FINI_ARRAY`, `DT_INIT_ARRAYSZ`, `DT_FINI_ARRAYSZ`,  `DT_PREINIT_ARRAY`, `DT_PREINIT_ARRAYSZ`
+			If the flag with the name `DF_STATIC_TLS` with value `0x10` is set the dynamic linker is instructed to reject attempts to load this object dynamically. It indicates that this object requires **static** [Thread-local Storage](Thread-local%20Storage.md)(see for more details).
 - `.init`, `.fini`, `.init_array`, `.fini_array`, `.preinit_array`.
-	
+	Mostly related to C++ and some C code. They will not be discussed here. 
 - `.tdata`/`.tbss`
 	See [Thread-local Storage](Thread-local%20Storage.md)
 - `.gnu.version`, `.gnu.version_d`, `.gnu.version_r`.
@@ -303,6 +302,6 @@ extern Elf32_Dyn	_DYNAMIC[];
 
 #### Execution View
 
-### Linking with shared libs and Running Program
+### Linking with shared libs and Running Programs
 
 ### The malloc hack and other shared lib problems
