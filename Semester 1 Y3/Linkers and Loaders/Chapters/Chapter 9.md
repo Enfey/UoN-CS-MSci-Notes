@@ -84,26 +84,7 @@ On ELF-based systems, a shared library can attach a version tag to each exported
 		Offset to next aux entry, in bytes.
 - `.gnu.version_r`
 	Has section type of `SHT_GNU_verneed` shall contain **required symbol version definitions from other shared libraries**. The number of entries in this section shall be contained in the `DT_VERNEEDNUM` entry of  `.dynamic`. The `sh_link` member of the section header shall point to the section that contains the strings referenced by this section.  The section shall contain an array of `Elfxx_Verneed` structures, optionally followed by an array of `Elfxx_Vernaux` structures. Used by both consumer objects and shared libs.
-  ```C
-	typedef struct {
-		Elfxx_Half    vn_version;
-		Elfxx_Half    vn_cnt;
-		Elfxx_Word    vn_file;
-		Elfxx_Word    vn_aux;
-		Elfxx_Word    vn_next;
-	} Elfxx_Verneed;
-  	```
-	`vn_version`
-		Version of structure. This value is currently set to `1`.
-	`vn_cnt`
-		Number of associated `verneed` array entries
-	`vn_file`
-		Offset to the file name string of the library string, often in `.dynstr`
-	`vn_aux`
-		Offset to a corresponding entry in `Elfxx_Vernaux` array, which gives rich version definition.
-	`vn_next`
-		Offset to the next `Elfxx_verneed` entry, in bytes.
-  ```C
+	```C
 	typedef struct {
 		Elfxx_Word    vna_hash;
 		Elfxx_Half    vna_flags;
@@ -111,7 +92,7 @@ On ELF-based systems, a shared library can attach a version tag to each exported
 		Elfxx_Word    vna_name;
 		Elfxx_Word    vna_next;
 	} Elfxx_Vernaux;
-  	```
+	```
 	`vna_hash`
 		Dependency name hash value
 	`vna_flags`
@@ -126,9 +107,7 @@ On ELF-based systems, a shared library can attach a version tag to each exported
 When loading a shareable object, the system shall analyse version definition data from the loaded object to assure that it meets the versions requirements of the calling object. The step is referred to as **definition testing**. The dynamic loader shall retrieve the entries in the caller's `Elfxx_Verneed` array, and attempt to find matching definition information in the loaded `Elfxx_Verdef` table.
 
 Each object and dependency shall be tested in turn. If a symbol definition is missing and the `vna_flag` bit for `VER_FLG_WEAK` is not set, the loader shall return an error and exit. If the `vna_flags` bit for `VER_FLG_WEAK` is set, the loader shall issue a warning and continue operation.
-
 #### Symbol resolution
-
 Where symbol versioning is active, symbol resolution becomes stricter. 
 Definition testing is thus extended beyond a simple match of symbol name strings; the version of the reference must also equal the name of the definition. A number of steps are taken to achieve this. 
 

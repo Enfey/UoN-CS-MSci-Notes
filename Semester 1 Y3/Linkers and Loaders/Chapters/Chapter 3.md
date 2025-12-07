@@ -415,8 +415,4 @@ Contains all baggage of relocatable view and executable view of ELF file. Since 
 
 Thus has ELF header, program header table, loadable segments(sections(unsure if coalesced yet - probably maintains view of both)), non-loadable information e.g., `.symtab` and section header table. Usually ordered like this.
 
-### 
-## Exercises (today)
-
-
 

@@ -3,10 +3,10 @@ Linkers and loaders, compilers and assemblers, all extremely sensitive to archit
 Chapter focus on architectural issues affecting linkers.
 
 Two aspects of hardware architecture affect linkers:
-1. Program Addressing
+1. **Program Addressing**
 	Refers to conventions regarding memory layout, data alignment, and overall address space available to program, affects linkers as first major task for linker is storage allocation, determining where in output address space all program segments will reside. Affects address binding and code relocation as symbols often defined relative to segments, so absolute addresses of base address of segment must be determined to resolve the rest of them. 
 	Linkers must also conform to defined address space architecture e.g., width of the address bus, ensuring different libraries are mapped to non-verlapping addresses. Must also conform to data alignment.
-2. Instruction formats
+2. **Instruction formats**
 	Specify how addresses or offsets are encoded within instructions themselves, dictating how linkers must modify code during relocation. Linkers must abide by instruction formats when patching object code to ensure any modifications to addresses or offsets match the addressing scheme and do not result in an invalid instruction. 
 	Must also handle limited address fields, many modern architectures like RISCs have instructions that do not contain enough bits to hold a full direct address. Black magic clearly required to execute instructions to derive a full address. Alternatively, linker may organise all addresses into an address pool, and subsequently modify instructions to refer to the appropriate entry in that pool 
 

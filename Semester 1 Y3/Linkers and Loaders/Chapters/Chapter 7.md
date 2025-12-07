@@ -67,7 +67,7 @@ At load time, in bare-metal systems with no per-process address space and no har
 A_new = A + 𝛿
 ```
 #### Dynamic loading
-TO COMPLETE.
+See [Chapter 9](Chapter%209.md).
 ## Symbol and segment relocation
 ### Symbol relocation
 > Symbol relocation refers to adjusting machine code or data that contains symbol references, via application of a relocation that will provide the final resolved address of that symbol.
