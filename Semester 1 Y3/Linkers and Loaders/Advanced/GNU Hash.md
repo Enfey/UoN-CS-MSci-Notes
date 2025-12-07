@@ -111,7 +111,7 @@ Conceptually, the the on-disk layout of `.gnu.hash` is as follows:
 	uint32_t maskwords;   // number of bloom filter words
 	uint32_t shift2;      // secondary bloom filter shift 
 	// (usually 6)
-```
+	```
 	Also locate the bloom filter, bucket table, and chain table, as described in [layout](#layout).
 3. **Set membership test**
 	The bloom filter eliminates most misses without having to touch symbol table memory. 
