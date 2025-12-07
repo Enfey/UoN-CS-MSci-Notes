@@ -1,9 +1,10 @@
-Consulted Sources:
-https://sourceware.org/git/?p=binutils-gdb.git;a=blob;f=gold/dynobj.h;h=ee08c201354e9f128cf272ffebbe4930f1f60ccb;hb=HEAD#l94
-https://gnu.googlesource.com/binutils-gdb/%2B/refs/heads/gdb-15-branch/bfd/elflink.c#6437
-https://stackoverflow.com/questions/14467173/bit-setting-and-bit-shifting-in-ansi-c
 # Purpose
 A section with the name `.gnu.hash` of type `SHT_GNU_HASH` contains a hash table augmented with a  [bloom filter](https://en.wikipedia.org/wiki/Bloom_filter), auxilary data, and provides `.dynsym` ordering whereby ordering is via hash-values, such that memory access tends to be adjacent and monotonically increasing to exploit memory locality for improved cache behaviour. This is used to accelerate dynamic symbol lookups by the dynamic linker. The below structure permits a dynamic linker to avoid expensive string comparisons for most misses and find corresponding definition quickly for hits. 
+
+## Consulted Sources
+- https://sourceware.org/git/?p=binutils-gdb.git;a=blob;f=gold/dynobj.h;h=ee08c201354e9f128cf272ffebbe4930f1f60ccb;hb=HEAD#l94
+- https://gnu.googlesource.com/binutils-gdb/%2B/refs/heads/gdb-15-branch/bfd/elflink.c#6437
+- https://stackoverflow.com/questions/14467173/bit-setting-and-bit-shifting-in-ansi-c
 ## Layout
 Conceptually, the the on-disk layout of `.gnu.hash` is as follows:
 1. **Header**
@@ -26,7 +27,7 @@ Conceptually, the the on-disk layout of `.gnu.hash` is as follows:
 ## Instantiation
 1. **Choose `symndx`**
 	Symbols before this index are typically the null symbol, versioning metadata and so and so forth. For all symbols `i >= symndx`, the linker computes their hash and reorders them such that symbols with lower GNU hash values appear earlier (though no actual reordering of `.dynsym` occurs). The GNU hash algorithm is detailed below:
-```C
+	```C
 	unsigned long
 	bfd_eld_gnu_hash (const name *namearg){
 		const unsigned char *name = (const unsigned char *)
@@ -41,15 +42,15 @@ Conceptually, the the on-disk layout of `.gnu.hash` is as follows:
 	```
 2. **Compute size parameters**
 	The static linker chooses (pseudo-`C`):
-```C
+	```C
 		nbuckets  = prime(n_symbols) / 4; // Heuristic
 		maskwords = power2((n_symbols - symndx) /
 		ELFCLASS_BITS);
 		shift2 = small constant; // Almost always 6
-```
+	```
 3. **Bloom Filter**
 	For each `sym i`, such that `i>=symndx`:
-```C
+	```C
 	uint32_t h         = gnu_hash(sym_name);
 	uintX_t word_index = (h / ELFCLASS_BITS) & (maskwords 
 	-1);
@@ -57,16 +58,16 @@ Conceptually, the the on-disk layout of `.gnu.hash` is as follows:
 	uintX_t bit 2      = (h >> shift2) % ELFCLASS_BITS;
 	
 	bloom[word_index]  |= (1UL << bit1) | (1UL << bit2);
-```
+	```
 4. **Fill buckets**
 	For each `sym i`, such that `i>=symndx`:
-```C
+	```C
 	uint32_t h = gnu_hash(sym_name);
 	uint32_t b = h % nbuckets;
 
 	if (buckets [b] == STN_UNDEF)
 		buckets[b] = i; // first symbol with this bucket
-```
+	```
 5. **Fill chain table**
 	Flat array parallel to the re-ordered `.dynsym`, containing one entry per symbol with index `i >= symndx`. Low bit encodes end of chain. We often store some auxilary info throughout our mechanical construction that aids our population of the chain table. These are all detailed below.
 	```C
@@ -132,7 +133,7 @@ Conceptually, the the on-disk layout of `.gnu.hash` is as follows:
 	}
 	```
 3. **Bucket Lookup**
-```C
+	```C
 	bucket = h % nbuckets;
 	b = buckets[bucket];
 
@@ -161,7 +162,7 @@ Conceptually, the the on-disk layout of `.gnu.hash` is as follows:
 			break;
 		b++; // Don't really understand this!
 	}
-```
+	```
 
 
 
