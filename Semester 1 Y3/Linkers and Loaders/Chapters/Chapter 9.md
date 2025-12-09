@@ -359,29 +359,65 @@ It should be noted that $ARM$, other vendors, and alternate operating systems su
 | `PT_GNU_PROPERTY` | **Contents**: Points to `.note.gnu.property` section. That note must be present in a loadable mapping. The note of type `NT_GNU_PROPERTY_TYPE_0` contains a descriptor portion with a sequence of one or more `pr_property` entries, each of which describes a distinct property of the object:<br><br>`struct pr_property {`<br>    `uint32_t pr_type;`<br>	`uint32_t pr_datasz;`<br>	`uint8_t  pr_data[pr_datasz];`<br>	`// Padding to 4 or 8 bytes, 32/64 bit`<br>`}`<br><br>Property types are defined per architecture, but contain the same container format described above. See [ARM specifics for linking](ARM%20specifics%20for%20linking.md) for more detail.<br><br>`Runtime usage`: loader reads these early to select mapping semantics, and honour required features. Unknown properties are ignored unless they are mandatory according to the processor supplement. |
 
 #### Mapping Rules and Formulas
-$S \in P  \iff  [ S.sh_addr, S.sh_addr + S.sh_size )  \Subset   [ p_vaddr, p_vaddr + p_memsz )$
-That is, the entire section interval must be contained within the segment's memory interval. 
+$S \in P  \iff  [ S.sh\_addr, S.sh\_addr + S.sh\_size )  \Subset   [P.p\_vaddr, P.p\_vaddr + P.p\_memsz )$
+##### Notation
+- `PAGESZ`
+	Page size in bytes, `4096` for our purposes.
+- `p_offset, p_vaddr, p_filesz, p_memsz`
+	Fields acquired from the program header.
+- `file_map_offset`
+	Page-aligned file offset to pass to `mmap()`.
+- `seg_page_vaddr`
+	Page-aligned link-time VA to map to (add `chosen_base` at runtime). `p_vaddr` is only required to be congruent with `p_offset`, where `[p_offset, p_vaddr] % PAGESZ == 0` and may not be page aligned depending on the content segments.
+- `delta`
+	`delta = p_vaddr & (PAGESZ - 1)`, determines where segment data begins within the first mapped page.
+- `map_filesz`
+	Number of bytes to `mmap()` from the file.
+- `map_memsz`
+	Number of bytes to reserve in memory for the whole segment. 
+- `load_bias`
+	The VMA chosen for the object in memory, as ordained by the loader.
+- `runtime_map_addr`
+	`runtime_map_addr = load_bias + seg_page_vaddr` = address of the first page at which to map the segment.
+- `runtime_seg_content`
+	`runtime_seg_content = runtime_map_addr + delta`.
 
-file_map_offset = p_offset & ~(PAGESZ-1)
-seg_page_vaddr = p_vaddr & ~(PAGESZ-1)
-map_filesz = round_up((p_offset & (PAGESZ-1)) + p_filesz, PAGESZ)
-map_memsz = round_up((p_vaddr & (PAGESZ-1)) + p_memsz, PAGESZ)
+##### Formulas
+- `file_map_offset = p_offset & ~(PAGESZ-1)`
+	`-1` yields all low bits needed to clear to get the page boundary. We perform a logical not to clear these bits, and then perform a logical and with the file offset to clear the bits in `p_offset` to obtain a **page aligned file offset** rounded down to a page boundary. It should be noted that yes, the page will contain bytes from the previous segment up to `runtime_seg_content`. If multiple `PT_LOAD`s request permissions for the same page, take the union of their `P_FLAGS`.
+- `seg_page_vaddr = p_vaddr & ~(PAGESZ-1)`
+	Must map memory at a page boundary. Round down link-time `p_vaddr` to the page start.
+- `delta = p_vaddr & (PAGESZ-1)`/`delta = p_offset & (PAGESZ-1)
+	Yields the byte offset within the first page where the segment data actually begins. May need to compute for `p_offset` to determine where the segment's file bytes begin in the first `mmap()`'ed file page. From now on, these will be referred to as `delta_v` and `delta_o`, respectively.
+- `map_filesz = round_up(delta_o + p_filesz, PAGESZ)`
+	The number of bytes to map from the file is the sum of:
+	1. `delta_o` - the offset of the segment start within the first page of the file-mapped region.
+	2. `p_filesz` - the actual size of the segment's data in the file. 
+	This sum is rounded to the next page boundary to satisfy the `mmap()` page alignment requirement. Without adding `delta_o`, the first few bytes of the segment could be missed because `mmap()` starts at the page boundary of file_map_offset, which may be before the segment start.
+- `map_memsz = round_up(delta_v + p_memsz, PAGESZ)`
+	Total number of bytes to reserve in memory for the segment (including zero initialised bytes) is the sum of:
+	1. `delta_v` - the offset of the segment start within the first memory page
+	2. `p_memsz` - the segment size in memory (may exceed `p_filesz` to define `.bss`)
+	This sum is rounded to the next page boundary to ensure the mapping is page-aligned.
+- `runtime_map_addr = load_bias + seg_page_vaddr`
+	The address at which the page-aligned segment is mapped in runtime memory.
+	- `seg_page_vaddr` is the page-aligned link-time VA of the segment.
+	- `load_bias` is the runtime base address chosen by the loader for this `ET_DYN` object.
+	Adding them computes the runtime address of the first virtual page of the segment. The segment's true content starts at `runtime_map_addr` + `delta_v`, or alternatively, `load_bias + p_vaddr`.
+- **Zero fill bytes**
+	After mapping the file bytes, any remaining bytes in the last page of the segment that extend beyond `p_filesz` but are within `p_memsz` must be zeroed.
+		Formulaically: zero bytes in `[runtime_map_addr + delta_v + p_filesz, runtime_map_addr + delta_v + p_memsz)`.
 
-The loader/kernel mmap the file region at `chosen_base + seg_page_vaddr`. After mapping, zero bytes in pages beyond `p_filesz` up to `p_memsz`.
+##### `mmap()` considerations
+[`mmap()`](https://man7.org/linux/man-pages/man2/mmap.2.html) expects file offsets and memory addresses to be page aligned, which is why above there is a considerable amount of rounding, and the use of a delta in the formulas to locate the true start of the segment.
 
-For each `PT_LOAD`:
-- `seg_page_offset = p_offset & ~(PAGESZ - 1)`
-- `delta = p_offset & (PAGESZ - 1)`
-- `map_filesz = roundup(delta + p_filesz, PAGESZ)`
-- `seg_page_vaddr = p_vaddr & ~(PAGESZ - 1)`
-- `map_memsz = roundup((p_vaddr & (PAGESZ - 1)) + p_memsz, PAGESZ)`
-- `runtime_map_addr = chosen_base + seg_page_vaddr` (chosen_base = loader’s mapping base for this object)
-- Map file bytes: `mmap(fd, map_filesz, prot, MAP_PRIVATE, file_offset=seg_page_offset)` at `runtime_map_addr`
-- Zero-fill: bytes in final page beyond `delta + p_filesz` up to `map_memsz` must be zero.
-- Effective in-memory range = `[chosen_base + p_vaddr, chosen_base + p_vaddr + p_memsz)`
+`prot` is set according to segment flags; for partially overlapping permissions, `prot` is set according to the union of the overlapping permissions. 
 
-**Load bias formula:** for link-time value `L`:
-`runtime_address = L + load_bias`
-where `load_bias = chosen_base - link_time_base` (link_time_base often 0 for ET_DYN).
+The [flags](https://man7.org/linux/man-pages/man2/mmap.2.html#:~:text=not%20be%20accessed.-,The%20flags%20argument,-The%20flags%20argument)argument determines whether updates to the mapping are visible to other processors mapping the same region. We typically map segments as `MAP_PRIVATE`, and map `.bss` as `MAP_ANONYMOUS`, and use `MAP_FIXED` to clobber existing ranges, though typically this is only for userspace loaders for non-relocatable ELF executables.
+
+
 ### Linking with Shared Libraries and Running Programs
 Below is the totality of the previous chapters! We discuss the *entire pipeline,* going from a number of arbitrary `ET_REL` files to an `ET_DYN` executable, loading this in via a userspace loader, and then describing how shared libraries are linked into the process image at load-time. 
+
+
+- Take in ET_RELs, Storage allocation, Symbol resolution and library search, static relocation application, relocation emittance, creation of needed sections like .dynamic and setting corresponding values, userspace loading of ET_DYN, and dynamic linking of said ET_DYN. Drag in all files.
