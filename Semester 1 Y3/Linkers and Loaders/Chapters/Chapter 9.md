@@ -419,5 +419,30 @@ The [flags](https://man7.org/linux/man-pages/man2/mmap.2.html#:~:text=not%20be%2
 ### Linking with Shared Libraries and Running Programs
 Below is the totality of the previous chapters! We discuss the *entire pipeline,* going from a number of arbitrary `ET_REL` files to an `ET_DYN` executable, loading this in via a userspace loader, and then describing how shared libraries are linked into the process image at load-time. 
 
+#### Static Linker
+##### 1. Inputs & Formats to be Parsed
+###### ELF Header
+###### Section Header Table
+###### Section Contents
+###### In-Linker data structures
 
-- Take in ET_RELs, Storage allocation, Symbol resolution and library search, static relocation application, relocation emittance, creation of needed sections like .dynamic and setting corresponding values, userspace loading of ET_DYN, and dynamic linking of said ET_DYN. Drag in all files.
+###### Library Parsing
+
+###### ELF macros
+
+
+##### 2. Symbol Resolution
+##### 3. Coalescence
+
+##### 4. Relocation Application & Emitting Dynamic Relocations
+
+##### 5. Section Generation 
+
+##### 6. Program Header Instantiation
+
+
+
+
+#### Userspace Loader
+
+#### Dynamic Linker and Interpreter Hand Off
