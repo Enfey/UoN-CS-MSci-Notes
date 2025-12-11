@@ -140,7 +140,7 @@ Modern ar variants support additional modes:
 
 
 ## Searching Libraries
-After a library has been created, the linker has to be able to search it. The searching of a library occurs after all input files have been processed, i.e., in the linker's first pass after constructing all internal data structures. Once the GST has been constructed (the exact implementation and contents are linker-dependent), the linker can determine unresolved global/weak symbols that remain. The linker must satisfy these by pulling in enough objects from library files. _Linker's extract only the object modules that resolve currently unresolved symbols_
+After a library has been created, the linker has to be able to search it. The searching of a library occurs after all input files have been processed, i.e., in the linker's first pass after constructing all internal data structures. Once the $GST$ has been constructed (the exact implementation and contents are linker-dependent), the linker can determine unresolved global/weak symbols that remain. The linker must satisfy these by pulling in enough objects from library files. _Linker's extract only the object modules that resolve currently unresolved symbols_
 
 First, the linker must read the library index `/` || `/SYM64/`. This is then parsed into an in-memory data structure like so:
 ```c
