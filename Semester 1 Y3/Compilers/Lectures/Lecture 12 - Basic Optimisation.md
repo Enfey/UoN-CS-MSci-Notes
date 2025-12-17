@@ -73,7 +73,8 @@ Extends LVN across multiple basic blocks along a single control-flow path.
 
 Formally an $EBB$ is a maximal set of blocks $B_1...B_n$ where each $B_i$ except $B_1$ has exactly one predecessor and that block is in the $EBB$.
 ![](Pasted%20image%2020251216052810.png)
-We define $SVLN$ over $EBBs$ and not arbitrary $CFG$ regions as there is no ambiguity about reachability and there is no need for $\phi$ functions. Thus an $EBB$ has some desirable properties which makes optimisations more worthwhile to perform over them. An EBB may be the block relating to a loop condition, and the blocks relating to the loop body. Or the block containing a logical test, and the block that will be executed if the test is true (though maybe a bad example).
+We define $SVLN$ over $EBBs$ rather than arbitrary $CFG$ regions becuause $EBBs$ have a single entry point and contain no internal join points. As a result, there is no ambiguity about reachability; along any path within an $EBB$, all previously encountered instructions on that path have definitely executed. Therefore, there is also no need for $\phi$ functions which are required only at control-flow joins. Thus, an $EBB$ contains some desirable properties such as unambiguous execution order and the safe propagation of value information. An $EBB$ may be the loop header and parts of the loop body, or a block containing a logical test together with one of its successor blocks, provided those blocks have a single ancestor.
+
 
 ##### Algorithm
 1. Identify $EBBs$ and add their entry blocks to a work list
@@ -81,9 +82,82 @@ We define $SVLN$ over $EBBs$ and not arbitrary $CFG$ regions as there is no ambi
 	Initialise a value-number table at the $EBB$ entry and run value numbering on the block, producing a hash table, which is then extended.
 	For each of the blocks successors:
 		If this block is the only ancestor, apply $SVLN$ to that block using the shared table as the starting point.
-		If the sucessor has several ancestors, add it to the work list to be processed linearly.
+		If the successor has several ancestors, add it to the work list to be processed linearly.
 At conditional branches, you copy the table and propagate independently down each successor.
 Furthermore, we kill on redefinitions, that is assign a new value number and remove previous mappings for the old name.
 
-#### Loop unrolling
+##### Example
+1. Identify $EBB$
+	$B_1:$
+		$T_1 = a + b$
+		$\mathrm{if\ (c)\ goto\ } B_{2} \mathrm{\ else\ } B_{3}$
+	$B_2:$
+		$T_2 = a + b$
+		$d = T_2 * e$
+	$B_3:$
+		$T_3 = a+b$
+		$f = T_{3} - e$
+	Thus $EBB$ = $\{B_{1},B_{2}, B_{3}\}$ = $worklist$
+2. Initialise the VN table at the EBB entry and process $B_1$
 
+| Key                       | Name  | Value |
+| ------------------------- | ----- | ----- |
+|                           | $a$   | $1$   |
+|                           | $b$   | $2$   |
+|                           | $c$   | $3$   |
+| $\langle 1, +, 2 \rangle$ | $T_1$ | $4$   |
+
+3. Propagate copy of table down each each successor as we are at conditional branch. We then process $B_2$ as it appears next in the work list. As key $\langle 1, +, 2 \rangle$ exists, we rewrite $T_2$ to be $T_2 = T_1$. 
+
+| Key                       | Name  | Value |
+| ------------------------- | ----- | ----- |
+|                           | $a$   | $1$   |
+|                           | $b$   | $2$   |
+|                           | $c$   | $3$   |
+| $\langle 1, +, 2 \rangle$ | $T_1$ | $4$   |
+|                           | $e$   | $5$   |
+| $\langle 4, *, 5 \rangle$ | $d$   | $6$   |
+4. Propagate the table from step 2 and process $B_3$. As key $\langle 1, +, 2 \rangle$ exists, we rewrite $T_3$ to be $T_3 = T_1$. 
+
+| Key                       | Name  | Value |
+| ------------------------- | ----- | ----- |
+|                           | $a$   | $1$   |
+|                           | $b$   | $2$   |
+|                           | $c$   | $3$   |
+| $\langle 1, +, 2 \rangle$ | $T_1$ | $4$   |
+|                           | e     | 5     |
+| $\langle 4, -, 5 \rangle$ | f     | 6     |
+
+#### Loop unrolling
+Loop transformation technique that attempts to optimise a programs execution speed at the expense of its binary size, an approach known as the space-time tradeoff. The transformation can be taken either manually by the programmer or by an optimising compiler. On modern processors, loop unrolling is often counterproductive as the increased code size can cause more cache misses. Unrolling a loop literally means turning a loop into linear code, and this is only possible if the number of iterations is static. 
+
+The goal of loop unrolling is to increase speed by reducing or eliminating repeated instructions that control the loop such as pointer arithmetic and 'end of loop' tests on each iteration.
+##### Advantages
+- Minimisation of branch penalty
+- If the statements in the loop are independent of each other, the statements can potentially be executed in parallel. 
+- If the reduction in executed instructions compensates for any performance reduction caused by code size explosion, then it is worthwhile. Consequently, loop unrolling is applied selectively to loops that are identified as satisfying this trade-off. 
+
+##### Disadvantages
+- Increased binary sizes; problematic in resource constrained environments, thus this form of optimisation should be limited. 
+- Reduced code readability where this optimisation is performed by hand. 
+
+##### Examples
+![](Pasted%20image%2020251216175935.png)
+![](Pasted%20image%2020251216175941.png)
+![](Pasted%20image%2020251216180021.png)
+![](Pasted%20image%2020251216180025.png)
+Halves branches, increment, and comparison, and improves ILP. 
+
+## Order of Optimisations
+The order of compiler optimisations matters as certain optimisations being placed eartlier can enable, disable, or change the profitability of later optimisations. Applying them in a poor order may miss opportunities or even undo previous improvements, while a good order maximises effectiveness and preserves correctness. 
+
+One optimisation may create opportunities for another:
+- Constant propagation is the process of substituing the values of known constants in expressions at compile time. 
+	![](Pasted%20image%2020251216180516.png)
+	Yields:
+	![](Pasted%20image%2020251216180529.png)
+- This further enables constant folding, which is the process of recognising and evaluating constant expressions at compile time. 
+One optimisation may destroy information needed by another:
+- The advanced optimisation known as code motion, if extremely aggressive, may inhibit value numbering optimisations. 
+
+We generally apply optimisations that simplify the IR and expose structure first. Examples include constant propagation, constant folding, and dead code elimination. 
