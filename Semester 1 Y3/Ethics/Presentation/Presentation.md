@@ -1,4 +1,4 @@
-I stand mostly for the proposition. When negative outcomes arise from the use of generative AI, primary responsibility should rest with the user/deployer, while creators retain enforceable duties to design safely and disclose risks.
+giI stand mostly for the proposition. When negative outcomes arise from the use of generative AI, primary responsibility should rest with the user/deployer, while creators retain enforceable duties to design safely and disclose risks.
 
 By negative outcomes, I refer to harms such as privacy breaches, defamation, discrimination, facilitation of illegal acts, or real-world harms from decisions based on model outputs. The user/deployer is the one that prompts, acts on, or publishes outputs. We term the creator/provider as being the developer(s) that design, train, and supply the model and user-facing service.
 
