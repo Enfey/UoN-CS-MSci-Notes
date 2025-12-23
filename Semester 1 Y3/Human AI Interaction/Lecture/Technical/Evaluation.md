@@ -45,7 +45,7 @@ Key metrics can be derived from these:
 #### Nested Cross-Validation
 - Creates two loops
 	1. An outer loop, cross-validation only used for final, unbiased evaluation on test set. 
-	2. An inner loop, used for hyperpaameter tuning on the validation set.
+	2. An inner loop, used for hyperparameter tuning on the validation set.
 - These are kept strictly separate.
 - For example: 
 	Outer Iteration 1:

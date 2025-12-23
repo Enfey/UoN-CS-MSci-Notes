@@ -1,40 +1,27 @@
 # Computer Science Notes
-This repository my **personal notes** for the University of Nottingham Computer Science Master's program.
-Although the course began in 2023, documentation only dates back to late 2024, following a shift in my workflow. 
-If you find any errors or have anything you wish to add, feel free to submit a PR!
+Personal notes for the University of Nottingham Computer Science MSci program, and other topics in Computer Science. The course began in 2023, however documentation only dates back to late 2024, following a shift in my workflow. 
 
----
-
-## Covered Optional Modules
-Below is a list of optional modules I've completed or am currently completing.
-
-### Year 2
-- **Semester 2**  
-  - Artificial Intelligence Methods
-
-### Year 3
-- **Semester 1**  
-  - Small Study Group: Implementation of a Linker and Loader for the ARM7TDMI Architecture  
-  - Human–AI Interaction
- 
----
-
-## Planned Future Optional Modules
+ ---
+## Planned Future Modules
 Below is a list of modules I plan to take in upcoming semesters.
 
 ### Year 3
 - **Semester 2**  
-  - Games  
+  - Games 
   - Graphics
+  - Cryptography
+  - Cyber Security
 
 ### Year 4
 - **Semester 1**  
-  - Machine Learning  
-  - Advanced Algorithms and Data Structures  
-  - Advanced Computer Networks
+  - Individual Research Dissertation
+  - Group Dissertation
+  - Symbolic AI
+  - Advanced Algorithms and Data Structures
 
 - **Semester 2**  
-  - Programs, Proofs, and Type Theory  
+  - Individual Research Dissertation
+  - Group Dissertation
   - Malware Analysis
 
  ---

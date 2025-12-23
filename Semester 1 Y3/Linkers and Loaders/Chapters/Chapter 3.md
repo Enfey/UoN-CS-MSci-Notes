@@ -350,7 +350,7 @@ typedef struct {
 
 
 
-#### Executable ELF files (today)
+#### Executable ELF files 
 Another type of object file specified by ELF `ET_EXEC`, alongside relocatable files and shared object files. An executable files holds a program that is ready for execution and specifies how the system creates a program's process image. Relies primarily on the **Execution View**.
 
 An executable file contains a **program header table**; an array of structures (`Elf32_Phdr`), with each header/structure describing a segment or other information the system needs in order to prepare the program for execution. This header table is only meaningful for executable and shared object files. File specifies program header size with the ELF header's `e_phentsize` and `e_phnum` members. 
@@ -412,11 +412,4 @@ The BSS section holds uninitialised data that should be initialised to zero by t
 
 #### ELF Shared Object
 Contains all baggage of relocatable view and executable view of ELF file. Since intended to be run, must contain program header table. Since intended to be linked with other files, it holds relocation information, symbol tables, other data, defined according to section header table.
-
-Thus has ELF header, program header table, loadable segments(sections(unsure if coalesced yet - probably maintains view of both)), non-loadable information e.g., `.symtab` and section header table. Usually ordered like this.
-
-### 
-## Exercises (today)
-
-
 
