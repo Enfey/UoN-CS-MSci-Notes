@@ -153,9 +153,11 @@ A useful agent must:
 
 
 ### Active Learning
-#### Motivation
-- In traditional supervised learning, training examples are **randomly sampled** from the training set and fed into the  the machine learning algorithm.
+> Machine learning paradigm in which the model actively selects which data points should be labelled by a human (termed the oracle/teacher), instead of passively learning from a randomly labelled dataset
+#### Motivation and Comparison
+- In traditional supervised learning, training examples are **randomly sampled** from the training set and fed into the the machine learning algorithm, learning passively.
 - In active learning, the machine learning algorithm starts from scratch, and asks the user to label specific data points. 
+- Fully labelling data is often time-consuming, expensive, and requires expert knowledge, active learning can be achieved by humans just labelling informative instances, inserting those back into the training set and then retraining. 
 - Active learning can start from completely unlabelled data, while traditional supervised learning needs a lot of labelled data from that start. 
 
 #### Active Learning in practice
@@ -163,5 +165,30 @@ A useful agent must:
 	- **Select** a new batch of data points based on some criteria
 	- **Query** human user to label that batch
 	- **Retrain** the model
-	- 
+- Focuses human effort where it matters most.
+
+#### Query models
+There exist different **query models** determining how the model selects data points:
+- **Uncertainty sampling**
+- **Query by committee**
+- **Expected error reduction**
+- **Expected model change**
+
+##### Uncertainty Sampling
+- Query instances the model is **least confident** about.
+- For example, if using a probabilistic classifier, find documents where the probability is closest to random e.g., close to 0.5 binary classification
+- For example, for nearest-neighbour classifiers, find documents/points which are equally close to multiple classes
+- For example, multiclass classifiers, find document with the smallest margin between top classes. 
+- Uncertain points are often near the decision boundary. 
+- Thus, in ununcertainty sampling, the queried instances are _unlabelled_ data points for which the model has made _tentative predictions_ with high uncertainty; the oracle provides true labels, used to refine the decision boundary.
+- Optimises local uncertainity
+##### Query by committee
+- Train multiple models (the committee) in parallel on the current provisionally labelled data.
+- Each model predicts labels for unlabelled data, measure disagreement/vote entropy, and query instances with the highest disagreement
+- Disagreement indicates model uncertainty or lack of knowledge to self-refine.
+##### Expected error reduction
+Select instances for querying whose labels would **most reduce future generalisation error**. This requires estimating how the model would perform if each unlabelled point were labelled. Most principled active learning strategy, directly optimising **test performance**. Computationally nfeasible for large datasets, but can approxmiate.
+##### Expected model change
+Select instances for querying where knowing the label would case the **largest** update to model parameters. Cheaper than error reduction, asks "which label would teach me the most?".
+
 
