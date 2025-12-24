@@ -214,7 +214,7 @@ A veneer extends the range of a branch by becoming the intermediate target of th
 
 If the target is outside the above range, the linker inserts a veneer to bridge the gap. The branch instruction is re-targeted to the veneer, and the veneer then performs the jump to reach the actual symbol.
 
-Veneers are inserted by the linker where $value = F_t(S, P, A)$ (where this is often $displacement = S - (A+8)$) does not fit in the 24-bit displacement.
+Veneers are inserted by the linker where $value = F_t(S, P, A)$ (where this is often $displacement = S - (A+8)$) does not fit in the 24-bit displacement
 
 There are different types of veneers generated, below are the most common 2:
 

@@ -108,7 +108,7 @@ The `/SYM64/` archive member is simply a 64 bit variant of `/`
 It was introduced to handle archives larger than 4GB as the 32 bit `member_offset` and `nsymbol` fields would overflow. The semantics are identical; same ordering and endianness rules, and same logic in that the $i-th$ symbol corresponds to the $i-th$ offset.
 
 Generated automatically by `ar` if the archive exceeds 4GB. 
-#### Using AR to create libraries
+#### Using AR(GNU) to create libraries
 `ar` is used to 'create and maintain library archives'. When an archive consists entirely of valid object files, `ar` formats the archive such that it it is usable as a library for link editing. 
 
 One creates a library by invoking a command like the below:
@@ -175,7 +175,7 @@ There are few things to note.
 	The search order of libraries is according to the order in which the inputs appear. 
 
 ## Performance issues
-The primary peformance issue related to libraries used to be the time spent scanning libraries sequentially. Once symbol directories became standardised this was no longer an issue. Library searches can still be slow if a library has a lot of tiny members. Particularly in the now common case that all of the library members are combined at run time into a single shared library anyway, it'd probably be faster to create a single object file that defines all of the symbols in the library and to link using that rather than by searching a library. More on this in [[Chapter 9]].
+The primary performance issue related to libraries used to be the time spent scanning libraries sequentially. Once symbol directories became standardised this was no longer an issue. Library searches can still be slow if a library has a lot of tiny members. Particularly in the now common case that all of the library members are combined at run time into a single shared library anyway, it'd probably be faster to create a single object file that defines all of the symbols in the library and to link using that rather than by searching a library. More on this in [[Chapter 9]].
 
 ## Weak External Symbols
 Early UNIX linkers maintained a rigid definition/reference model in that:

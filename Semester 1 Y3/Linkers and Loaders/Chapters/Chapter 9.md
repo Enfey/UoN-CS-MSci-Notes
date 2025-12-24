@@ -255,7 +255,7 @@ Generally, the following sections are generally created. Certain sections will b
 		`DT_PLTREL`
 			An entry with the tag `DT_PLTREL` specifies the type of relocation entry to which the procedure linkage table refers. The `d_val` member holds `DT_REL` or `DT_RELA`, as appropriate. All relocations in a procedure linkage table must use the same relocation type. 
 		`DT_PLTGOT`
-			An entry with the tag `DT_PLTGOT` holds an address associated with the procedure linkage table and/or the global offset table. Interpreted according to architecture.
+			An entry with the tag `DT_PLTGOT` holds an address associated with the procedure linkage table and/or the global offset table. Interpreted according to architecture, but typically contains the address of .got.plt.
 	`DT_HASH`, `DT_GNU_HASH`
 		These tags describe the hash table structures used to support *dynamic symbol lookup*.
 		`DT_HASH`
