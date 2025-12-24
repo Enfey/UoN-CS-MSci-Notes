@@ -1,9 +1,7 @@
 # Conversational AI architectures
 A typical pipeline includes:
 1. **Preprocessing** → tokenisation, normalisation
-    
 2. **Representation** → e.g., Bag of Words
-    
 3. **Natural Language Understanding (NLU)**
     - Identifies intents, extracts meaning
 4. **Dialogue Management**
@@ -53,7 +51,7 @@ A useful agent must:
 - Traditional ML focuses on full automation, but this has limits:
 	- Models saturate on benchmark datasets
 	- Specialise too much
-	- Suffer from "concept drift"
+	- Suffer from "**concept drift**":
 		- The statistical properties of the target variable change over time in unforeseen ways.
 	- Cannot adapt efficiently due to overspecialisation
 	- Often unsafe without oversight
@@ -82,7 +80,6 @@ A useful agent must:
 #### Model-Specific vs Model-Agnostic
 - **Model-Specific**: interpretation methods tied to particular models
 - **Model-Agnostic**: interpretation methods applicable to any model
-
 #### Local vs Global
 - **Local**: interpret one prediction at a time.
 - **Global**: interpret the entire model
@@ -100,30 +97,71 @@ A useful agent must:
 
 
 ### Model-Agnostic methods
-- Interpretation methods applicable to any model
+- Interpretation methods applicable to any model; separation of explanation from the model, and can take many forms e.g., plot, text, feature weights etc.
+- Desirable properties of a model-agnostic explanation system include:
+	- **Model flexibility**
+		Can work with any model
+	- **Explanation flexibility**
+		Can provide multiple types of explanation
+	- **Representation flexibility**
+		- Can map the explanation to differing types of explanations
 #### Global Surrogate Models
-- Train an interpretable model e.g., decision tree to approximate the predictions of a black box model
+- Train an interpretable model e.g., decision tree to approximate the predictions of a **black box model**.
 - E.g., Train SVM on $(X,Y)$
 - Classify a dataset, giving $(X, \hat{Y}$)
 - Train decision tree on $(X, \hat{Y}$)
 - If the accuracy of the decision tree is acceptable, use it to explain the decisions of the SVM.
-- Goal of the surrogate model is to approximate the black box.
+- Goal of the surrogate model is to approximate the entire black box model, rather than specific predictions. 
 #### Local Surrogate Models
 - Used to explain individual predictions of black box machine learning models
 	- Why did the model make this specific prediction?
 	- What effect did this specific feature value have on the prediction?
+- We use a simple interpretable model that is trained to approximate a black-box model in a small neighbourhood around a specific prediction. 
 - Best known is **LIME** - "Locally Interpretable Model Estimation"
-	- Generate perturbed versions of one example
-	- Sample artificial datapoints near a prediction and fit a linear model through it
-	- Use that l,linear model to interpret the prediction
+	- Generate perturbed versions of one example as synthetic data points, representing 'what could have happened'.
+	- For each synthetic point, feed it into the black-box model, and record the predictions. 
+	- Weight samples by proximity; distant points may follow different decision logic.
+	- Train a linear, interpretable model on the weighted, perturbed dataset. 
+	- Can then determine:
+		- Which features contributed most to the prediction
+		- Whether they pushed the prediction toward or away from a class
+		- How sensitive the prediction is to feature changes
+- This is a **feature-based explanation**, decomposing predictions into feature effects and not treating vectors as indivisible objects. 
+
+#### Explaining with examples
+- Model agnostic techniques; interpret black-box model by presenting **concrete instances** rather than model parameters, feature weights or rules. 
+- Generally aims to provide a more intuitive, holistic focus when delivering model explanations. 
+- Examples can be used to show
+	- Implicit decision boundary (counterfactual explanation, adversarial examples)
+	- Representative instances and unrepresented examples(prototypes/criticisms)
+	- Which instances have the highest influence on model parameters
+##### Counterfactual explanation
+- Describes the closest alternative instance the to the original input that would result in a **different prediction**. 
+- Explains invidiual predictions, and is used to identify potential causal links between concrete instances.
+- "If feature x was higher by y, the prediction would have been positive"
+	- Clearly interpretable
+	- Very flexible
+	- Easy to implement - often slightly perturb, until prediction changes, and select the closest valid alternative to propagate counterfactually.
+	- Though often multiple counterfactual explanations for a single outcome.
+##### Prototypes
+- **Prototypes** are **representative instances** of a class that capture what the model (or data) considers *typical*.
+- A **criticism** is an instance **not well represented** by the prototypes. 
+- Prototypes can be selected manually, but this does not scale well and leads to poor results; there are many approaches to finding prototypes in the data, one of these is k-medoids, a clustering algorithm related, but any clustering algorithm that returns actual data points as cluster centers would qualify for selecting prototypes.
+- ![](Pasted%20image%2020251224003623.png)
+
+- One may choose to compute distance from each point to its nearest prototype, and pick points with largest distances as a heuristic, works well where the distance metric is meaningful for class representation and the data is well-scaled. 
+
+
+### Active Learning
+#### Motivation
+- In traditional supervised learning, training examples are **randomly sampled** from the training set and fed into the  the machine learning algorithm.
+- In active learning, the machine learning algorithm starts from scratch, and asks the user to label specific data points. 
+- Active learning can start from completely unlabelled data, while traditional supervised learning needs a lot of labelled data from that start. 
+
+#### Active Learning in practice
+- General idea:
+	- **Select** a new batch of data points based on some criteria
+	- **Query** human user to label that batch
+	- **Retrain** the model
 	- 
 
-#### Explaining with Examples
-- Typically model agnostic techniques
-- Work by selecting instances to provide explanations
-- Can be used to show 
-	- Implicit decision boundary (counterfactual explanation, adversarial examples)
-	- Representative instances and unrepresented examples (prototypes/criticisms)
-	- Which instances have the have the highest influence on model parameters
-
-##Finish off tomorrow
