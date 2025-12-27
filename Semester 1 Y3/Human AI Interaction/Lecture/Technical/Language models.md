@@ -105,8 +105,8 @@ Gradients flow backwards through time.
 #### Training RNNS with cross-entropy loss
 At each timestep $t$, predict the **next word**:
 $$\hat{y}_{t} = P(w_{t+1} \ | \ w_{1}, \dots , w_{t})$$
-At each timestep $t$, the model looks at previous words and produces a vector: $z_{t} \in \mathbb{R}^{∣V∣}$ which can be any real number. A softmax layer:
-$\hat{y}_t[i] = \frac{e^{z_{t}[i]}}{\sum_{j=1}^V e^z_{t}[j]}$ converts the raw score into a positive number, preserving ordering and yielding a proper probability distribution. 
+At each timestep $t$, the model looks at previous words and produces a vector: $z_{t} = Wh_{t}+b, z_{t} \in \mathbb{R}^{∣V∣}$ which can be any real number. A softmax layer:
+$$\hat{y}_t[i] = \frac{e^{z_{t}[i]}}{\sum_{j=1}^V e^{z_{t}[j]}}$$converts the raw score into a positive number, preserving ordering and yielding a proper probability distribution. 
 We can say that:
 $$P(w_{t+1}=i | w_{1} \dots w_{t}) = \frac {e^{(Wh_{t}+b)_{i}}} {\sum^V_{j=1}e^{(Wh_{t}+b)_{j}}}$$
 Because the correct next word is known during training, the target distribution is **one-hot** vector over the entire vocabulary, the entry for the correct word being 1, and all others being 0. The cross-entropy (CE) loss for LMs is **only** determined by the probability of next word. At timestep $t$, CE (for one-hot target) is:
