@@ -18,6 +18,10 @@ User: I'd like to book for Sunday
 → Shows: "Sorry, we're closed on Sundays. Our next available day is Monday 30th December." [Navigate to generate_date_error_message in entities.py] if the driver does not provide a suggestion, we generate one using the original date as the reference, effecting both repair and progression. 
 
 
+i'll be demonstrating the validation constraints in the extraction layer.
+User: I'd like to book for Sunday - INTENT MATCHED AS BOOKING, DATE KEYWORD SUNDAY RECOGNISED AND IS REJECTED
+→ Shows: "Sorry, we're closed on Sundays. Our next available day is Monday 29th December." - RESPONSE PROVIDES VALID OPTION SO THE USER CAN RECTIFY WITH MINIMAL COGNITIVE LOAD. PARSE FUNCTIONS RETURN TYPED UNIONS, THESE ARE EITHER THE PARSED VALUE, OR AN ERROR ENUMERATION. IN THIS CASE, ITS A SUNDAY ERROR, WE THEN USE THIS TO GENERATE AN ERROR MESSAGE. IN THE ENTITIES LAYER, WE PRODUCE A SUGGESTION BASED ON THE ORIGINAL DATE AND INTERPOLATE THIS INTO THE RESPONSE TO PROVIDE AUTOMATIC HELP.
+
 Scene 2: Repair/Recovery and Mid-flow QA
 User: Book a table for Friday at 6pm - seen this before
 User: Actually, change the time to 8pm - going to change the time, we invoke detect_slot_correction [Go to detect_slot_correction/handle_booking_slot] to detect repair intent, which matches keywords like "change", then determine which slot to update based on both keyword mentions and extracted entities, and then only that slot is overwritten. This is all equipped with validation. 
@@ -48,6 +52,8 @@ User: Book a table for tomorrow
 User: Stop
 User: Yes - Once more explicitly confirms, setting 'awaiting_stop_confirm' to prevent accidental data loss, only resetting slots after confirmation. 
 → "Alright, I've stopped what I was doing."
+
+
 
 
 Continental demonstrates key conversational user interface principles: discoverability through help prompts, recovery via slot corrections and informative
