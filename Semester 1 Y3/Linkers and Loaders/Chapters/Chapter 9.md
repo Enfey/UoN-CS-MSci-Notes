@@ -117,7 +117,7 @@ The linker uses the same index from `.dynsym`, parallel to `SHT_GNU_versym` (`.g
 
 Additionally, if the high-order bit (bit 15) of the version symbol is set, in the section `.gnu.version` (containing `Elfxx_Half` array) for that symbol, then the static linker shall ignore the symbol's presence in the object during the build process. Designed to prevent new applications from linking against obsolete versions of a function. 
 
-When an object with a reference and an object with a reference and an object with a definition are being linked, the following rules shall govern the result:
+When an object with a reference and an object with a definition are being linked, the following rules shall govern the result:
 
 1. The object with reference and the object with the definitions both use versioning. All described matching is processed in this case. A fatal error shall be triggered when no matching definition can be found in the object whose name is one referenced by the `vn_name` element in the `Elfxx_Verneed` array.
 2. The object with the reference does not export any versions, while the object with the definitions does. In this instance, the linker attempts to resolve safely by restricting the search to the 'base definition'. These are definitions with index numbers 1 or 2, which represent the default, public face of the definition. 
