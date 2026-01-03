@@ -20,7 +20,7 @@ Every archive begins with the magic ASCII signature:
 Which marks the file as an archive.
 
 #### Archive Member Headers
-Each archive member is preceded by a 60-bye fixed-width ASCII header.
+Each archive member is preceded by a 60-byte fixed-width ASCII header.
 ```c
 char name[16]; // Member name (space-padded or '/' offset)
 char st_mtime[12] // Decimal alteration time
