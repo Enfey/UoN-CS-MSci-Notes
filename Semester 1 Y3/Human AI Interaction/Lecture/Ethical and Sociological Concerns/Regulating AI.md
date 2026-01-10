@@ -88,6 +88,29 @@
 ### Structure of the EU AI Act
 - EU AI act categories systems into **four** distinct tiers based on risk-level, enabling targeted regulation and remediation for deployers. 
 - **Unacceptable risk - banned** - Examples of AI systems that pose inacceptable risks include social scoring by governments, real-time biometric identification in public spaces, and manipulative AI.
+	- Social scoring systems are prohibited alongside biometric surveillance and manipulative AI deployments.
 - **High risk - heavily regulated** - Medical diagnostic tools, recruitment algorithms, essential public services, subject to strict compliance and oversight.
-- **Limited risk - transparency obligations** - AI applications classified as limited risk must adhere to transparency rules such as chatbots disclosing their AI nature and emotion recongiti
-- **Minimal risk - largely unregulated**
+	- Medical diagnostic tools, subject to stringent regulations, as directly impact health, developers required to implement risk management protocols, high quality training data used, and maintain thorough docs.
+	- Recruitment tools, adhere to strict fairness + accountability standards to prevent bias in hiring decisions; includes regular audits ensuring that algorithms do not disadvantage demographic groups unfairly.
+	- Education + Exam scoring AI - must demonstrate transparency and accuracy in their assessments e.g., providing clear criteria for scoring and ensuring all outcomes are fair and valid.
+	- Essential public services - AI used here such as welfare + immigration decisions, must adhere to rigorous standards; require human oversight and regular evaluations. 
+- **Limited risk - transparency obligations** - AI applications classified as limited risk must adhere to transparency rules such as chatbots disclosing their AI nature and emotion recognition systems notifying users that they're active.
+- **Minimal risk - largely unregulated** - most common AI applications like game AI and spam filters, face few to none new regulatory requirements. 
+
+
+### Enforcement of the EU AI Act
+Establishes enforcement framework to regulate AI compliance and ensure accountability. 
+
+1. **Oversight mechanism**
+	National supervisory authorities will oversee compliance and enforcement of EU AI Act where the regulation is applicable, ensuring that AI systems operate within legal goalposts.
+2. **Financial penalties**
+	Fines for violations of the EU AI Act can reach up to 35 million euros or 7% of global turnover, encouraging adherence to regulations via strong material deterrent.
+
+### Implications for Developers of AI Systems
+- **Document System Design and Training Data**
+	- Must maintain comprehensives docs, including design processes, architecture choices, training data etc. Essential for compliance, and also for accountability, and facilitating audits + assessments of system performance and ethical implications. 
+- **Conduct Bias and Safety Assessments**
+	- Crucial to identify + mitigate potential risks with AI systems, must implement standard evaluation protocols to assess the impact of their AI on various demographic groups ensuring fairness and reducing likelihood of harmful consequences arising from biased infrastructure.
+- **Provide Transparency to Users**
+	- Transparency regarding AI functionalities, decision-making processes, data usage etc, devs encouraged to implement comms strategies to explain how AI systems operate, what data they utilise, and the implications of their recommendations, foster trust and show compliance.
+
