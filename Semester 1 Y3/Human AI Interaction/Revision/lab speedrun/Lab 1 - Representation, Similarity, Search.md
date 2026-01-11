@@ -88,12 +88,36 @@ How does one know if search algorithm is good? Several metrics
 
 
 ### Human assessment of relevance
+Measure quality of search engine, based on set of reference queries, which know expected results. Results can be binary or graded (0 to 2).
 
+A sample query would be represented as:
+$$q_1 = \{d_{1} : 2, d_{5} : 2, d_{6}, : 2, d_{7}, d_{8} : 1\}$$
+Assumption of 0 for all other docs, knowing this, can compute several metrics. 
 ### Precision
+Precision$@ K$ Concerned, how many of the returned $K$ documents are relevant, focus only top $K$ results e.g., first page of search results. Usually evaluated with binary judgements, no grading of relevance. 
+$$Precision = \frac{|\{relevant documents\} \cap \{retrieved documents\}| }{|\{retrieved documents\}|}$$
 
 ### Recall
+Recall$@K$ concerned with how many of the relevant documents have been retrieved. Common to plot with multiple $K$ values to see how results of algo change as more results returned. Makes sense, small, specialised search engines, where restricted set of docs deemed relevant.
+$$\frac{|\{relevant \ documents\} \cap \{retrieved \ documents\}|} {|\{relevant \ documents\}|}$$
 
-### Normalised Discounted Cumulative Gain
+### NDCG
+Normalised Discounted Cumulative Gain$@p$;way to evaluate search results with graded relevance. 
+
+Sum up relevance scores of top $P$ results
+$$CG@P=\sum_{i=1}^{P}rel_{i}$$
+Then discount lower ranks logarithmically
+$$DCG@P\sum_{i=1}^{P}\frac{2^{rel_{i}}-1}{\log_{2}(i+1)}$$
+We compute the best possible DCG i.e., the DCG if we had ranked all relevant documents perfectly.
+$$IDCG@K = DGC@K$$
+To make results comparable across queries or systems, we divide the actual $DCG$ by the ideal $DCG$
 
 
+#### Evaluation Campaigns
+Organised competitions, research groups test their search or ranking algorithms on shared datasets used shared evaluation metrics. To evaluate a search engine, one must know which documents are relevant to each query. But when dealing with billions of documents, cannot manually label all of them. Use a shortcut called pooling:
+1. Each search system runs a fixed set of queries called evaluation topics, each system returns the top $N$ results for each query. 
+2. A central authority takes the union of all documents returned during that search
+3. The union is randomly split and assigned for labelling
+4. Each participant receives a subset of the pool and labels each document as relevant, partially relevant, not relevant
+5. After labelling, all judgments are aggregated so that each document gets a final, consensus based relevance label.
 
