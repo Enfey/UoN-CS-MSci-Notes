@@ -143,7 +143,7 @@ where:
 	$Complexity(\beta)$: depends on the size of the weights
 Common ways of regularising linear models:
 $$
-\text{Complexity}(\boldsymbol{\theta}) = \lambda \sum_{i=1}^{n} \theta_i^2
+\text{Complexity}(\boldsymbol{\theta}) = \lambda \sum_{i=1}^{n} \theta_i{^2}
 $$
 *L2* regularisation
 

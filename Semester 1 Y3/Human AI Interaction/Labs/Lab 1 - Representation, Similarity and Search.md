@@ -264,8 +264,8 @@ $$
 \text{similarity}(q, d) = 
 \frac{q \cdot d}{\|q\| \, \|d\|} =
 \frac{\sum_{i=1}^{n} q_i d_i}{
-\sqrt{\sum_{i=1}^{n} q_i^2} \, 
-\sqrt{\sum_{i=1}^{n} d_i^2}}
+\sqrt{\sum_{i=1}^{n} q_{i^2}} \, 
+\sqrt{\sum_{i=1}^{n} d_{i^2}}}
 
 $$
 	$q_i$ and $d_i$ correspond to the $i^{th}$ component of the query and document vector. E.g., $q_2$ corresponds to frequency of term 2 in the query document. 
