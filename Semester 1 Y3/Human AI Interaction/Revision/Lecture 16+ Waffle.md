@@ -1,38 +1,38 @@
 ## Discoverability
-> ease, which users, find, execute, system commands/features
+><mark style="background: #FFF3A3A6;"> ease</mark>, which <mark style="background: #FFF3A3A6;">users</mark>, <mark style="background: #FFF3A3A6;">find</mark>, execute, system<mark style="background: #FFF3A3A6;"> commands</mark>/features
 
-Challenging, VUI context, no visual cues
+<mark style="background: #FFF3A3A6;">Challenging</mark>, <mark style="background: #FFF3A3A6;">VUI</mark> context, no visual cues
 
-An **affordance** = action possibilities environment offers. Affordance has narrow meaning; **possible actions actor can perceive**.
+An **<mark style="background: #FFF3A3A6;">affordance</mark>** = <mark style="background: #FFF3A3A6;">action possibilities</mark> <mark style="background: #FFF3A3A6;">environment</mark> <mark style="background: #FFF3A3A6;">offers</mark>. Affordance has <mark style="background: #FFF3A3A6;">narrow meaning</mark>; **<mark style="background: #FFF3A3A6;">possible actions</mark> actor<mark style="background: #FFF3A3A6;"> can perceive</mark>**.
 
 
 ### Discoverability GUI vs VUI
-- **Recognition**
-- **Recall**
-- Recognition better, minimise cognitive l,oad
-- Voice interface, principle violated
+- **<mark style="background: #FFF3A3A6;">Recognition</mark>**
+- **<mark style="background: #FFF3A3A6;">Recall</mark>**
+- <mark style="background: #FFF3A3A6;">Recognition better</mark>, <mark style="background: #FFF3A3A6;">minimise cognitive l,oad</mark>
+- <mark style="background: #FFF3A3A6;">Voice</mark> interface,<mark style="background: #FFF3A3A6;"> principle violated</mark>
 
 ### Discoverability challenge
-- Invisibility+ephmerality of speech, exacerbate issues, difficult users find + exec available functions
-- Can hurt:
-	- Task success
-	- Efficiency
-	- User satisfation
-- **Study task** - order 2 diff dishes from local takeaway 
+- Invisibility+<mark style="background: #FFF3A3A6;">ephmerality of speech</mark>, exacerbate issues, difficult users find + exec available functions
+- Can <mark style="background: #FFF3A3A6;">hurt</mark>:
+	- <mark style="background: #FFF3A3A6;">Task success</mark>
+	- <mark style="background: #FFF3A3A6;">Efficiency</mark>
+	- <mark style="background: #FFF3A3A6;">User satisfaction</mark>
+- **Study task** - <mark style="background: #FFF3A3A6;">order 2 diff dishes</mark> from <mark style="background: #FFF3A3A6;">local takeaway</mark> 
 	- **Study conditions**
-		- Automatic help
-		- Requested help
-		- No help(baseline)
+		- <mark style="background: #FFF3A3A6;">Automatic help</mark>
+		-<mark style="background: #FFF3A3A6;"> Requested help</mark>
+		- <mark style="background: #FFF3A3A6;">No help(baseline)</mark>
 	- Measured
-		- Perf metrics
-			- Time per task
-			- Turns per task
-			- Errors per task
-			- Completed stages
-		- Perceived usability
-			- SUS
-			- Post-task discussion feedback
-	- Automatic help = best, performance in requested varied, baseline worst, turns per task only metric for which sig diff found between requested and automatic.
+		-<mark style="background: #FFF3A3A6;"> Perf metrics</mark>
+			- <mark style="background: #FFF3A3A6;">Time per task</mark>
+			- <mark style="background: #FFF3A3A6;">Turns per task</mark>
+			- <mark style="background: #FFF3A3A6;">Errors per task</mark>
+			- <mark style="background: #FFF3A3A6;">Completed stages</mark>
+		- <mark style="background: #FFF3A3A6;">Perceived usability</mark>
+			-<mark style="background: #FFF3A3A6;"> SUS</mark>
+			- <mark style="background: #FFF3A3A6;">Post-task discussion feedback</mark>
+	- <mark style="background: #FFF3A3A6;">Automatic help = best</mark>, performance in requested varied, baseline worst,<mark style="background: #FFF3A3A6;"> turns per task</mark> only metric for which <mark style="background: #FFF3A3A6;">sig diff </mark>found between requested and automatic.
 ### Discoverability support
 - **Automatic help**
 	- System proactively tell users what can say
@@ -46,37 +46,37 @@ An **affordance** = action possibilities environment offers. Affordance has narr
 - Gave echo to 5 households, conditional voice recorder, study real conversational breakdowns. 
 
 ### Findings
-- Voice interaction = messy, people repeat selves, change phrasing, talk over each other
-- 30-50% failure rates in everyday interactions
-	- Misrecognition
-	- Misinterpretation
-	- Wrong domain
-	- Ambiguous intent
-- Need good error recovery, explain problem, offer steps.
+- <mark style="background: #FFF3A3A6;">Voice interaction</mark> =<mark style="background: #FFF3A3A6;"> messy</mark>, people <mark style="background: #FFF3A3A6;">repeat selves</mark>, change phrasing, talk over each other
+- <mark style="background: #FFF3A3A6;">30-50%</mark> <mark style="background: #FFF3A3A6;">failure rates</mark> in everyday interactions
+	- <mark style="background: #FFF3A3A6;">Misrecognition</mark>
+	- <mark style="background: #FFF3A3A6;">Misinterpretation</mark>
+	- <mark style="background: #FFF3A3A6;">Wrong domain</mark>
+	- <mark style="background: #FFF3A3A6;">Ambiguous intent</mark>
+- Need <mark style="background: #FFF3A3A6;">good error recovery</mark>, explain problem, offer steps.
 
 ### Recovery, repair, progressivity
 - **Recovery**
-	- Recover from error, say what went wrong e.g., instead of "I didn't understand" a prompt like "I couldn't find a quiz called 'family quiz'"
+	- <mark style="background: #FFF3A3A6;">Recover from error</mark>, <mark style="background: #FFF3A3A6;">say what went wrong</mark> e.g., instead of "I didn't understand" a prompt like "I couldn't find a quiz called 'family quiz'"
 - **Repair**
-	- Help user fix their request, give resolution "You can say start a quiz", teach the system's language
+	- <mark style="background: #FFF3A3A6;">Help user fix their request</mark>, give resolution "You can say start a quiz", teach the system's language
 - **Progressivity**
-	- Help **interaction move forward**, not stall, offer options.
+	- Help **<mark style="background: #FFF3A3A6;">interaction move forward</mark>**, not stall, offer options.
 
 
 ### Confirmation design
-- Reflect what system thinks heard, proportional, depend on confidence, help catch misunderstandings early. 
+- <mark style="background: #FFF3A3A6;">Reflect</mark> <mark style="background: #FFF3A3A6;">what system</mark> <mark style="background: #FFF3A3A6;">thinks heard,</mark><mark style="background: #FFF3A3A6;"> proportional</mark>, <mark style="background: #FFF3A3A6;">depend on confidence</mark>, help catch misunderstandings early. 
 
 
 ## Responsible AI
-- Approach, encompasses dev, deployment, responsible use, AI systems, focused on stakeholders+system, considering legal+technical aspects, benefit stakeholders and environment. 
+- <mark style="background: #FFF3A3A6;">Approach</mark>, encompasses <mark style="background: #FFF3A3A6;">dev</mark>,<mark style="background: #FFF3A3A6;"> deployment</mark>, responsible use, AI systems, <mark style="background: #FFF3A3A6;">focused </mark>on <mark style="background: #FFF3A3A6;">stakeholders</mark>+<mark style="background: #FFF3A3A6;">system</mark>, considering legal+technical aspects, benefit stakeholders and environment. 
 
 ### RAI principle
-- **Fairness**
-- **Accountability**
-- **Safety**
-- **Transparency**
-- **Privacy**
-- **Sustainability**
+- **<mark style="background: #FFF3A3A6;">Fairness</mark>**
+- **<mark style="background: #FFF3A3A6;">Accountability</mark>**
+- **<mark style="background: #FFF3A3A6;">Safety</mark>**
+- **<mark style="background: #FFF3A3A6;">Transparency</mark>**
+- **<mark style="background: #FFF3A3A6;">Privacy</mark>**
+- **<mark style="background: #FFF3A3A6;">Sustainability</mark>**
 
 ### Why is RAI important
 - LLM based CAI gained popularity, chai AI, airliner, cannot control response generated, can harm users, 
@@ -90,11 +90,11 @@ An **affordance** = action possibilities environment offers. Affordance has narr
 - Safety - refuse help, unethical situation
 
 ### Designing persona of CAI system
-- **Character traits**
-- **Tone/voice**
-- **Multimodal**
-- **Multilingual support**
-- **Design of interface**
+- **<mark style="background: #FFF3A3A6;">Character traits</mark>**
+- **<mark style="background: #FFF3A3A6;">Tone/voice</mark>**
+- **<mark style="background: #FFF3A3A6;">Multimodal</mark>**
+- **<mark style="background: #FFF3A3A6;">Multilingual support*</mark>*
+- **<mark style="background: #FFF3A3A6;">Design of interface</mark>**
 
 #### Persona design + responsible AI
 | RAI principle  | How persona design affects it                                                                                      |
@@ -109,58 +109,58 @@ An **affordance** = action possibilities environment offers. Affordance has narr
 
 
 ## Regulation dilemma
-- **Too early**
+- **<mark style="background: #FFF3A3A6;">Too early</mark>**
 	- Stifle innovation = 'regulation chill', limit scope of benefit
 	- Legal frameworks becomes obsolete
-- **Too late**
-	- Delaying allows harmful practices become entrenched, power dynamics, privacy violations; difficult to react to.
+- **<mark style="background: #FFF3A3A6;">Too late</mark>**
+	- Delaying<mark style="background: #FFF3A3A6;"> allows harmful practices</mark> become<mark style="background: #FFF3A3A6;"> entrenched, </mark><mark style="background: #FFF3A3A6;">power dynamics</mark>, <mark style="background: #FFF3A3A6;">privacy violations</mark>; difficult to react to.
 
 ### Precautionary principle  vs Innovation Principle
-- **Precationary principle**
+- **<mark style="background: #FFF3A3A6;">Precationary principle</mark>**
 	- Proactive regulation, prevent harm, safeguard public welfare
-- **Innovation principle**
+- **<mark style="background: #FFF3A3A6;">Innovation principle</mark>**
 	- Inverse, focus advancement, regulate after
 
 ### UK approach, regulating AI
-- **Sector-specific** strat, avoid overarching law
-- Emphasise existing regulatory bodies, pro-innovation, while safeguarding
-- **ICO** - data protection
-- **Ofcom**
-- **Financial conduct authority(FCA)**
-- **Competition+markets authority(CMA)** - fair market
+- **<mark style="background: #FFF3A3A6;">Sector-specific</mark>** strat, avoid overarching law
+- Emphasise <mark style="background: #FFF3A3A6;">existing regulatory bodies</mark>, pro-innovation, while safeguarding
+- **<mark style="background: #FFF3A3A6;">ICO</mark>** - data protection
+- **<mark style="background: #FFF3A3A6;">Ofcom</mark>**
+- **<mark style="background: #FFF3A3A6;">Financial conduct authority(FCA)</mark>**
+- **<mark style="background: #FFF3A3A6;">Competition+markets authority(CMA)</mark>** - fair market
 - **Medicines + healthcare products regulatory agency(MHRA)**
 
 ### Online safety Act
-- Comprehensive measures, safeguard, particularly AI algorithmic systems
-- Mandates safeguards, risk assessments, mitigate harms associated with **automatic content moderation** and recommendation.
-- Covers user-generated content
+- <mark style="background: #FFF3A3A6;">Comprehensive measures</mark>, safeguard, particularly AI algorithmic systems
+- Mandates <mark style="background: #FFF3A3A6;">safeguard</mark>s, <mark style="background: #FFF3A3A6;">risk assessments, </mark><mark style="background: #FFF3A3A6;">mitigate harms associated</mark> with **<mark style="background: #FFF3A3A6;">automatic content moderation</mark>** and recommendation.
+- Covers <mark style="background: #FFF3A3A6;">user-generated content</mark>
 
 
 ### Data protection Act 2018 & UK GDPR
-- DPA, cornerstone, regulated data processing
-- Incorporate GDPR elements
-- **Transparency in data processing**
-- **Fairness(in AI systems)**
+- <mark style="background: #FFF3A3A6;">DPA</mark>, cornerstone, regulated data processing
+- Incorporate <mark style="background: #FFF3A3A6;">GDPR elements</mark>
+- **<mark style="background: #FFF3A3A6;">Transparency in data processing</mark>**
+- **<mark style="background: #FFF3A3A6;">Fairness</mark>(in AI systems)**
 	- E.g., no discrim, hiring algos
-- **Accountability**
+- **<mark style="background: #FFF3A3A6;">Accountability</mark>**
 	- Must comply
-- **Data minimisation principle**
-- **Rights of data subjects**
+- **<mark style="background: #FFF3A3A6;">Data minimisation principle</mark>**
+- **<mark style="background: #FFF3A3A6;">Rights of data subjects</mark>**
 
 ### Equality Act 2010 + Algorithmic bias
-- Ai systems deployed, sensitive areas, adhere principles, non-discrimination, e.g., policing, housing, credit
-- Algorithmic bias, arise, flawed training data/biased algorithms, risk perpetuating inequalities
+<mark style="background: #FFF3A3A6;">- Ai systems deployed, sensitive areas, adhere principles, non-discrimination, e.g., policing, housing, credit
+- Algorithmic bias, arise, flawed training data/biased algorithms, risk perpetuating inequalities</mark>
 
 
 ### UK AI regulation
 - Leverage existing regulatory bodies
 - Just has a regulation framework
-	- Grounded in **five foundational principles**
-		1. **Safety**
-		2. **Transparency**
-		3. **Fairness**
-		4. **Accountability**
-		5. **Provide mechanism for contestability**
+	- Grounded in **<mark style="background: #FFF3A3A6;">five foundational principles</mark>**
+		1. **<mark style="background: #FFF3A3A6;">Safety</mark>**
+		2. **<mark style="background: #FFF3A3A6;">Transparency</mark>**
+		3. **<mark style="background: #FFF3A3A6;">Fairness</mark>**
+		4. **<mark style="background: #FFF3A3A6;">Accountability</mark>**
+		5. **Provide <mark style="background: #FFF3A3A6;">mechanism</mark> for <mark style="background: #FFF3A3A6;">contestability</mark>**
 
 ### EU AI act
 - Structured regulatory framework, categorise AI system based on risk level.
@@ -186,15 +186,15 @@ An **affordance** = action possibilities environment offers. Affordance has narr
 
 #### Enforcement of EU AI Act
 - Establishes enforcement framework, regulate AI compliance
-	1. **Oversight mechanism**
+	1. **<mark style="background: #FFF3A3A6;">Oversight mechanism</mark>**
 		National supervisory authorities, oversee compliance.
-	2. **Financial penalties**
+	2. **<mark style="background: #FFF3A3A6;">Financial penalties</mark>**
 		Fines for violations, 7% of global turnover, or 35 million
 
 ### Implications; AI devs
-- **Document sys design, training data**
+<mark style="background: #FFF3A3A6;">- **Document sys design, training data**
 - **Conduct bias + safety assessments**
-- **Provide transparency to users**
+- **Provide transparency to users</mark>**
 
 
 
@@ -230,11 +230,11 @@ An **affordance** = action possibilities environment offers. Affordance has narr
 - Proactive framework, privacy considerations, core principle.
 
 ##### Core principles
-- **Proactive not reactive**
+- **<mark style="background: #FFF3A3A6;">Proactive not reactive</mark>**
 	- Anticipate privacy issues before occur. 
-- **Privacy is default**
+- **<mark style="background: #FFF3A3A6;">Privacy is default</mark>**
 	- Design private from outset
-- **User-centric**
+- **<mark style="background: #FFF3A3A6;">User-centric</mark>**
 	- Have control, over personal data, options for consent, access etc.
 
 Strengths = reduce risk of data breaches, legal reqs
@@ -244,7 +244,7 @@ Case = google pay, apple pay, firefox
 
 
 ### Participatory design in AI development
-- Emphasise, active involvement, all stakeholders, align needs + vals
+- Emphasise,<mark style="background: #FFF3A3A6;"> active involvement, all stakeholders</mark>, align needs + vals
 
 #### Core principles
 - **Collaboration**
@@ -253,10 +253,10 @@ Case = google pay, apple pay, firefox
 	- Involves giving voice, marginalised group
 - **Contextual understanding**
 	- Crucial participatory design, deeply engage with envs + challenges faced by users.
-Critiques = groupthink, marginalisation, resource-intensive commitment. 
+Critiques = <mark style="background: #FFF3A3A6;">groupthink, marginalisation, resource-intensive commitment. </mark>
 
 ### Responsible Research and Innovation
-- Framework, AREA, consider societal impacts, according structure, integrate ethical considerations into research process; innovation becomes result of ethical processing. 
+- <mark style="background: #FFF3A3A6;">Framework, AREA</mark>, consider societal impacts, according structure, integrate ethical considerations into research process; innovation becomes result of ethical processing. 
 
 #### Anticipation
 - Proactive, approach, foresee risks with tech advancements.
@@ -265,6 +265,6 @@ Critiques = groupthink, marginalisation, resource-intensive commitment.
 #### Reflexivity
 - Req resaerchers, reflect, ethical implications of work, across social context; via **responsiveness,** adapt methods + approaches based on ethical consideration.'
 
-Critiques include resitance from trad paradigms, inconsistency of implementation, conflicting stakeholder interests, short-term focuses overshadow ethics, resource constraints. 
-
+Critiques include <mark style="background: #FFF3A3A6;">resitance from trad paradigms, inconsistency of implementation, conflicting stakeholder interests, short-term focuses overshadow ethics, resource constraints. 
+</mark>
 ### Proactive ethics vs Reactive Ethics

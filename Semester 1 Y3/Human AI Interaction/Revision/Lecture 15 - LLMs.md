@@ -41,14 +41,14 @@ Construct everything atop this.
 
 #### Reinforcement learning with Human Feedback
 1. **Reward model Training**
-	1. **Human feedback** - humans, rate, compare, diff responses, by lang model
-	2. **Reward model**- separate model, trained, predict human preferences, based on feedback data; assigns reward scores to piece of text.
+	1. **<mark style="background: #FFF3A3A6;">Human feedback</mark>** - humans, rate, compare, diff responses, by lang model
+	2. **<mark style="background: #FFF3A3A6;">Reward model</mark>**- separate model, trained, predict human preferences, based on feedback data; assigns reward scores to piece of text.
 2. **Policy optimisation via RL**
-	1. **Fine-tuning LLM** - OG lang model, fine tuned, but uses reward scores, from trained reward model.
-	2. **Reinforcement learning loop** - updated model, generates new text, reward model again provide feedback, guide weight adjustment, better output. 
+	1. **<mark style="background: #FFF3A3A6;">Fine-tuning LLM</mark>** - OG lang model, fine tuned, but uses reward scores, from trained reward model.
+	2. **<mark style="background: #FFF3A3A6;">Reinforcement learning loop</mark>** - updated model, generates new text, reward model again provide feedback, guide weight adjustment, better output. 
 
 #### Decoding: How model generates text
-- Task of choosing word to generate based on probabilities = **decoding**
+- Task of choosing word to generate based on probabilities = **<mark style="background: #FFF3A3A6;">decoding</mark>**
 - Model outputs probability distribution over tokens at each step
 - Most common method for decoding in LLMs = **sampling**, sample distribution over words according to assigned probabilities
 
@@ -87,31 +87,31 @@ Fixed $k$ can be restrictive or too broad depending
 - $\tau = 1$ uses original probabilities.
 
 ### Challenges in LLMs
-- Hallucination
-	- Happens as model must generate something; sampling from probabilities, no grounding, may be issues in training data.
+- <mark style="background: #FFF3A3A6;">Hallucination</mark>
+	- <mark style="background: #FFF3A3A6;">Happens</mark> as <mark style="background: #FFF3A3A6;">model</mark> <mark style="background: #FFF3A3A6;">must generate something</mark>;<mark style="background: #FFF3A3A6;"> sampling from probabilities</mark>, <mark style="background: #FFF3A3A6;">no grounding, </mark>may be <mark style="background: #FFF3A3A6;">issues in training data.</mark>
 - Few ways to alleviate:
-	- **In-context learning**
-		- Teach LLM at inference time, task demonstrations, integrated into prompt in nat lang format, allow pre-trained llms address new tasks, without fine tuning, but accumulated knowledge is transient, merely biasing probability distribution. 
-	- **Reasoning**
-		- Force LLM, think, structured way, generate intermediate steps before answer, problem decomposed.
-	- **Grounding**
+	- **<mark style="background: #FFF3A3A6;">In-context learning</mark>**
+		- <mark style="background: #FFF3A3A6;">Teach LLM at inference time</mark>, task demonstrations, integrated into prompt in nat lang format, allow pre-trained llms address new tasks, without fine tuning, but <mark style="background: #FFF3A3A6;">accumulated knowledge is transient</mark>, merely biasing probability distribution. 
+	- **<mark style="background: #FFF3A3A6;">Reasoning</mark>**
+		- Force LLM, think, <mark style="background: #FFF3A3A6;">structured way</mark>, generate intermediate steps before answer, <mark style="background: #FFF3A3A6;">problem decomposed</mark>.
+	- **<mark style="background: #FFF3A3A6;">Grounding</mark>**
 		- E.g., RAG
- - LLM output, determined, training data, and input, **prompt engineering**, tailor input
-	 - **Chain-of-though prompting**
+ - LLM output, determined, training data, and input, **prompt <mark style="background: #FFF3A3A6;">engineering</mark>**, tailor input
+	 - **<mark style="background: #FFF3A3A6;">Chain-of-though prompting</mark>**
 		 - Ask model, show reasoning step, before giving final answer.
-	 - **Directional stimulus prompting**
+	 - **<mark style="background: #FFF3A3A6;">Directional stimulus prompting</mark>**
 		 - Guide model toward reasoning strat without explicit steps e.g., "think about edge cases"
-		 - Nudge models toward internal reasoning patterns
+		 - <mark style="background: #FFF3A3A6;">Nudge models toward internal reasoning patterns</mark>
 	 - **Meta prompting**
-		 - Prompt model, about how should think or behave e.g., you are expert mathematician
+		 - <mark style="background: #FFF3A3A6;">Prompt model</mark>, about <mark style="background: #FFF3A3A6;">how should think or behave</mark> e.g., you are expert mathematician
 	 - **Tree of thoughts**
-		 - Instead of single reasoning chain, ask explore multiple, evaluate them
+		 - <mark style="background: #FFF3A3A6;">Instead of single reasoning chain</mark>, ask <mark style="background: #FFF3A3A6;">explore multiple,</mark> evaluate them
 			 1. Gen possible states
 			 2. Evaluate each step
 			 3. Expand best ones
 			 4. Prune weak paths
-	- **Self-consistency prompting**
-		- Model gathers multiple independent reasoning chains, picks most common final answer e.g., sample 5 chain of thought answers, extract final answer, choose most frequent. 
+	- **<mark style="background: #FFF3A3A6;">Self-consistency prompting</mark>**
+		- Model gathers <mark style="background: #FFF3A3A6;">multiple independent reasoning chains</mark>, <mark style="background: #FFF3A3A6;">picks most common final answer</mark> e.g., sample 5 chain of thought answers, extract final answer, choose most frequent. 
 ### RAG
 - Ground, give external knowledge at inference time, retrieve and artificially inject relevant facts into prompt itself. 
 - Pipeline:
@@ -125,17 +125,17 @@ Fixed $k$ can be restrictive or too broad depending
 #### Graph RAG
 - Standard RAG, treats knowledge, **chunks of text**
 - Many domains = relational, need finer granularity, need to be able to reason/join concepts
-- **Knowledge graphs** used, queried by LLMs, traverse graph instead
+- **<mark style="background: #FFF3A3A6;">Knowledge graphs</mark>** used, queried by LLMs, traverse graph instead
 - Complex relationships easily captured
 ### Recent trnds in LLMs
 #### Multimodal LLMs
 - LLMs, that understand multiple data types, like text, images, audio, video, transcend text-only
-- Image encoder,audio encoder etc,. align onto shared embedding space, same one as text tokens
+<mark style="background: #FFF3A3A6;">- Image encoder,audio encoder etc,. align onto shared embedding space, same one as text tokens</mark>
 
 ### Quantisation
-- Shrink LLMs, reduce precision of weights/activations, cut memory usage, speed up inference
+- <mark style="background: #FFF3A3A6;">Shrink LLMs, reduce precision of weights/activations, cut memory usage, speed up inference
 - LLMs = huge
-- LoRA/QLoRA, find smaller model that performs similarly.
+- LoRA/QLoRA, find smaller model that performs similarly.</mark>
 
 
 ### Specialised LLMs
@@ -145,17 +145,17 @@ Fixed $k$ can be restrictive or too broad depending
 - Reliable in-domain
 
 ### Agentic architectures
-- Agentic LLM, LLM composed, modular layers, mimic cognitive proceesses, mark itself, autonomous system, capable of reasoning planning, iterating
+- <mark style="background: #FFF3A3A6;">Agentic LLM, LLM composed, modular layers, mimic cognitive proceesses, mark itself, autonomous system, capable of reasoning planning, iterating</mark>
 
 #### Tool calling
-- Core mechanism, permit LLM, interact, externally, invoke APIs, databases, custom code, permit capability of real-world tasks.![](Pasted%20image%2020251227024147.png)
+<mark style="background: #FFF3A3A6;">- Core mechanism, permit LLM, interact, externally, invoke APIs,</mark> databases, custom code, permit capability of real-world tasks.![](Pasted%20image%2020251227024147.png)
 - User message, tool needed, no, text rsponse
 - User message, tool needed, yes, generate JSON schema for tool, execute function, send result back
 
 ### Mixture of experts models
 - Instead of dense model, have sparsely connected 'expert networks' with identical arch
-- Gating mechanism, routes input to experts(weighted sum, top-$k$ experts)
-	- Token embedding, goes into router
+<mark style="background: #FFF3A3A6;">- Gating mechanism, routes input to experts(weighted sum, top-$k$ experts)</mark>
+	-<mark style="background: #FFF3A3A6;"> Token embedding, goes into router</mark>
 	- Have $n$ experts, router outputs scores
 	- Choose top $k$ experts with highest scores
 	- Compute weighted sum of expert outputs
@@ -174,8 +174,8 @@ Fixed $k$ can be restrictive or too broad depending
 	- Not ecologically valid
 
 ### Evaluation dimensions
-- **Accuracy and fluency**
-- **Reasoning**
-- **Knowledge and common sense**
-- **Bias and fairness**
-- **Efficiency and scalability**
+- **<mark style="background: #FFF3A3A6;">Accuracy and fluency</mark>**
+- **<mark style="background: #FFF3A3A6;">Reasoning</mark>**
+- **<mark style="background: #FFF3A3A6;">Knowledge and common sense</mark>**
+- **<mark style="background: #FFF3A3A6;">Bias and fairness</mark>**
+- **<mark style="background: #FFF3A3A6;">Efficiency and scalability</mark>**

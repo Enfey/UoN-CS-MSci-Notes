@@ -1,155 +1,155 @@
 ## User testing for VUIs
 Special considerations made:
-- Do users, understand, can talk to system? Do they know how
-	- Discoverability problem
-- Does VUI understand, way ppl talk to it?
-	- What ppl say, words used, need to recognise them and intent
-- Is DM effective?
-	- Task completion, error recovery, disambiguation, branching, confirmation etc. 
+- <mark style="background: #FFF3A3A6;">Do users, understand</mark>, can <mark style="background: #FFF3A3A6;">talk</mark> to <mark style="background: #FFF3A3A6;">system?</mark> <mark style="background: #FFF3A3A6;">Do they know how</mark>
+	- <mark style="background: #FFF3A3A6;">Discoverability</mark> problem
+- Does <mark style="background: #FFF3A3A6;">VUI understand</mark>,<mark style="background: #FFF3A3A6;"> way</mark> <mark style="background: #FFF3A3A6;">ppl talk</mark> to it?
+	- What ppl say, words used, <mark style="background: #FFF3A3A6;">need to recognise</mark> them and intent
+- Is <mark style="background: #FFF3A3A6;">DM effective</mark>?
+	- <mark style="background: #FFF3A3A6;">Task completion</mark>,<mark style="background: #FFF3A3A6;"> error recovery</mark>, <mark style="background: #FFF3A3A6;">disambiguation</mark>, <mark style="background: #FFF3A3A6;">branching</mark>, confirmation etc. 
 
 ## User testing
-### Why testing w/ real users
-UCD
-- Find problems, early on in process, fix them
-- Most tech, designed, used by, useful for, specific audience, test with them, for effective delivery
-- Ppl, draw, on prior experience, when interacting, tech, can help/hinder; only find out via interacting.
-- Testing, improve product, more money
-- People, can have expert/local knowledge, design better VUI
+### <mark style="background: #FFF3A3A6;">Why testing w/ real users</mark>
+<mark style="background: #FFF3A3A6;">UCD</mark>
+-<mark style="background: #FFF3A3A6;"> Find problems, early on</mark> in process, fix them
+- Most tech, designed, used by, useful for, specific audience, test with them, for <mark style="background: #FFF3A3A6;">effective delivery</mark>
+- Ppl, <mark style="background: #FFF3A3A6;">draw, on prior experience</mark>, when interacting, tech, can help/hinder; only find out via interacting.
+- Testing, <mark style="background: #FFF3A3A6;">improve product</mark>, more money
+- People, can have <mark style="background: #FFF3A3A6;">expert/local knowledge</mark>, design better VUI
 
-### Testing: for what purpose?
-- Measure UX/task performance
-	- Subjective e.g., ratings vs Objective
-	- Self-reported vs behavioural/observational
-- Inform design decisions (**formulative evaluation**)
+### Testing: for <mark style="background: #FFF3A3A6;">what purpose</mark>?
+- <mark style="background: #FFF3A3A6;">Measure UX</mark>/<mark style="background: #FFF3A3A6;">task performance</mark>
+	- <mark style="background: #FFF3A3A6;">Subjective</mark> e.g., ratings <mark style="background: #FFF3A3A6;">vs Objective</mark>
+	- <mark style="background: #FFF3A3A6;">Self-reported </mark><mark style="background: #FFF3A3A6;">vs behavioural/</mark>observational
+- <mark style="background: #FFF3A3A6;">Inform design decisions</mark> (**<mark style="background: #FFF3A3A6;">formulative</mark> evaluation**)
 	- Early on, mid-stage
-- Evaluate final prototype (**summative evaluation**)
-- Report success measures, to clients, write a paper, etc.
+- <mark style="background: #FFF3A3A6;">Evaluate final prototype</mark> (**<mark style="background: #FFF3A3A6;">summative </mark>evaluation**)
+- <mark style="background: #FFF3A3A6;">Report success measures</mark>, to clients, <mark style="background: #FFF3A3A6;">write a paper</mark>, etc.
 
 ### User study
-- **Goal**
+- **<mark style="background: #FFF3A3A6;">Goal</mark>**
 	- What is purpose/goal
 	- Driven by research questions, hypotheses
 	- Study UX, perf
-- **Tasks**
+- **<mark style="background: #FFF3A3A6;">Tasks</mark>**
 	- What asking user to do
-- **Ppts**
+- **<mark style="background: #FFF3A3A6;">Ppts</mark>**
 	- Ethics, recruitment, instruction, reimbursement, sampling
-- **Data collection/analysis**
+- **<mark style="background: #FFF3A3A6;">Data</mark> collection/<mark style="background: #FFF3A3A6;">analysis</mark>**
 	- How/what data collecting (interviews, surveys)
 	- Is it valid
 	- How being analysed(quant vs qual)
 
-#### Task definition
-- Designed, exercise, parts of system, wish to test
-- Focus on primary dialogue paths
-	- Features, used freq
-	- Tasks, areas, high risks
-	- Tasks, address major goals/design criteria, ident in req def
-- Write task definitions, carefully, avoid bias
-- Describe goal of task, no mention, command words, elicit, real interaction
+#### <mark style="background: #FFF3A3A6;">Task definition</mark>
+- Designed, <mark style="background: #FFF3A3A6;">exercise</mark>, <mark style="background: #FFF3A3A6;">parts of system</mark>,<mark style="background: #FFF3A3A6;"> wish to test</mark>
+- <mark style="background: #FFF3A3A6;">Focus</mark> on <mark style="background: #FFF3A3A6;">primary dialogue paths</mark>
+	- Features, <mark style="background: #FFF3A3A6;">used freq</mark>
+	- Tasks, areas, <mark style="background: #FFF3A3A6;">high risks</mark>
+	- Tasks, <mark style="background: #FFF3A3A6;">address </mark>major goals/<mark style="background: #FFF3A3A6;">design criteria</mark>, ident in req def
+- Write<mark style="background: #FFF3A3A6;"> task definitions</mark>, carefully, <mark style="background: #FFF3A3A6;">avoid bias</mark>
+- <mark style="background: #FFF3A3A6;">Describe goal of task</mark>, <mark style="background: #FFF3A3A6;">no mention</mark>, <mark style="background: #FFF3A3A6;">command words,</mark> elicit, real interaction
 
-#### Task Order
-- Avoid order effects (primacy, recency effects)
-- Randomise tasks, **latin square design**, each task, in every pos.
+#### <mark style="background: #FFF3A3A6;">Task Order</mark>
+- <mark style="background: #FFF3A3A6;">Avoid order effects</mark> (primacy, recency effects)
+- Randomise tasks, **<mark style="background: #FFF3A3A6;">latin square design</mark>**, each task, in every pos.
 	![](Pasted%20image%2020251225014640.png)
-- **Counterbalance** order if using conditions (different versions of a task), prevent a condition's results being confounded by its position. 
+- **<mark style="background: #FFF3A3A6;">Counterbalance</mark>** order if using conditions (different versions of a task), prevent a condition's results being confounded by its position. 
 	- Half do condition A, then B
 	- Half do condition B, then A
-	- Only use when conditions
+	- <mark style="background: #FFF3A3A6;">Only use when conditions</mark>
 
 #### Participants
-- **Characteristics**
+- **<mark style="background: #FFF3A3A6;">Characteristics</mark>**
 	- Demographics, experience of use, practicality
-- **Sample+pop**
-	- Stratified, accoring to certain characteristics
-	- Need large enough N, generalise results
+- **<mark style="background: #FFF3A3A6;">Sample+pop</mark>**
+	- <mark style="background: #FFF3A3A6;">Stratified</mark>, accoring to certain characteristics
+	- Need <mark style="background: #FFF3A3A6;">large enough N</mark>, generalise results
 - **How many is enough**
-	- Nielsen: test with 5 users or less, 2 for low-fidel prototypes, many iterations of testing e.g., 3
-	- For fewer iterations, test w/ more users, up to 20 for finished products. 
+	- Nielsen: test with <mark style="background: #FFF3A3A6;">5 users or less,</mark> <mark style="background: #FFF3A3A6;">2 for low-fidel prototypes,</mark> many<mark style="background: #FFF3A3A6;"> iterations of testing e.g., 3</mark>
+	- For<mark style="background: #FFF3A3A6;"> fewer iterations</mark>, test w/ more users,<mark style="background: #FFF3A3A6;"> up to 20</mark> for <mark style="background: #FFF3A3A6;">finished products. </mark>
 
 #### Data collection
-- Questionnaires/surveys/structured interviews, gather self-report data
+- <mark style="background: #FFF3A3A6;">Questionnaires/surveys/structured interviews</mark>, gather s<mark style="background: #FFF3A3A6;">elf-report data</mark>
 	- Lots of techniques, e.g., SUS
 	- Tools make own, open/closed ended, Q, liker scale, rankings, scores etc.
-- Measurement, video/audio gather observational data
-	- Quant: errors, time, completions, num words
-	- Qual: audio recordings/interactions with VUIs
+- Measurement,<mark style="background: #FFF3A3A6;"> video/audio gather observational data</mark>
+	- Quant: <mark style="background: #FFF3A3A6;">errors, time, completions, num words</mark>
+	- Qual: <mark style="background: #FFF3A3A6;">audio recordings/interactions with VUIs</mark>
 
 #### Data analysis
-- Quant
-	- Hypothesis testing
-	- Descriptive+inferential statistics
-		- Depend on type of data + distribution
-	- Algorithmic/mathematical e.g., precision and recall
+- <mark style="background: #FFF3A3A6;">Quant</mark>
+	- <mark style="background: #FFF3A3A6;">Hypothesis testing</mark>
+	- <mark style="background: #FFF3A3A6;">Descriptive+inferential statistics</mark>
+		- <mark style="background: #FFF3A3A6;">Depend on type of data</mark> + <mark style="background: #FFF3A3A6;">distribution</mark>
+	- <mark style="background: #FFF3A3A6;">Algorithmic</mark>/mathematical e.g.,<mark style="background: #FFF3A3A6;"> precision and recall</mark>
 - Qual
-	- Thematic analysis
-	- Conversation analysis
-	- Interaction analysis(multimodal)
+	-<mark style="background: #FFF3A3A6;"> Thematic analysis</mark>
+	-<mark style="background: #FFF3A3A6;"> Conversation analysis</mark>
+	- <mark style="background: #FFF3A3A6;">Interaction analysis</mark>(<mark style="background: #FFF3A3A6;">multimodal</mark>)
 
 ### Early stage and Usability testing
 
 #### Early stage testing
 - Test concepts, dialogue flows, early on, design process
-- **Table reads** w/sample with **sample dialogues**
-	- How sound? Reptitive? Concise? Natural?
+- **<mark style="background: #FFF3A3A6;">Table reads</mark>** w/sample with **<mark style="background: #FFF3A3A6;">sample dialogues</mark>**
+	- How sound? <mark style="background: #FFF3A3A6;">Reptitive</mark>?<mark style="background: #FFF3A3A6;"> Concise</mark>? <mark style="background: #FFF3A3A6;">Natural</mark>?
 	- Good for spotting too many transitions
-- Initial reactions to **mock-ups**
-- Wizard of Oz
+- Initial reactions to **<mark style="background: #FFF3A3A6;">mock-ups</mark>**
+-<mark style="background: #FFF3A3A6;"> Wizard of Oz</mark>
 	- Human simulate fully working system, cheap, realistic
 	- Elicitation study, learn what lang people use
 	- How does one, realistically simulate features e.g., recog accuracy
 		- Human wizard understanding, makes simulation, unrealistic, need strict protocol, wizard's rules.
 
 #### Usability testing
-- When have **working app**
-	- Should have features, want to test, in fully working state, parts may still be hardcoded
-- Can test dialogue flow, ease of use
+- When have **<mark style="background: #FFF3A3A6;">working app</mark>**
+	- Should have <mark style="background: #FFF3A3A6;">features</mark>, <mark style="background: #FFF3A3A6;">want to test</mark>, in fully working state, <mark style="background: #FFF3A3A6;">parts</mark> may <mark style="background: #FFF3A3A6;">still be hardcoded</mark>
+- Can <mark style="background: #FFF3A3A6;">test dialogue flow</mark>, <mark style="background: #FFF3A3A6;">ease of use</mark>
 	- Not aimed, testing perf
-	- Done in lab setting
-	- Can be done remotely?
-- Measure both perf, and experience.
-	- Cognitive effort, accuracy, speed, transparency, friendliness (VUI)
-- Analysis
-	- Identify pain points
-	- Recommendations: rank issues by severity; plan how to fix and when
+	- Done in<mark style="background: #FFF3A3A6;"> lab setting</mark>
+	- Can be done <mark style="background: #FFF3A3A6;">remotely</mark>?
+- <mark style="background: #FFF3A3A6;">Measure both perf</mark>, and <mark style="background: #FFF3A3A6;">experience.</mark>
+	- <mark style="background: #FFF3A3A6;">Cognitive effort</mark>, <mark style="background: #FFF3A3A6;">accuracy</mark>, <mark style="background: #FFF3A3A6;">speed</mark>, <mark style="background: #FFF3A3A6;">transparency,</mark> <mark style="background: #FFF3A3A6;">friendliness</mark> (VUI)
+- <mark style="background: #FFF3A3A6;">Analysis</mark>
+	- <mark style="background: #FFF3A3A6;">Identify pain points</mark>
+	- <mark style="background: #FFF3A3A6;">Recommendations</mark>: rank issues by severity; plan how to fix and when
 
 #### Chatbot usability questionnaire
-- Questionnaire, designed, measure, **usability**
-- CUQ, designed, comparable, SUS, 16 items
-- Measures: **realism, engagement, friendliness, purpose, ease of use, understanding, relevance of responses, error handling**
+- <mark style="background: #FFF3A3A6;">Questionnaire</mark>, designed, <mark style="background: #FFF3A3A6;">measure,</mark> **<mark style="background: #FFF3A3A6;">usability</mark>**
+- CUQ, designed, comparable, <mark style="background: #FFF3A3A6;">SUS</mark>, <mark style="background: #FFF3A3A6;">16 items</mark>
+- Measures: **<mark style="background: #FFF3A3A6;">realism</mark>, <mark style="background: #FFF3A3A6;">engagement</mark><mark style="background: #FFF3A3A6;">, friendliness,</mark><mark style="background: #FFF3A3A6;"> purpose,</mark> <mark style="background: #FFF3A3A6;">ease of use</mark>, <mark style="background: #FFF3A3A6;">understanding</mark>,<mark style="background: #FFF3A3A6;"> relevance of responses</mark>,<mark style="background: #FFF3A3A6;"> error handling</mark>**
 
 #### Settings 
 - Lab vs Real-World
-- Generally, field trial, shows messiness, but ecological validity.
+- Generally, <mark style="background: #FFF3A3A6;">field trial</mark>, shows messiness, but <mark style="background: #FFF3A3A6;">ecological validity.</mark>
 
 ### Prerelease + Pilot testing
 #### Prerelease tesing
-- **Dialogue traversal testing**
-	- Purpose: system accurately implement dialogue spec
-	- Test all transitions, error prompts, help prompts
+- **<mark style="background: #FFF3A3A6;">Dialogue traversal testing</mark>**
+	- Purpose: <mark style="background: #FFF3A3A6;">system accurately implement dialogue spec</mark>
+	- Test <mark style="background: #FFF3A3A6;">all transitions</mark>, error prompts, help prompts
 	- Try out of grammar utterances, try silence to test no-speech time outs.
-- **Load testing**
+- **<mark style="background: #FFF3A3A6;">Load testing</mark>**
 	- Stress test, concurrent user sessions, determine outcome. 
 
 #### Pilot testing
-- Define **success criteria**
+- Define **<mark style="background: #FFF3A3A6;">success criteria</mark>**
 	- Not just recog accuracy
 	- Talk martketers, sales, support, shareholders
 		- 500 users first month, 60% users make hotel reservation after starting it
 - Key measures of success:
-	- **Task completion rate**
-	- **Dropout rates** - inverse of above
-	- **Time spent**
-	- **Barge-in**
-	- **Speech vs GUI**
-	- **No-speech timeouts**
-	- **No-intent matches**
-	- **Errors**
-	- **Navigational info**
-	- **Latency**
+	- **<mark style="background: #FFF3A3A6;">Task completion rate</mark>**
+	- **<mark style="background: #FFF3A3A6;">Dropout rates</mark>** - inverse of above
+	- **<mark style="background: #FFF3A3A6;">Time spent</mark>**
+	- **<mark style="background: #FFF3A3A6;">Barge-in</mark>**
+	- **<mark style="background: #FFF3A3A6;">Speech vs GUI</mark>**
+	- **<mark style="background: #FFF3A3A6;">No-speech timeouts</mark>**
+	- **<mark style="background: #FFF3A3A6;">No-intent matches</mark>**
+	- **<mark style="background: #FFF3A3A6;">Errors</mark>**
+	- **<mark style="background: #FFF3A3A6;">Navigational info</mark>**
+	- **<mark style="background: #FFF3A3A6;">Latency</mark>**
 
 #### Logging
-- Log measures of success e.g., 
+- <mark style="background: #FFF3A3A6;">Log measures of success</mark> e.g., 
 	- Recognition result (including conf scores)
 	- N-best list (if available (list of possible hypotheses))
 	- Audio of user's utterance - for each state, including pre- and post-endpointed utterances

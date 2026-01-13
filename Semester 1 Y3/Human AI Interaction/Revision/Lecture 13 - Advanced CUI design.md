@@ -51,65 +51,65 @@ Approaches to reduce error.
 ## Dialogue Management
 - <mark style="background: #FFF3A3A6;">Make dialogue flow</mark>, <mark style="background: #FFF3A3A6;">flexible,</mark> effective, by <mark style="background: #FFF3A3A6;">managing conversational process</mark>, a lot of <mark style="background: #FFF3A3A6;">design principles</mark>
 - Effective DM, adapt to user effectively. 
-### Capturing Intent and objects
-- Recognise both
+### <mark style="background: #FFF3A3A6;">Capturing Intent and objects</mark>
+- <mark style="background: #FFF3A3A6;">Recognise both</mark>
 	- Show me my calendar
-- Intent and object, combined in concept of **utterances**
-	- Utterances, how user says it, allow, map different ways, user may express themselves, to same intent
-	- Objects can be captured as slots. 
+- Intent and object, <mark style="background: #FFF3A3A6;">combined</mark> in concept of **<mark style="background: #FFF3A3A6;">utterances</mark>**
+	- Utterances, how user says it, allow, <mark style="background: #FFF3A3A6;">map different ways</mark>, <mark style="background: #FFF3A3A6;">user </mark>may <mark style="background: #FFF3A3A6;">express themselves</mark>, to <mark style="background: #FFF3A3A6;">same intent</mark>
+	- <mark style="background: #FFF3A3A6;">Objects</mark> can be <mark style="background: #FFF3A3A6;">captured</mark> as <mark style="background: #FFF3A3A6;">slots. </mark>
 
-### Handling negation
+### <mark style="background: #FFF3A3A6;">Handling negation</mark>
 - Negative responses, important
-- Express what don't want. 
+- <mark style="background: #FFF3A3A6;">Express</mark> <mark style="background: #FFF3A3A6;">what</mark> <mark style="background: #FFF3A3A6;">don't want</mark>. 
 - E.g., not very good -> matching on good
 	- Not ideal
-- Can be handled by LOGICAL EXPRESSIONS.
+- Can be handled by <mark style="background: #FFF3A3A6;">LOGICAL EXPRESSIONS.</mark>
 
 
-### Should VUI display what recognised
-- May make transcription errors visible/audible
-- Allow user recover from errors, not left guessing
-- Good strategy, if utterance must be recognised to fulfill intent
-- Can be distracting if not required though
-- Strategy depends on where in process user is and context of app. 
+### <mark style="background: #FFF3A3A6;">Should VUI display what recognised</mark>
+- May <mark style="background: #FFF3A3A6;">make transcription errors visible</mark>/audible
+- Allow user recover from errors, <mark style="background: #FFF3A3A6;">not left guessing</mark>
+- <mark style="background: #FFF3A3A6;">Good strategy</mark>, <mark style="background: #FFF3A3A6;">if</mark> utterance <mark style="background: #FFF3A3A6;">must</mark> be<mark style="background: #FFF3A3A6;"> recognised</mark> to<mark style="background: #FFF3A3A6;"> fulfill</mark> <mark style="background: #FFF3A3A6;">intent</mark>
+- Can be <mark style="background: #FFF3A3A6;">distracting</mark> if not required though
+- <mark style="background: #FFF3A3A6;">Strategy depends</mark> on where in process user is and context of app. 
 
-### Sentiment analysis
+### <mark style="background: #FFF3A3A6;">Sentiment analysis</mark>
 - Process, computationally identifying + categorising opinions expressed in utterance
 - NLP needed e.g., BOW from stemmed/lemmatising docs, compute rep for input, map, compute distance/similarity from inp to 'sentiment docs'
-- In VUIs, capturing sentiment, useful, generate appropriate responses, on fly.
+- In VUIs, capturing sentiment, useful, <mark style="background: #FFF3A3A6;">generate appropriate responses</mark>, on fly.
 
-### TTS vs recorded human speech
+### <mark style="background: #FFF3A3A6;">TTS vs recorded human speech</mark>
 - TTS much better now
 	- Speech Synthesis Markup Language, can be used to tune **prosody** (pitch, rate(speed), volume) etc.
 - Recording voice talent, can make VUI sound more natural, but costly, not flexible, cumbersome. 
 
-### Speaker verification
+### <mark style="background: #FFF3A3A6;">Speaker verification</mark>
 - Biometric auth, voice ID
 
-### Context
+### <mark style="background: #FFF3A3A6;">Context</mark>
 - Take advantage, basic context, make VUI seem smarter, track stages required, complete transaction
-- Coreference resolution, facilitated too.
+- <mark style="background: #FFF3A3A6;">Coreference resolution,</mark> facilitated too.
 
-### Personalisation
+###<mark style="background: #FFF3A3A6;"> Personalisation</mark>
 - Use user's name and other info, personalise chatbot prompt
 - Greeting user in time zone
 - Referring last log on
 - Use location
-### Advanced multimodal
+### <mark style="background: #FFF3A3A6;">Advanced multimodal</mark>
 - Hybrid stats, voice + visual output
 - Could also have hybrid strats of voice+visual input
 - Or VUI embedded in website
 
-### Bootstrapping datasets
-- Build own lang models
+### <mark style="background: #FFF3A3A6;">Bootstrapping datasets</mark>
+-<mark style="background: #FFF3A3A6;"> Build own lang models</mark>
 	- Website data
 	- Call center data
 	- Data collection, whemn there isn't any available data, ask ppl questions that VUI would ask, transcribe, simulate VUI, also crowdscourcing
 ## Conclusions
- - VUI/CUI not solved problem, huge challenges around gap between how ppl talk, capabilities of ASR and NLU to recog intent, respond appropriately
+ - VUI/CUI <mark style="background: #FFF3A3A6;">not solved problem</mark>, huge challenges around <mark style="background: #FFF3A3A6;">gap between how ppl talk</mark>, capabilities of <mark style="background: #FFF3A3A6;">ASR</mark> and <mark style="background: #FFF3A3A6;">NLU</mark> to <mark style="background: #FFF3A3A6;">recog intent</mark>, respond appropriately
  - A lot designers can do to make CUI/VUI effective
-	 - Dialogue management, overarching concept
-		 - Disambiguation, error recovery, negation, personalisation discoverability, multimodal, TTS, etc
+	 - <mark style="background: #FFF3A3A6;">Dialogue management</mark>, overarching concept
+		 - <mark style="background: #FFF3A3A6;">Disambiguation</mark>, error recovery, negation, personalisation discoverability, multimodal, TTS, etc
 		 - Overall, DM, help user, provide expected/well-formatted input via good prompt and response design, ensure task completion. 
 
 
