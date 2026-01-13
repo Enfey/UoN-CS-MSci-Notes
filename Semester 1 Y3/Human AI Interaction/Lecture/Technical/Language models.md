@@ -11,7 +11,7 @@ $P(w_1, w_2, w_3,...w_n) = P(w_1) \times P(w_2∣w_1) \times P(w_3∣w_1, w_2) \
 Impossible to compute directly. Aka:
 $$\prod_iP(w_i ∣w_1, w_2 \dots w_{i-1})$$
 We simplify this such that each word depends only on last few words, not entire sentence,
-$P(w_i∣w_{i-n+1}, \dots w_{i-1})$ 
+	$P(w_i∣w_{i-n+1}, \dots w_{i-1} )$ (range) 
 Each word $i$ depends only on a **restricted set of preceding words.** 
 Assumption: language is a **stochastic, memoryless process**. 
 We use the above 2 statements to make the language countable.

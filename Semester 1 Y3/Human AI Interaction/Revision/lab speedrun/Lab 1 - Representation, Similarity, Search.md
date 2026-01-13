@@ -76,7 +76,7 @@ $q$ <mark style="background: #FFF3A3A6;">must undergo</mark> <mark style="backgr
 ### Confidence threshold + fallback
 Key concept HAII, management of failure, always chance query does not match anything, <mark style="background: #FFF3A3A6;">usually computed</mark> by some sort of <mark style="background: #FFF3A3A6;">arbitrary threshold</mark> in our similarity <mark style="background: #FFF3A3A6;">under which</mark> <mark style="background: #FFF3A3A6;">nothing</mark> is <mark style="background: #FFF3A3A6;">considered relevant. </mark>
 
-####<mark style="background: #FFF3A3A6;"> Fallback by warning message</mark>
+#### <mark style="background: #FFF3A3A6;"> Fallback by warning message</mark>
 Display nothing relevant, suggest reformulation
 #### <mark style="background: #FFF3A3A6;">Fallback by query expansion</mark>
 One may use lang model e.g., given existing query, what is <mark style="background: #FFF3A3A6;">most likely next term entered by user</mark>, or may <mark style="background: #FFF3A3A6;">use semantic resource</mark> e.g., <mark style="background: #FFF3A3A6;">ontology</mark> to refine the query. 

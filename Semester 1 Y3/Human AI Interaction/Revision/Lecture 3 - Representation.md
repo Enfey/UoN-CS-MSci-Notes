@@ -27,7 +27,7 @@ $$
 - How far apart two vectors are, low value = more similar
 - Euclidean distance
 	- Measure straight-line distance between two vectors in $V$ dimensional space
-	- $dist_{Euc}\left( A^{\to}B^{\to} = \sqrt{ \sum_{i=1}^{V}(A_{i}B_{i})  }  \right)$
+	- $dist_{Euc}\left( A^{\to}B^{\to} = \sqrt{ \sum_{i=1}^{V}(A_{i}-B_{i})  }  \right)$
 - Manhattan distance, measures absolute difference between word weights.
 ### Similarity in vector space
 - How close/alike two vectors are, high value, more similar
