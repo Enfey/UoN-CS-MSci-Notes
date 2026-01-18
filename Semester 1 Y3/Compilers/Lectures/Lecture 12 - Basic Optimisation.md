@@ -86,6 +86,7 @@ We define $SVLN$ over $EBBs$ rather than arbitrary $CFG$ regions becuause $EBBs$
 At conditional branches, you copy the table and propagate independently down each successor.
 Furthermore, we kill on redefinitions, that is assign a new value number and remove previous mappings for the old name.
 
+
 ##### Example
 1. Identify $EBB$
 	$B_1:$
