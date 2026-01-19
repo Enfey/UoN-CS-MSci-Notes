@@ -42,6 +42,65 @@ $$ L(G) = \{w \in T^* \ |\ S \xRightarrow{*}_G w
 - Solve by introducing a new symbol to the left of $S$ 
 
 #### Left Factoring
+- When two alternatives share a common prefix, must factor the grammar; a single lookahead not enough to decide which alternative to choose.
 - Given productions of the form $A → αβ₁ | αβ₂ | αβ₃$ where $α$ is the **common prefix** and $β_i$ are the distinct suffixes.
 - Left factor them into:
-	- $A → a  
+	- $A → a  \ A'$ 
+	- $A' \to β₁ | β₂ | β₃$ 
+- TAKE OUT THE COMMON PREFIX, then make a separate rule for the distinct part of each thing in a production
+- Removes common prefixes from productions
+
+#### Direct Left Recursion Elimination
+- For all productions of the form: $$A\to A a_{1} \ | \ A a_{2} \ | \dots \ | \ \beta_{1} \ | \beta_{2} \ | \ $$
+	Where $a_{i} \neq \epsilon$
+	Where $\beta_{i}$ does not start with $A$
+- Replace these with with two sets of productions:
+	1. $A \to \beta_1 A' \ | \ \beta_2 A'$
+	2. $A' \to a_{1} A' \ | \ a_{n}A' \ | \ \epsilon$ 
+
+$Expression \to Expression + Expression \ | \ Integer \ | \ String$ 
+
+Could be rewritten to avoid recursion as
+$Expression  \to Integer \ Expression'  \ | \ String  \ Expression'$
+$Expression' \to +Expression  \ Expression'  \ |  \  \epsilon$ 
+
+##### Questions
+In book
+
+
+## Parsing strategies
+Goal of parsing, construct a parse tree
+- Inner nodes = NTs
+- Leaves are terminals representing the input
+- Shape of the tree shows which rules were applied in which order
+Can be constructed **top-down** or **bottom-up**
+### Bottom-up
+Covered next lecture
+
+### Top-Down
+- Begin with root, and grow tree down toward leaves, selecting nonterminal recursively on lower fringe of the tree, extending it with RHS of production that that rewrites the NT. 
+- Continue until input stream exhausted or sentential form yielded. If exhaused, may have selected wrong production, may need to backtrack. Can construct parser and grammar in a way that is backtrack free via left factoring, complete elimination of left recursion and use of a lookahead token to decide which production to take. 
+#### LL(1) parsing
+- Top down look-ahead parsing algorithm requiring a single character of lookahead
+- Parses a grammar in $O(n)$ time relative to the derivation length, no backtracking
+- To build an LL(1) parser
+	1. Compute the **first** and **follow** sets for each symbol
+	2. Compute the **start** set for each production
+	3. Use sets to build a table to show which rule to apply for each NT + input symbol combination. 
+##### First sets
+- $First(\alpha)$ is the set of terminals that can appear at the the start of a sentence derived by $\alpha$ 
+- If $\alpha$ is terminal, $\epsilon$ or $eof$ then $First(\alpha)$ has exactly one member, $\alpha$.
+- For a production $A \to \beta C$ 
+	- If $\beta$ is a terminal, add $\beta$ directly to $First(\alpha)$ 
+	- If $\beta$ is a nonterminal, add $First(\beta)$ to $First(\alpha)$ 
+	- If $\beta$ can derive the empty string, add $First(C)$ too.
+
+##### Follow sets
+- $Follow(A)$ is the set of terminals that can appear immediately after parsing an $A$.
+- For a production $C \to \beta A \delta$ 
+	- Add $First(\delta)$ to $Follow(A$)
+	- If $\delta$ can derive the empty string, add $Follow(\delta)$ to $Follow(A)$ 
+- For a production $C \to \beta A$
+	- Add $Follow(C)$ to $Follow(A)$
+		- LAST NONTERMINALS GET THE LHS OF PRODUCTION ADDED.
+##### Start sets
