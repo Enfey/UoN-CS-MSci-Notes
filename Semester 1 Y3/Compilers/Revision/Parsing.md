@@ -99,8 +99,33 @@ Covered next lecture
 - $Follow(A)$ is the set of terminals that can appear immediately after parsing an $A$.
 - For a production $C \to \beta A \delta$ 
 	- Add $First(\delta)$ to $Follow(A$)
-	- If $\delta$ can derive the empty string, add $Follow(\delta)$ to $Follow(A)$ 
+	- If $\delta$ can derive the empty string, add $Follow(\delta)$ to $Follow(A)$ too.
 - For a production $C \to \beta A$
 	- Add $Follow(C)$ to $Follow(A)$
 		- LAST NONTERMINALS GET THE LHS OF PRODUCTION ADDED.
+- INIT START SYMBOL WITH EOF.
 ##### Start sets
+- $Start (A \to B \ C)$ is the set of terminals that indicate that the rule $A \to B \ C$ can be applied.
+- If $A \to B \ C$ 
+	- Add $First(B)$ to $Start(A \to B \ C)$
+	- If $B$ can derive the empty string, also add $First(C)$
+	- If the whole RHS can derive the empty string, add $Follow(A)$
+- Each alternative for a non-terminal has a **separate start set**.
+- ADD FIRSTS, ADD CONSECTUTIVE FIRST IF DERIVE EMPTY, IF ALL DERIVE EMPTY, THEN ADD FOLLOW OF THE NT PRODUCTION.
+
+
+#### Parse table/function
+- Parsing can be defined either as table lookup or a function.
+- To apply a production $A \to B \ C$, the top symbol of the parse stack must be $A$ and the next token must belong to $Start(A \ \to B \ C)$ 
+- A terminal on top of the stack matches the same terminal in the input, and consumes it. 
+- Have skeleton parser, that uses stack to manage unmatched portion of parse tree's fringe. 
+- Parser initialises stack with $eof$ and $S$ 
+- Repeatedly examine symbol at top of stack ($focus$) and the current input. 
+- If the focus is terminal, matches next word, both are consumed
+- If the focus is NT, consult parse table, determine the correct production according to the Start set. 
+
+
+
+A grammar is considered **backtrack-free** if, for any nonterminal A with multiple alternative right-hand sides, the FIRST+ sets of those alternatives are pairwise disjoint (all disjoint). This is known as an **LL(1) grammar.**
+
+For every terminal $w \in FIRST^+$ $(A \to \beta)$, the table entry $Table[A, w]$ is set to the production $A \to \beta$. 
