@@ -4,10 +4,10 @@
 	- If <mark style="background: #FFF3A3A6;">carries no meaning</mark>, then <mark style="background: #FFF3A3A6;">don't emit token</mark>; <mark style="background: #FFF3A3A6;">otherwise emit</mark> token like everything else with whitespace lexeme and syntactic category/kind
 ## Scanners vs Automata
 - <mark style="background: #FFF3A3A6;">Typical DFA</mark>, tries to <mark style="background: #FFF3A3A6;">recognise</mark> the <mark style="background: #FFF3A3A6;">entire input</mark>
-	- A <mark style="background: #FFF3A3A6;">scanner</mark> needs to <mark style="background: #FFF3A3A6;">repeatedly recognise</mark><mark style="background: #FFF3A3A6;"> portions of the input</mark>,<mark style="background: #FFF3A3A6;"> identifying the longest prefix </mark>from the remaining input that <mark style="background: #FFF3A3A6;">forms a valid token. </mark>
-- DFA has to report 'reject' or 'accept'
+	- A <mark style="background: #FFF3A3A6;">scanner</mark> needs to <mark style="background: #FFF3A3A6;">repeatedly recognise</mark><mark style="background: #FFF3A3A6;"> portions of the input</mark>,<mark style="background: #FFF3A3A6;"> identifying the longest prefix </mark>from the remaining **input that <mark style="background: #FFF3A3A6;">forms a valid token. </mark>**
+- **DFA has to report 'reject' or 'accept'**
 	- A theoretical DFA only answers "accept or reject"; a <mark style="background: #FFF3A3A6;">scanner's "DFA" must say</mark> which token was accepted/<mark style="background: #FFF3A3A6;">which state was accepted in.</mark>
-- If a DFA reaches an error state it immediately rejects 
+- **If a DFA reaches an error state it immediately rejects** 
 	- <mark style="background: #FFF3A3A6;">Scanner may be able to ‘rollback</mark>’ to find a shorter prefix it could accept
 
 

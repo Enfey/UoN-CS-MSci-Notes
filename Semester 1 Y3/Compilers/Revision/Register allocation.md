@@ -115,7 +115,7 @@ If a <mark style="background: #FFF3A3A6;">colouring is impossible</mark>, <mark 
 	![](Pasted%20image%2020260118213404.png)
 	If <mark style="background: #FFF3A3A6;">no node with lower degree exists</mark>, <mark style="background: #FFF3A3A6;">pick node</mark> with **lowest spill cost** each time, mark as spill candidate, remove. <mark style="background: #FFF3A3A6;">LOWEST DEGREE ON STACK FIRST, IF EQUAL, THEN LOWER SPILL COST GOES FIRST.</mark>
 4. Rebuild the graph
-	<mark style="background: #FFF3A3A6;">Pop nodes</mark> from stack<mark style="background: #FFF3A3A6;"> one by one</mark> in <mark style="background: #FFF3A3A6;">order of spill cost</mark> (doubly ordered)
+	<mark style="background: #FFF3A3A6;">Pop nodes</mark> from stack<mark style="background: #FFF3A3A6;"> one by one</mark>
 	<mark style="background: #FFF3A3A6;">Reinsert each node into graph, assign it colour different from its neighbours</mark>
 <mark style="background: #FFF3A3A6;">	If no register available, uncoloured, must be spilled. 
 5. Inserting spill code
