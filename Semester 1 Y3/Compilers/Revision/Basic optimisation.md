@@ -1,4 +1,4 @@
-> Optimising compilere generate code optimised in aspects such as execution time, memory footprint, code size, power consumption. Generally implemented as sequence of optimisation transformations to transform either IR or generated code for the target backend, producing a **semantic equivalent** which is optimised in some way.
+> Optimising compilere <mark style="background: #FFF3A3A6;">generate code</mark><mark style="background: #FFF3A3A6;"> optimised</mark> in aspects such as <mark style="background: #FFF3A3A6;">execution time,</mark> memory <mark style="background: #FFF3A3A6;">footprint</mark>, code size, <mark style="background: #FFF3A3A6;">power consumption. </mark>Generally implemented as<mark style="background: #FFF3A3A6;"> sequence of optimisation transformations</mark> to <mark style="background: #FFF3A3A6;">transform</mark> either <mark style="background: #FFF3A3A6;">IR</mark> or <mark style="background: #FFF3A3A6;">generated code</mark> for the target backend, producing a **semantic equivalent** which is optimised in some way.
 
 
 ## Constraints
@@ -6,11 +6,11 @@
 
 ***Perfectly optimal code is not possible; optimising one aspect often degrades performance for another***
 	Generally leads optimisation to be a collection of heuristic methods for improving resource usage. 
-
+<mark style="background: #FFF3A3A6;">PERFECTLY OPTIMAL NOT POSSIBLE, MUST PROVE CANNOT ALTER SEMANTICS OF SOURCE PROGRAM. </mark>
 
 ## Scope of Optimisation
-- Optimisation can be applied to different sized sections of the program
-- Smaller scopes generally simpler to optimise, but more limited in impact. 
+<mark style="background: #FFF3A3A6;">- Optimisation can be applied to different sized sections of the program</mark>
+<mark style="background: #FFF3A3A6;">- Smaller scopes generally simpler to optimise, but more limited in impact. </mark>
 
 | Scope           | Involves                                   |
 | --------------- | ------------------------------------------ |
@@ -21,13 +21,13 @@
 
 
 ### Local optimisation
-- Use info local to basic block
-- Since basic blocks contain no branches, these optimisations require minimal analysis, reducing time+storage requirements. 
+- <mark style="background: #FFF3A3A6;">Use info local</mark> to <mark style="background: #FFF3A3A6;">basic block</mark>
+- <mark style="background: #FFF3A3A6;">Since basic blocks</mark> contain<mark style="background: #FFF3A3A6;"> no branches,</mark> these<mark style="background: #FFF3A3A6;"> optimisations </mark><mark style="background: #FFF3A3A6;">require</mark> <mark style="background: #FFF3A3A6;">minimal analysis,</mark> <mark style="background: #FFF3A3A6;">reducing time</mark>+<mark style="background: #FFF3A3A6;">storage requirements</mark>. 
 
 #### Local Value Numbering
-- Aims to find multiple instances of equivalent expressions(those that yield the same result), replacing them with the first occurrence
-- Eliminates redundant calculations. 
-- We assign a unique number/value to to track when they change. 
+- <mark style="background: #FFF3A3A6;">Aims</mark> to find <mark style="background: #FFF3A3A6;">multiple instances </mark>of<mark style="background: #FFF3A3A6;"> equivalent expressions</mark>(those that yield the same result), <mark style="background: #FFF3A3A6;">replacing them</mark> with the <mark style="background: #FFF3A3A6;">first occurrence</mark>
+- E<mark style="background: #FFF3A3A6;">liminates redundant calculations</mark>. 
+- We assign a <mark style="background: #FFF3A3A6;">unique number</mark>/value to to track when they change. 
 
 For each operation  $T_{i}= L_i \ Op \ R_i$ 
 - Let $V_1 = lookup(L_i)$ and $V_2 = lookup R_i$ 
@@ -95,32 +95,32 @@ REUSE THE ORIGINAL LOCAL VALUE, INSTEAD OF CREATING NEW TABLE ENTRY, LOOK AT VAL
 - **Commutative operations (yield same, no matter how ordered)**
 	- **Should receive the same value.**
 	- To achieve, normalise operands, by storing key as smaller value number first, so both expressions get the same value number/rewrite.
-- If both operands are known constants, we may be able to compute the result directly, use this in place of variable lookups
+- If both operands are known constants, we may be able to <mark style="background: #FFF3A3A6;">compute the result directly</mark>, <mark style="background: #FFF3A3A6;">use this in place of variable lookups</mark>
 	- If $a:= 2 + 3$ simply mark $a$ as having the constant value $5$ and then future uses of $a$ can then substitute the literal value 5, rather than referring to that variable/expression. This is **constant folding**.
 	- <mark style="background: #FFF3A3A6;">By assigning value numbers to constants and expressions, when an operations operands have constant values when looked up(constant propagation), can evaluate the expression at compile time, and replace with the resulting constant.</mark>
 
 
 
 ### Regional optimisation
-Operate in a region in the CFG that contain multiple blocks, loops, paths, trees, extended basic block particularly. 
+<mark style="background: #FFF3A3A6;">Operate </mark>in a <mark style="background: #FFF3A3A6;">region</mark> in the <mark style="background: #FFF3A3A6;">CFG</mark> that contain <mark style="background: #FFF3A3A6;">multiple blocks</mark>, loops, paths, trees, extended basic block particularly. 
 
 #### Superlocal Value numbering and EBBs
-Extend $LVN$ across multiple basic blocks along a single control-flow path. 
+Extend $LVN$ <mark style="background: #FFF3A3A6;">across multiple basic blocks along</mark> a single control-flow path. 
 
-Formally, an $EBB$ is a maximal set of blocks $B_1 \dots B_{n}$ where each $B_i$ except $B_1$ has exactly one predecessor, and that block is in the $EBB$. Each block with $>1$ predecessor starts an $EBB$. 
+Formally, an $EBB$ is a <mark style="background: #FFF3A3A6;">maximal set of blocks</mark> $B_1 \dots B_{n}$ where each $B_i$ except $B_1$ has <mark style="background: #FFF3A3A6;">exactly one predecessor,</mark> and<mark style="background: #FFF3A3A6;"> that block</mark> is <mark style="background: #FFF3A3A6;">in the</mark> $EBB$.<mark style="background: #FFF3A3A6;"> Each block</mark> with $>1$ predecessor <mark style="background: #FFF3A3A6;">starts an</mark> $EBB$. 
 
-They are a collection of basic blocks representing one path of execution; e.g., the block containing a logical test, and the block that will be executed if the test is true, or the block relating to a loop condition, and the block(s) relating to the loop body (ofc, providing single ancestor)
+They are a collection of basic blocks <mark style="background: #FFF3A3A6;">representing one path of execution</mark>; e.g., the block containing a logical test, and the <mark style="background: #FFF3A3A6;">block that will be executed if the test is true,</mark> or the <mark style="background: #FFF3A3A6;">block relating to a loop condition</mark>, and the block(s) relating to the loop body (ofc, providing single ancestor)
 
-We define $SVLN$ over $EBBs$ rather than arbitrary $CFG$ regions, EBBs have single entry, no internal joins, no ambiguity about reachability; along any path in EBB, can be usre that all previously encountered blocks on that path have executed. Safe propagation of **value information** is permitted. 
+We define $SVLN$ over $EBBs$ rather than arbitrary $CFG$ regions, EBBs have <mark style="background: #FFF3A3A6;">single entry</mark>, <mark style="background: #FFF3A3A6;">no internal joins</mark>, <mark style="background: #FFF3A3A6;">no ambiguity about reachability</mark>; along any path in EBB, can be usre that all previously encountered blocks on that path have executed. Safe propagation of **value information** is permitted. 
 
 
 ##### Algorithm
-1. Identify $EBBs$ and add their entry blocks to a work list
-2. For each block in a work list
-	1. Initialise a value-number table at the $EBB$ entry, and run value numbering on the block, producing a hash table, and save this hash table
-	2. For each of the blocks successors
-		1. If this block is the only ancestor for the successor, apply $SVLN$ to the successor block using the shared hash table(if conditional branch, copy table and propagate independently to each successor)
-		- If successor has several ancestors, add to work list if not already in from step 1, and process linearly.
+1. <mark style="background: #FFF3A3A6;">Identify</mark> $EBBs$ and <mark style="background: #FFF3A3A6;">add their entry blocks</mark> to a <mark style="background: #FFF3A3A6;">work list</mark>
+2. <mark style="background: #FFF3A3A6;">For each block in a work list</mark>
+	1. Initialise a <mark style="background: #FFF3A3A6;">value-number table</mark> at the $EBB$ entry, and<mark style="background: #FFF3A3A6;"> run value numbering</mark> on the block,<mark style="background: #FFF3A3A6;"> producing a hash table</mark>, and <mark style="background: #FFF3A3A6;">save this hash table</mark>
+	2. For <mark style="background: #FFF3A3A6;">each of the blocks successors</mark>
+		1. <mark style="background: #FFF3A3A6;">If this block is the only ancestor for the successor</mark>, apply $SVLN$ to the successor block using the s<mark style="background: #FFF3A3A6;">hared hash table</mark>(if conditional branch, copy table and propagate independently to each successor)
+		- <mark style="background: #FFF3A3A6;">If successor</mark> has <mark style="background: #FFF3A3A6;">several ancestors</mark>,<mark style="background: #FFF3A3A6;"> add to work list</mark> if not already in from step 1, and process linearly.
 
 ##### Example
 1. Identify EBB.
@@ -171,30 +171,30 @@ And for $B_3$
 
 
 ### Loop unrolling
-- Loop transformation technique, attempts to optimise program execution speed at expense of binary size (space-time tradeoff)
-- Can be done manually, or by optimising compiler
-- Often counterproductive, modern processors, increased code size, cache pressure/subsequent misses.
+- <mark style="background: #FFF3A3A6;">Loop transformation technique,</mark> attempts to <mark style="background: #FFF3A3A6;">optimise program </mark>execution speed at expense of <mark style="background: #FFF3A3A6;">binary size</mark> (space-time tradeoff)
+- Can be<mark style="background: #FFF3A3A6;"> done manually</mark>,<mark style="background: #FFF3A3A6;"> or by optimising compiler</mark>
+- Often counterproductive, modern processors,<mark style="background: #FFF3A3A6;"> increased code size,</mark> <mark style="background: #FFF3A3A6;">cache pressure</mark>/subsequent misses.
 - **Unrolling a loop means turning a loop into linear code**
-	Reduces the num of operations to complete the loop, but increases code size
-- Unrolling only possible if number of iterations is static.
-- Goal = increase speed by reducing or eliminating repeated instructions that control the loop e.g., pointer arithmetic, 'end of loop tests' on each iteration.
+	<mark style="background: #FFF3A3A6;">Reduces the num o</mark>f operations to<mark style="background: #FFF3A3A6;"> complete the loop</mark>, but <mark style="background: #FFF3A3A6;">increases code size</mark>
+- <mark style="background: #FFF3A3A6;">Unrolling</mark> <mark style="background: #FFF3A3A6;">only possible</mark> if <mark style="background: #FFF3A3A6;">number of iterations</mark> is <mark style="background: #FFF3A3A6;">static.</mark>
+- Goal =<mark style="background: #FFF3A3A6;"> increase speed </mark>by <mark style="background: #FFF3A3A6;">reducing</mark> or <mark style="background: #FFF3A3A6;">eliminating repeated</mark> <mark style="background: #FFF3A3A6;">instructions </mark>that <mark style="background: #FFF3A3A6;">control the loop</mark> e.g.,<mark style="background: #FFF3A3A6;"> pointer arithmetic</mark>, 'end of loop tests' on each iteration.
 
 #### Advantages
-- Minimisation of branch penalty
-- If the statements in loop are independent of each other, can execute in parallel
-- If reduction in executed instructions compensates for any performance reduction caused by code size explosion; generally use heuristics to identify loops that satisfy this trade-off.
+- <mark style="background: #FFF3A3A6;">Minimisation </mark>of <mark style="background: #FFF3A3A6;">branch penalty</mark>
+- <mark style="background: #FFF3A3A6;">If</mark> the <mark style="background: #FFF3A3A6;">statements</mark> <mark style="background: #FFF3A3A6;">in loop</mark> are <mark style="background: #FFF3A3A6;">independent of each other</mark>, <mark style="background: #FFF3A3A6;">can execute in parallel</mark>
+-<mark style="background: #FFF3A3A6;"> If reduction</mark> in <mark style="background: #FFF3A3A6;">executed instructions</mark> <mark style="background: #FFF3A3A6;">compensates</mark> for<mark style="background: #FFF3A3A6;"> any performance reduction</mark> <mark style="background: #FFF3A3A6;">caused by code size explosion</mark>; <mark style="background: #FFF3A3A6;">generally use heuristics</mark> to <mark style="background: #FFF3A3A6;">identify loops</mark> that<mark style="background: #FFF3A3A6;"> satisfy this trade-off.</mark>
 
 #### Disadvantages
-- Increased binary size; problematic, resource contrained envs, should limit this optmisation
-- Reduced code readability
+-<mark style="background: #FFF3A3A6;"> Increased binary size</mark>; problematic, resource contrained envs, should limit this optmisation
+<mark style="background: #FFF3A3A6;">- Reduced code readability</mark>
 
 ![](Pasted%20image%2020260118143210.png)
 
-This is full unrolling, but one may choose to unroll partially, to say, halve the branch penalty and improve ILP with fully exploding code size. 
+<mark style="background: #FFF3A3A6;">This is full unrolling</mark>, but <mark style="background: #FFF3A3A6;">one may choose to unroll partially,</mark> to say, <mark style="background: #FFF3A3A6;">halve the branch penalty </mark>and improve ILP with fully exploding code size. 
 ![](Pasted%20image%2020251216180025.png)
 
 #### Order of optimisations
-- The order of compiler optimisations mattersc
+- <mark style="background: #FFF3A3A6;">The order of compiler optimisations</mark> <mark style="background: #FFF3A3A6;">matters</mark>c
 - Certain optimisations being placed earlier can enable, disable, or change the profitability of later optimisations
 - A poor ordering may miss opportunities, or even undo improvements.
 - A good ordering maximises effectiveness and preserves correctness(naturally).
