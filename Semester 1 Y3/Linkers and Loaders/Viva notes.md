@@ -23,11 +23,12 @@
 	- .dynamic generation
 		- All required DT_* tags with some optional included e.g., .gnu.hash as this is synthesised
 	- GNU hash
-		- Bloom filter + reordering of dynsym according to hash values to support memory locality.
+		- Bloom filter + reordering of dynsym according to hash values to support memory locality. Quite optimised, actually faster than most implementations. 
 	- Symbol versioning
-		- .gnu.version_d, .gnu.version with version script parsing
+		- .gnu.version_d, .gnu.version with version script parsing and parent version support (up to 2(3 if include self)levels of inheritance(though this limit is self-imposed.))
 	- RELRO
 		- Partial and Full, though afaik passing partial as an option is more or less redundant in the long run because musl's dynamic linker will resolve the PLT at startup and ignore DT_BINDNOW entirely.
+	- Stack hardening via PT_GNU_STACK
 
 ### Tests
 Run tests, show the tests, prepare some commands and test files additionally?
@@ -177,14 +178,187 @@ Run tests, show the tests, prepare some commands and test files additionally?
 	- veneer_entry
 		- maintains target symbol, veneer addr which becomes intermediary jump target, and offset within the veneer section, which is appended immediately after text. stored as linked list, and there is buffer in a mgr structure so can output this content after text. 
 		- If overflow when patching address in and reloc type suitable for veneer, then create veneer_addr, and apply the same relocation to P, but with S being the veneer address instead. Add to veneer mgr (which also generates the veneer in the buffer, with respect to the target symbol, patched into literal pool that is loaded PC-relative without padding).
-- reloc_parse_input
+- reloc_parse_input(input)
+	- Find sections with type REL/A, get sh_info (section to which relocs apply), get sh_size, via lens, get base pointers for target section and reloc section
+	- If rel
+		- Iterate rels, get type, get sym, decode addend for that reloc type at specified offset in targeted section (separate function, this is directly equivalent with semantics for the supported relocation types.), instantiate reloc and add to input object based on acquired info.
+	- If rela
+		- Same, but do not parse addend.
 - reloc_apply_input
-- relaxation
-### Dynlink support
+	- Iterate input object's relocs array, skip relocs for sections not included in output e.g., debug sections (caused issues)
+	- Get Symbol via indexing into symmap with r->sym_idx
+	- Compute S
+		- For section symbols, st_value is 0, so must compute S as output address of referenced section, done via accessing sec_state array on input using shndx attached to symbol, and adding output offset of that section to base address of output section. 
+		- Otherwise, addr known. 
+		- plt offset, if have, then S = plt_addr + plt_offset.
+	- Compute P
+		- Get sec state using reloc section index
+		- Get osec from sec state
+		- Compute P as the osec base address + the isec's output offset + the offset for the reloc.
+	- Compute location in output buffer(otherwise, just applying to object in memory)
+		- Grab from osec->fileoff, then ouput offset for concerned section, then add reloc offset, essentially just P but with fileoff instead.
+	- Relaxation
+		- Try this before actual application
+		- reloc_try_relax(location in buffer, reloc type, S, A, P, sym)
+			- Switch type
+				- MOVW, clears upper 16 bits prior to writing lower 16, if upper bits are known zero, a MOVT is redundant.
+				- Preserve condition bits 31:28, and replace the rest with a NOP
+				- Different for ABS and PREL
+	- Apply
+		- Helper function based on relocation semantics as specified in processor supplement
+### Dynlink
+- Component responsible purely for handling dynamic linking structures and orchestrating part of their output (the main contents are synthesised in meld_output), 
+- Has own error codes.
+- IR
+	- dyn_tag
+		- Actual dynamic array entries, linked list
+	- dynamic_t
+		- Stores linked list, with tail pointer, and count
+	- meld_needed
+		- Linked list of so names, helper for constructing DT_NEEDED dynamic array entry, contains path, and strtab offset needed for d_val for DT_NEEDED.
+	- meld_dynlink
+		- Main IR, stores on itself, got, plt, dynrels(manager), veneers(manager), dynamic array
+		- DT_NEEDED list stored on structure
+		- *interp path
+		- got_addr, gotplt_addr, plt_addr, dynamic_addr, interp_addr etc.
+		- Has some flags; allow textrel, hastextrel, is pie, is static, needs got (some come from main linking context, save indirection, set in dynlink_configure)
+	- A lot of helpers (e.g., reloc in writable section, relevant for PIE, want to avoid TEXTREL, prevents text sharing, makes executable section writable at load-time). Got lazy at this point, entire API is exposed, though i can't remember now how much of it has been used. 
+#### Implementation
+- dynlink_configure
+	- Configure initial flags e.g., is_static, is_pie, set interp to ARM_INTERP_PATH if not static.
+- reloc in writable section
+	- based on reloc sec_ndx, use to check flags of referenced section against SHF_WRITE
+- Symbol_needs_runtime_resolution(symbol, is_static)
+- Scan relocs
+	- - Initial pass, allocates GOT/PLT entries, counts absolute data relocations (errors on textrel abs)
+	- Scan all inputs in link context, and then scan all relocs, and grab referred symbol, can determine whether need got entry or got base based on reloc type. Determine if need PLT based on is defined, comes from shared lib, and reloc type.
+- Layout
+	- Assign addresses to GOT, plt, veneer, delegate to layout.
+	- Also, set synthetic symbol values, acquire from gst lookup; do _DYNAMIC and gotplt_addr.
+- Generate dynamic relocs
+	- Second pass; generate dynamic relocs for .rel.dyn and .rel.plt sections
+	- Emit R_ARM_JUMP_SLOT for .got.plt entries
+	- Emit R_ARM_GLOB_DAT for global symbols. 
+	- Relaxation: defined symbols that don't need runtime resolution, relaxed to cheaper R_ARM_RELATIVE, works even if symbol isn't exported to dynsym, as does not refer to a symbol(see symbol_needs_runtime_resolution).
+	- Go through got entries (linked list), if is .got.plt, then emit reloc, otherwise R_ARM_RELATIVE depending on symbol semantics, or R_ARM_GLOB_DAT(needs sym_idx from dynsym)
+	- R_ARM_RELATIVE for ABS in writable.
+		- 
+	- All added to dynrel managed.
+- Write funcs for GOT, PLT, Veneers; differ from regular output
+	- Only writes st_value for got.entry syms where the state is defined, leaves the others allocated, but zero, to be filled by the dynamic relocs. PLT remains the same. GOTPLT does the same thing, reserves 3
+	- GOTPLT unique, not delegating, saves 3 entries, one for _DYNAMIC, one for link_map, one for runtime_resolve. Each .got.plt[n] initially point's to each PLT[n]'s lazy binding portion at +12 offset. 
+- Dynamic array add
+	- Simply calloc tag IR, set passed tag and val, and add to linked list in dynamic array IR.
+- Dynamic array write
+	- Write into buffer, contents of linked list, sequentially. Also add DT_NULL at the end.
+- Dynlink_build_dynamic
+	- Big list of args, takes a lot of base addrs with corresponding sizes, main link context
+	- Adds all dynamic tags, depending on arguments (note, DT_FLAGS, DF_BINDNOW, ignored by musl dynamic linker)
+- Dynlink_add_needed
+	- calloc needed IR, add soname from args, add to dynlink IR linked list of needed IR.
 ### Output
+- Library of ELF structure builders; builds IR first, and has corresponding functions to seralise to ELF format
+- Extraordinarily detailed; includes strtab* blobs, symtab*(dyn and static), .gnu.hash bloom filter + bucket reordered dynsym for cache locality for requested sym names, versioning structures, got/plt serialisation, dynamic relocation manager (but are not created here, simply have function to append which is used by dynlink)
+- Key stuff:
+	- Everything has init, destroy, write, and usually an add function that operates over internal IR. 
+	- Just respects the ELF semantics, the only innovative thing here would be version script parsing to specify for symbols, some specific versions that should be exported, and an optimisation of the .gnu.hash construction algorithm to use fast modulo (both in the bloom filter for maskword allocation, bit1, and bit2, and in bucket allocation)
+		- Version script, add verdef specified, and then find referenced symbol in GST, and add version_ndx to symbol that is returned from verdef vd->ndx++'
+	- Most of this inspired from online however e.g., PLT construction, exact sequence is not my own. 
+	- Dynrel, will also mention, there is dynrel mgr; has a number of add functions, e.g., add_plt, add_dyn, plt doesn't need reloc type, is always R_ARM_JUMP_SLOT, just maintains 2 sep linked list of types of relocs that it can serialise to .rel.plt, and .rel.dyn later, respectively.
+- meld_output_ext_build
+	- Centres on IR, containing all other IR e.g., symtab, dynsym, gnu_hash, version, got(static), plt, dynrels. 
+	- Simply build each section
+		- E.g., symtab, add locals from each input via helper function symtab_add, and then end_locals(set st_info to last idx of locals), and then iterate GST and add all globals via gst_iter_fn add_global().
+		- Dynsm built via gst_iter_fn add_dynamic(those that are exported/participate in interposition)
+		- Then gnu.hash, then .gnu.version (alloc'd, then populated via sym->version_ndx, assigned specially when parsing version scripts, lookup each sym by name in reordered dynsym, if exists in gst and version_ndx >= 2, then set corresponding entry in .gnu.version to that version index, otherwise keep zero default).
+			- Also, store dynsym_idx on IR, used when generating dynamic relocs as we need to encode this. 
+			- NAME LOOKUP BECAUSE GNU HASH REORDERS, SO POSITIONAL CORRESPONDENCE DOESN'T WORK.
+- meld_output_ext_update_symtab/dynsym_values
+	- Needed as symbol tables are built before layout assigns addresses, need to patch in ordained addresses here, so can apply relocs etc.
+	- First we have one for symtab
+		- Update locals first, then globals
+	- Then for dynsym
+		- Similar logic, just get name first, then GST lookup, then patch value based on what was assigned to dynsym syms(elf structures, not IR).
 ### Layout
+- IR
+	- Seg_type e.g., RO, RX, RW, BSS, RELRO
+	- Errors
+	- phdr; has elf32_phdr, and pointer to next logical phdr
+	- meld_layout
+		- Central IR
+		- Phdrs linked list, section mgr(osec linked list with tail pointer), dynlink, ehdr_size, phdr_off (phdr_table_file offset), per segment tracking arrays indexed by segment type, shstrab_offset, size, name_offset, base_addr(0x1000 for ET_EXEC, far enough up, 1 page, 0 for ET_DYN), relro_addr, relro_off, relro_size(rounded up), flags derived from main link context. All things one would expect is needed for final binary.
+#### Implementation
+- Configure
+	- Configure takes some vals from main link ctx e.g., base_addr, flags such as relro and bind now(irrelevant).
+- assign_addresses
+	- Iterate osecs via mgr, if alloc, and not obits, then determine if osec should be in relro region depending on osec name
+	- Get phdr count (e.g., +1 if interp, +1 if dynamic, +1 if RELRO enabled etc)
+	- Big long function; to simplify, align loads to 16 bytes, ABI requirement, iterate segments, iterate all osecs and check if seg is same type as one currently iterating, if is, and seg hasnt started, establish section boundaries by aligning up file off and vaddr, set seg_addr and seg_off respectively. If RELRO, then start that region on the context object. Set osec addr and file_off to recently assigned vaddr and file_off, and then increase these according to osec size.  
+	- If the seg was already started, then update seg size on layout obj, and update filesz on layout obj for that segment. If relro, then update size there, comes from vaddr, and must be aligned up to page size.
+		- Essentially just finishes off that segment by adding final data. 
+	- Non loadable sections placed at end, have file_off(should be final loadable section) for that osec which is aligned up to alignment value for that osec, and attached to the osec, and then increase file_offset, until all non-loadable sections placed. 
+- generate_phdrs
+	- Build program header table, takes layout object
+	- Take count as did before in last function
+	- Utilise layout_add_phdr to add phdrs to table.
+	- For PT_LOAD, must start at offset 0 to cover elf header and program headers to avoid warning, iterate seg types, grab vals from tracking arrays, if RO (first phdr), then must start at offset zero, some weird calculations for this as must increase filesz, memsz, and decrease addr before adding.
+	- PT_GNU_STACK, does not map any file data, p_flags tells whether process stack should be executable, stack hardening technique to enforce NX stack to prevent code injection
+	- PT_GNU_RELRO flags are generally ignored.
+- write functions (edhr, phdrs, shdrs, shstrtab)
+	- Just derived from layout, phdrs linked list(which is direct correspondence with ELF PHDR), osec+shstrab info on layout context, and shstrtab itself, written at end of file.
+- add_phdr
+	- Used internally by generate_phdrs, just pass a lot of args, synthesise elf phdr, and add to layout link list of phdrs.
+- shstrtab_add/build
+	- First func, dynamic array shstrtab, double to keep O(1) insertion, just gets shstraboffset and adds to actual output addr stored in layout ctx, and uses this to get addr to patch passed in name too, then increments size by length of name.
+	- Build, NUL byte first, adds all osecs, and then adds the section name of itself .shstrtab.
 ### Synthetic 
+- Maintain array of synth_defs, of IR synth_def(has name, bind, type, hidden, absolute(all false, can't even remember what this does))
+- One function, predefine linker symbols as weak+ hidden(do not cause undef symbol errors if unused, and don't trigger archive extraction) and either STT_OBJECT, or STT_NOTYPE.
+	- Iterate synth defs, acquire def from i, calloc sym IR, set sym IR attributes, always defined, and sym->input always null, and *out always null
+	- Insert into GST
+- Many synthetics required either for dynamic linking, or for musl linking startup objects, ones such as init_array_start and fini_array_start are needed (crti and crtn, respectively.) Start symbol comes from crt objects(sets up stack, pulls auxv, argc, etc, calls main), and as such, is resolved in meld (will have been added to gst)
 ### Link
-
-
+- Synthesising file.
+- Maintains overarching link ctx, used by a number of components, used by SET_ERR macro
+	- Link ctx has all inputs, all archives, current_group_id for group semantics, pointer to gst, version script path(if passed in), output path, library search paths, flags.
+- Library search/needed dynamic input + archive input
+	- 
+- Flags passed in via CLI, help determine flags in context object
+	- Some flags default e.g., output type, base_addr, unless otherwise, default is ET_DYN, base_addr is 0, is static_false, relro true, bind now false(but ignored).
+- Main function+meld_link
+	- Main
+		- set output path, check argv's and set flags/attributes on ctx depending on input
+		- For archives/libs, searches all -L paths, preceded as lib, followed by archive name, followed by .a or .so (prefer .so for dynamic ctx, vice versa), try the preferred extension, if can access the file, then add to archives on ctx, or use add_shared_lib, which acquires soname, and registers symbols as shared library symbols, and create needed entry which will be transferred to dynlink.
+		- Resolve archive symbols (static)(i think this is fine that i placed here)?, check for remaining unresolved, call meld_link
+	- meld_link
+		- BIG Function
+			- Collect and coalesces all sections from inputs and archives via section_mgr, and places into osecs (not actually placed, just assigned to osec).
+			- Assigns sections indices immediately
+			- Parses all relocations
+			- Lays out the sections - ordering, placement, and alignment (osecs)
+			- Dynlink scans for relocs, and transfer shared lib needed entries, stored locally within this file, via dynlink_add_needed.
+			- Scans for relocs that determines what dynamic structures are needed
+			- Parse version script
+			- Build output sections (not all of them, just those that meld_output structure concerns)
+			- Add sonames to dynstr
+			- Add synthetic sections
+				- OSecs instantiated, for GOT, symtab, strtab etc, and dynamic linking specific ones, now that we have built the output sections, as know the sizes, can add, and have type (no addr yet, final layout not complete)
+			- Reassign indices
+			- Re layout the sections
+			- Finalise some fields, and begin the overall layout config
+			- Assign addresses
+			- Find addresses for dynlink config (will yield a lot of osecs)
+			- Update sym values, and then update symtab/dynsym entries
+			- Construct dynamic array
+				- Add versioning entries, if we had need for them and were constructed
+			- Generate dynamic relocs in dynlink
+			- Build shstrtab
+			- Generate phdrs
+			- Search for start symbol, set ctx entry addr and layout.entry addr
+			- Calloc buf based on layout.file_size
+			- Write functions called according to layout, but then call write function according to osec name e.g., gnu_hash write, otherwise just memcpy into buffer based on start address and size
+			- For non-synthetic, iterate all isecs, and memcpy sequentially
+			- Apply relocs to this final output buffer
+			- Write the shdrs, and shstrtab
+			- Write buffer to fd (was opened earlier, buf has size of layout.file_size)
 
