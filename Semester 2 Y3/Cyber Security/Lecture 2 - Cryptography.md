@@ -99,3 +99,79 @@
 
 
 ## Asymmetric cryptography
+- Uses **two keys**
+	- Public key(shared)
+	- Private key (secret)
+- The analogy we can use is that of a mailbox, anyone can drop mail in, but only the owner can open it. 
+- Used for **key exchange** and **signatures**
+	- Encrypt with public key, decrypt with private 
+	- Sign with private key, verify with public key
+- Much more expensive than symmetric
+- Key management much easier: each user in a network has one private key and one public key, thus n keys (key pairs), rather than a unique secret key for each communicating pair. 
+- Asymmetric/public key cruptography hinges upon the premise that it is **computationally infeasible** to calculate a private from a public key
+- In practice, this is achieved through reduction to intractable/computationally hard mathematical problems (NP)
+	- RSA integer factorisation
+	- Diffie-Hellman discrete logarithms
+
+### Key Exchange - Diffie-Hellman
+- Diffie-Hellman key exchange is a method of generating a symmetric cryptography key over a public channel
+	![](Pasted%20image%2020260205181750.png)
+- Permits two parties to mathematically agree a shared secret over an insecure channel, public values are exchanged, and secret values are never transmitted, and both sides compute the same shared key.
+	- Both parties agree on a large prime $p$, and a generator $g$ of a multiplicative group modulo $p$. These are public, and often standardised. 
+	- Each party chooses a random private exponent/key($a$ and $b$), must be large and random, and never reused long-term
+	- Each side computes a public value
+		- $A = g^a \ mod \ p$ 
+		- $B = g^b \ mod \ p$ 
+	- Then these public values/keys are sent over the network, and the shared secret is computed
+		- Each side combines their private exponent with the other party’s public value
+			- $S = B^a \ mod \ p = (g^b)^a = g^{ab} \ mod \ p$ 
+			- $S = A^b \ mod \ p = (g^a)^b = g^{ab} \ mod \ p$ 
+		- Attacker cannot compute $g^{ab}$ without solving DLP (discrete logarithm problem).
+- Vulnerable to man in the middle attacks:
+	- An opponent Carol intercepts Alice public value $A$ and sends her own public value to Bob $M_1$. When Bob transmits $B$, Carol substitutes it with her own $M_2$ and sends it to Alice, pretending to be Bob. Thus, Carol and Alice agree on one shared key, and Carol and Bob agree on another shared key as the exchange has been manipulated. There is no proof that $B$ or $A$ came from Bob or Alice.  Carol could decrypt, read, modify, and re-encrypt all conversations between the two parties. This warrants digital signatures and certificates.
+
+### Digital signatures
+- Mathematical scheme for verifying the authenticity of digital messages or documents. 
+- Valid digital signature on a message gives a recipient confidence that the message came from a sender known to the recipient. 
+- Provides:
+	- **Authenticity**
+	- **Integrity(non modified)**
+	- **Non-repudiation**
+- A digital signature scheme consists of three algorithms:
+	1. A **key generation algorithm**
+		Selects a **private key** at random from a set of possible **private keys**, algorithm outputs **private key** and corresponding **public key**.
+	2. A **signing algorithm** that given a **message** and a **private key**, produces a **signature.**
+	3. A **signature verifying** algorithm, that, given the **message**, **public key,** and **signature,** either **accepts** or **rejects** the messages claim to authenticity.
+- For DHKE, server can sign DH parameters, client verifies signature using known public key. 
+
+### Certificates and Public Key Infrastructure
+- Public keys are meaningless with **identity binding**
+- A **certificate** binds a public key to an identity
+	- These are digitally signed by a certificate authorities, a third-party entity responsible for certifying the ownership of a public key by the named subject of the certificate to facilitate trust in that public key.
+- Certificates contain:
+	- Subject identity
+	- Public key
+	- Validity period
+	- Signature from CA to verify. 
+- System trusts a small set of root CAs, but this centralisation is operationally fragile, and compromised CAs are disastrous, as it means all their certificates cannot be trusted.
+### Public Key Algorithms ![](Pasted%20image%2020260205184753.png)
+
+### Post-Quantum Cryptography
+- Quantum computers are a real-threat to some cryptography, quantum hardened algorithms do exist but are not adopted on widespread scale.
+- Shors algorithm breaks asymmetric cryptography
+- Grovers algorithm weakens symmetric cryptography, but this can be mitigated by just doubling the key sizes.
+- The real threat, is that encrypted traffic can be recorded en masse today, and decrypted years later once quantum exxists, which is bad for long-lives secrets.
+- Post quantum cryptography has much larger keys, much larger keys, more computation, and is less field tested, thus the current strategy, is a transition period where hybrid cryptography is used, both classical+post quantum.
+
+### TLS
+- Protocol that combines many cryptographic primitives and carefully orchestrates them
+- Client already has **trust store** of root CA public keys
+- Server already has certificate (issued by CA), and the private key corresponding to the certificates public key.
+	1. Client sends supported TLS versions, ciphers, random nonce, and ephmeral DH public key
+	2. Server sends chosen cipher suite, random nonce, Servers ephemeral DH key
+	3. Each side computes $S = g^{ab}$, still vulnerable to MITM attacks
+	4. Server sends certificate, and signature over the handshake. 
+	5. Client verifies certificate using trusted CA public keys, knows was issued by the CA, and then verifies the servers signature using the public key contained in the certificate.
+	6. Both sides use the DH secret and derive symmetric session keys
+	7. Often send MACs over the handshake (called finished messages)
+	8. All traffic now uses symmetric encryption
