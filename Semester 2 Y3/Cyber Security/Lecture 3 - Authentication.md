@@ -84,7 +84,7 @@
 - Can improve password security by prepending a random value to the password before hashing. 
 - The salt is unique for each user and stored unencrypted with the hash.
 	![](Pasted%20image%2020260205201300.png)
-- 
+- Prevents hash collisions between users, decreasing scale of the attack, and prevents pre-computed rainbow table attacks because such tables dont include the unique salt, forcing the attacker to compute each guess individually for each user, makes less computationally feasible to crack. 
 ### Hashing speed
 - When password cracking, the most important factor is **hashing speed**.
 - Measured in hashes per second (H/s) - how many password hashes per sec
@@ -92,3 +92,20 @@
 - Newer hashing algorithms take longer (e.g., bcrypt, PBKDF2)
 	- More complex, and some have been specifically designed to take a while
 	- With a slow hash e.g., 5000H/s, cracking time would be roughly equal to 1520 yrs for 240 trillion search space. 
+- Bcrypt, designed to make offline password-cracking extremely difficult
+	- Automatic salting
+	- Cost factor
+	- Blowfish-based hashing, which is not GPU-friendly, making bcrypt stronger against GPU attacks
+- PBKDF2 transforms a password into secure, hard to crack hash with
+	- A salt
+	- A large number of iterations
+	- A cryptographic hash function e.g., SHA-512
+
+### Pretexting - If cracking fails
+- Social engineering attack where an attack invents a believable story, the pretext, and a fake role/identity, to convince a target that a request is legitimate
+- Goal is to extract sensitive information e.g., passwords or one-time codes, personal details, account numbers, internal procedures etc.
+- Pretexting exploits trust so:
+	- Verify identities before sharing info
+	- Avoid sharing sensitive details over unsecure channels
+	- Use official comms channels
+	- Report suspicious requests
