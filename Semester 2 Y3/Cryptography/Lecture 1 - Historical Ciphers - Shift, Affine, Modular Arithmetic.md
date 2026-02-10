@@ -24,7 +24,7 @@
 	- $m \ ∣ \ (a-r)$ 
 	- $m$ divides $(a-r)$ 
 - Where $a, r, m \in \mathbb{Z}$ and $m >0$  
-- This means that with respect to a modulus, $a$ and $r$ are the same (their difference is a multiple of $m$), meaning they are congruent. 
+- This means that with respect to a modulus, **$a$ and $r$ are the same (their difference is a multiple of $m$),** meaning they are **congruent.** 
 	![](Pasted%20image%2020260127200024.png)
 - The congruence relation:
 	- $a \equiv r \ (mod \ m)$ 
@@ -45,6 +45,7 @@
 	***Definition***:
 	The integer ring $\mathbb{Z}_m$ consists of:
 	1. The set $\mathbb{Z}_m = \{0, 1, ..., m-1\}$
+		Remainders modulo $m$, every integer collapses to one of these equivalence classes in the ring. 
 	2. Two operations $+$ and $\cdot$ for all $a, b \in \mathbb{Z}_m$ such that:
 		$a)$ $a+b \equiv c \ (mod \ m), (c \in \mathbb{Z}_m)$ 
 		$b)$ $a \cdot b \equiv d \ (mod \ m), (d \in \mathbb{Z}_m)$ 
@@ -61,6 +62,7 @@
 - Example:
 	$3 \cdot 9 \equiv 1 \ (mod \ 26)$ 
 	$9$ is the modular inverse of $3$ mod $26$.
+	Can just brute force this
 
 ### Shift Cipher
 - We can formalise the shift cipher using modular arithmetic:
@@ -74,6 +76,9 @@
 - The longer the ciphertext, the easier this becomes
 - Some letters appear more than others
 - Can match high-frequency letters to common plaintext letters to gradually reconstruct the key.
+- A shift cipher is vulnerable to this type of cryptanalysis as it preserves the shape of the frequency distribution. 
+	- If the most common ciphertext is $K$, might guess it corresponds to $E$, this suggests a shift of $K-E$.
+- Affine ciphers are still vulnerable: still a monoalphabetic substitution, each plaintext letter maps to exactly one ciphertext letter. Common digrams and trigrams still show up - with enough ciphertext, can solve it.
 
 ### Affine Ciphers
 - We can extend the shift cipher into an **affine cipher** by equipping it with multiplication and addition, rather than just shifting.

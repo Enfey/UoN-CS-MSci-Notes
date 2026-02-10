@@ -148,6 +148,36 @@ If we transform a position vector $p$, after the transformation, the new positio
 ## Combining transformations
 It is possible to combine transformations and store the result in a new transformation matrix. This is achieved via matrix-matrix multiplication of two transformation matrices. 
 
-## Understanding transformation combinations
+For example, if a point $p$ needs to first be scaled by $s = (2, 1, 1)$ and then afterwards translated by $t = (1, 0, 0)$ 
 
+$S = \begin{pmatrix} 2 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{pmatrix}$ 
+
+$T = \begin{pmatrix} 1 & 0 & 0 & 1 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{pmatrix}$ 
+$S$ is identity, but scales $p_x$ by a factor of $2$.
+$T$ is also identity, but the translation vector $u$ appears in the final column to be $1 \cdot t_x$ = $1$, to be added to the linear combination (which is just the identity) deriving $p_x$ .
+
+We multiply these matrices.
+
+$$TS = T \times S = \begin{pmatrix} 1 & 0 & 0 & 1 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{pmatrix} \times \begin{pmatrix} 2 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{pmatrix} =$$
+$$\begin{pmatrix} 2 + 0 + 0 + 0 & 0 + 0 + 0 + 0 & 0 + 0 + 0 + 0 & 0 + 0 + 0 + 1 \\ 0 + 0 + 0 + 0 & 0 + 1 + 0 + 0 & 0 + 0 + 0 + 0 & 0 + 0 + 0 + 0 \\ 0 + 0 + 0 + 0 & 0 + 0 + 0 + 0 & 0 + 0 + 1 + 0 & 0 + 0 + 0 + 0 \\ 0 + 0 + 0 + 0 & 0 + 0 + 0 + 0 & 0 + 0 + 0 + 0 & 0 + 0 + 0 + 1 \end{pmatrix} = \begin{pmatrix} 2 & 0 & 0 & 1 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{pmatrix}$$
+
+The combined transformation matrix $TS$ can be applied to a vector $p$ by multiplying $p$ by the matrix $TS$, as normal. 
+
+$TSp = \begin{pmatrix} 2 & 0 & 0 & 1 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{pmatrix} \times \begin{pmatrix} p_0 \\ p_1 \\ p_2 \\ 1 \end{pmatrix} = \begin{pmatrix} 2p_0 + 0 + 0 + 1 \\ 0 + p_1 + 0 + 0 \\ 0 + 0 + p_2 + 0 \\ 0 + 0 + 0 + 1 \end{pmatrix} = \begin{pmatrix} 2p_0 + 1 \\ p_1 \\ p_2 \\ 1 \end{pmatrix}$
+As we can see, scaled $p_0$ by a factor of $2$ and further translated it by $+1$. 
+## Understanding transformation combinations
+Recall that the columns of a transformation matrix $N$ represent basis vectors. 
+
+$N = \begin{pmatrix} | & | & & | \\ v_1 & v_2 & \cdots & v_p \\ | & | & & | \end{pmatrix}$ 
+
+and multiplying two matrices $M$ and $N$ is the result of matrix-vector multiplication of $M$ with each column of $N$.
+
+$MN = \begin{pmatrix} | & | & & | \\ Mv_1 & Mv_2 & \cdots & Mv_p \\ | & | & & | \end{pmatrix}$
+This is trivial to see in the definition of matrix multiplication, each row combines with each column vector in $N$ (look downward, rather than across when solving).
+
+This means that the product $MN$ is taking the transformation encoded in $N$, and transforming its basis vectors by $M$. This corresponds exactly to composition, that is, apply $N$ first, then apply $M$.
+
+Translation is not a linear transformation. As mentioned earlier, 3D points are embedding into 4D by adding a homogeneous co-ordinate. A point becomes $(x, y, z, 1)$, a direction becomes $(x, y, z, 0)$. The first 3 columns are direction vectors, describing how axes transform in a transformation matrix, the last column is concerned with translation.
 ## Order of the transformations
+![](Pasted%20image%2020260209213406.png)
+Much like composition.
