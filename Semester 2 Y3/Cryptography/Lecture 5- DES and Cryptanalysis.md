@@ -134,6 +134,21 @@
 	- Linear cryptanalysis
 
 ## Differential cryptanalysis
-- Perhaps now the most important modern method for breaking block ciphers. 
+- Perhaps the most important modern method for breaking block ciphers. 
 - **Differential cryptanalysis** constitutes a **chosen-plaintext** attack aiming to find predictable output changes caused by known input changes. 
-- 
+	- Choose two plaintexts, observe their differences, encrypt both, and observe differences in the ciphertext; aim to detect patterns that occur more often than random chance.
+	- $S-boxes$ take a 6-bit input, and yield a 4-bit output.
+		- For any input difference $Δx$ the output difference $Δy$ should occur with probability $\frac{1}{16}$ , 16 possible outputs. 
+		- In a poor s-box, likelihood might be higer
+		- Some input change resulting in some output change $(∆x , ∆y)$ is called a **differential** and has some probability of occurring.
+			- E.g., $∆x = x \oplus x'$ as independent $S-box$ input, yield 6 bit input difference.
+			- To compute the probability of a differential, we examine all 64 possible values of $x$, and determine how many matches.
+				![](Pasted%20image%2020260212204007.png)
+### Differential Cryptanalysis in DES
+- Choose many plaintexts with specific $Δx$ and encrypt them.
+- Look for the expected $Δy$ in the ciphertext (permuted via $P-box$ however).
+- If the differential occurs more often than random $1/16$, then can begin to guess subkey bits.
+### Resisting Differential Cryptanalysis in DES
+- S-boxes should be designed such that the probability of any differential is as low as possible. 
+- More rounds, makes differentials less likely.
+- Good permutation. 

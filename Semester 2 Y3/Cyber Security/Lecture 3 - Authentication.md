@@ -52,6 +52,7 @@
 		- Should the DB leak, only hashes are compromised.
 		- If an attacker gets **password hashes**, they can perform offline attacks:
 			- No rate limiting/logging vs online guessing. 
+				- Can just perform guesses including salt and compare to stolen hash. 
 			- On OSs steps have been taken to stop people reading hashes for offline attacks, linux stores in /etc/shadow, and /etc/passwd stores username, UID, GID, shell, home dir, with no hashes, shadow stores the salts and hashes, and only root can read /etc/shadow. 
 			- This assumes admins are trusted.
 
@@ -82,6 +83,7 @@
 ### Rainbow tables
 ### Password salting
 - Can improve password security by prepending a random value to the password before hashing. 
+- Feed this into 1-way hash function, along with plaintext.
 - The salt is unique for each user and stored unencrypted with the hash.
 	![](Pasted%20image%2020260205201300.png)
 - Prevents hash collisions between users, decreasing scale of the attack, and prevents pre-computed rainbow table attacks because such tables dont include the unique salt, forcing the attacker to compute each guess individually for each user, makes less computationally feasible to crack. 
