@@ -1,3 +1,0 @@
-## Intro
-- **Bottom**
-- **Top-left**
