@@ -169,8 +169,40 @@
 	- Access: preference for this genre of game, accessibility of the controls
 		- Investment
 			- More immersive games demand more attention and time
-			- The rewardsd perceived as equal to 
+			- The rewards perceived as equal to the effort put into the game
 - **Engrossment**
+	- Emotions are directly informed by the game, a high emotional investment, and a want to keep playing
+	- Less 'awareness' of surroundings; helps construct a distraction free environment, suggesting a greater degree of immersion
 - **Total Immersion**
+	- Presence = dissociation, and complete immersion
+	- Empathetic elements; attachment to in-game characters, greater than that of engrossment
+	- Atmosphere
+		- Graphics, plot, and sound are relevant to the actions and location of the game characters and help further immersion
+		- Level of immersion is related to the number and amount of attentional sources
 
 ### Measuring and Using immersion
+- Immersion is often viewed as **critical** to **game enjoyment**.
+- The Immersive Experience Questionnaire (IEQ)
+	- Quantitative measure of immersion
+		- Subjective reporting
+		- Objective measures of task completion too e.g., gaze tracking
+	- More immersion = less ability to engage with the real world
+	- Decrease in eye movement, visual attentiveness present
+	- 5 subscales measured
+		- Emotional involvement
+		- Cognitive involvement
+		- Real world dissociation
+		- Challenge
+		- Control
+- Difficult to pivot to game design - not an exact science - often vary a game "feature" experimentally
+	 - E.g., 2D vs 3D not relevant to *immersion* wherease non-diegetic sound and time-pressure are strong indicators.
+
+### Understanding Player Experience
+ - Physiological measures employed; how do games affect us physiologically?
+	 - Stress and arousal
+		 - Heart rate variability
+		 - Galvanic skin response
+	- Cognitive load and attention
+		- Brain activity + mental workload
+		- Pupil movement
+			- Eye tracking, fixation duration
