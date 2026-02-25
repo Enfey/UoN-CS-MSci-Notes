@@ -11,14 +11,15 @@
 ## Pseudorandom Permutations
 - A block cipher is meant to be behave like a **pseudorandom permutation** over $\{0, 1\}^n$ 
 	- A **pseudorandom permutation** is a function that cannot be distinguished from a random permutation. 
+		- Note that the output size equals the input size, and this this is bijective, whereas CSPRNGs expand a short seed into a pseudorandom string computationally indistinguishable from true randomness.
 - Maps a set of values $\{0, 1\}^n \times \{0, 1\}^n \to \{0, 1\}^n$
 	- For any key $k$ this function $F$ is a **bijection** (every plaintext has exactly one ciphertext, and every ciphertext comes from exactly one plaintext). Zero collisions, otherwise decryption/inversion would be impossible. 
-		- Non-bijectve leaks info e.g., if some ciphertexts are impossible or some plaintexts collide, immediately can deduce things.
-	- There is an **efficient algorithm** to calculate $F(x)$ for all keys and all messages.
+		- Non-bijective leaks info e.g., if some ciphertexts are impossible or some plaintexts collide, immediately can deduce things.
+	- There is an **efficient algorithm** to calculate $F(m, k)$ for all keys and all messages.
 		- Needs to be usable.
 - Unlike stream ciphers which approximate CSPRNGs by exploiting modular arithmetic under $XOR$, this is what we're trying to approximate.
 	- This means they escape bijection as they don't emulate a function from blocks to blocks.
-- Encryption is thus a psuedorandom permutation of all $2^n$ blocks.
+- Encryption is thus a pseudorandom permutation of all $2^n$ blocks.
 ## Terminology
 - Claude Shannon introduced some important foundational principles to cryptography for the design of block ciphers
 	- **Confusion**
@@ -47,7 +48,7 @@
 - The function $f$ should be a pseudorandom function ($PRF$).
 	A $PRF$ is a family of functions: $$F_{k} : \{0, 1\}^n \to \{0, 1\}^m$$
 	$k$ = key
-	Efficient to compute; differs from a prng as this takes a key and an input, and will produce psuedorandom output  consistently for every input, whereas PRNG just takes a seed. PRNGs produce sequences, but $PRF$ focuses on the mapping. 
+	Efficient to compute; differs from a PRNG as this takes a key and an input, and will produce pseudorandom output  consistently for every input, whereas PRNG just takes a seed. PRNGs produce sequences, but $PRF$ focuses on the mapping. 
 
 ### Feistel Cipher Encryption
 - Start with $L_{i} = L_i, R_{i} = R_i, k_{i}$
