@@ -53,4 +53,4 @@ $$
 	- This yields the average position of the triangle as a single vector. 
 	- We then compute the distance to to the camera, and sort the triangles in descending order. 
 	- We reorder the index buffer, issuing draw calls using the sorted index order to draw transparent triangles in the correct order. 
-- Centroid sorting assumes geometry is entirely in front or behind one another; if there are cyclical intersecting relation ships, there is no sorting order that can satisfy a particular geometry, which is why transparency remains a difficult problem. 
+- Centroid sorting assumes geometry is entirely in front or behind one another; if there are cyclical intersecting relationships, there is no sorting order that can satisfy a particular geometry, which is why transparency remains a difficult problem. 
