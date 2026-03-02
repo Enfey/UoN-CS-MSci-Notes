@@ -73,3 +73,59 @@
 3. If the padding is accepted in this easiest case, we know $IV' \oplus z_i = 0x01$ 
 4. Rearrange $IV' \oplus z_i = 0x01$, $z_i = IV' \oplus 0x01$ 
 5. We repeat this for greater padding lengths; once we know $z_i[16]$ we can manipulate the IV to output a plaintext with a padding length of 2 with values 2, and rearrange to acquire $z_i[15]$, and so on and so forth, eventually recovering $z_i$, at which point we can recover the original plaintext through $XOR$ with the previous block.
+
+
+### Counter Mode
+ - Encrypt a nonce + a counter and use this to mask the plaintext with $XOR$ 
+ - The encryption is applied to $XOR$ only.
+ - This is very easily parallelised as it is not reliant on prior output; the key and the nonce are fixed under the encryption cycle, just increment the counter for each block, yielding $y_i$'s
+	 ![](Pasted%20image%2020260301193445.png)
+- CTR turns a block cipher into a keystream generator:
+	- Pick a fixed Nonce
+	- For each block index $i$, compute a keystream block $s_i = e_k(Nonce + i)$ 
+	- Mask the plaintext with $XOR$, $y_i = x_i \oplus s_i$ 
+- This behaves exactly like a stream cipher; generate pseudorandom stream and $XOR$ with plaintext. 
+- Decryption is the same operation as XOR cancels, so we compute the same $s_i$ and $XOR$ with the ciphertext, $y_i$. 
+
+#### Counter benefits
+- CTR avoids repeating ciphertext blocks when plaintext blocks repeat  because the counter has changed; the keystream blocks differ for a different block. 
+- CTR can encrypt arbitrary length data without PKCS#7 padding; can XOR partial final blocks much like in stream ciphers, which removes the entire class of padding sidechannel/oracle vulnerabilities that CBC + PKCS#7 have. 
+- Parallelism. 
+
+#### Counter issues
+- Nonce reuse
+	- If the same key $k$ is used with the same Nonce, then the same keystream repeats
+		![](Pasted%20image%2020260301194503.png)
+	- $y_i = x_i \oplus s_i$, $y'_i = x'_i \oplus s_i$ 
+	- If we XOR the ciphertexts, we get $y_i \oplus y'_i = x_i \oplus x'_i$ 
+		- From here, could launch a crib dragging attack; relationship between plaintexts leaked, often able to recover parts of, if not the whole plaintext. 
+- Malleability (and why GCM is needed)
+	- Because $y_i = x_i \oplus s_i$, flipping a bit in the ciphertext flips the same bit in the plaintext. 
+	- $y_i \oplus \Delta \implies x_i \oplus \Delta$ 
+	- An attacker can predictably modify plaintext, and with this mode there is no authentication that the message has changed. If the attacker can guess contents and intercept the ciphertext, this could be catastrophic whilst not being a 'direct' attack. 
+
+### Galois Counter mode
+- Galois Counter Mode (GCM) is a block cipher mode which extends CTR to add authenticity to combat its malleability property
+- Very similar to counter mode, but adds an authentication tag.
+	- Multiplication in $GF(2^{128})$ with irreducible polynomial $x^{128} + x^7 + x^2 + x + 1$ 
+- Extremely parallelisable which will become obvious when viewing its construction below, and is robust against message alteration. 
+
+#### GCM diagram and explanation
+![](Pasted%20image%2020260301195850.png)
+- Inject an IV as counter 0; our nonce. 
+- An increment function $incr$ + subsequent encryption $e_k$ as it appears in the block cipher e.g., **AES** drives the keystream generation much like in CTR.
+- Counter 1 is the first 'proper key' encrypted and $XOR$'d with the plaintext to yield $y_1$
+	- AAD, additional authenticated data, goes into the authentication computation and is multiplied by $H$
+	- The result is $XOR'd$ with $y_1$
+	- That result is then multiplied by $H$, etc etc. 
+		- $H = e_k(0^{128})$ , forged from key.
+		- ![](Pasted%20image%2020260301203803.png)
+		- H will differ, generate a polynomial at each ciphertext block and reduce it, such that the final $S_m$ will be different if the ciphertext has changed; position sensitive. 
+		- Expands to $S = (S \oplus y_i) \cdot H$ per block. 
+- A special block is appended, $len(A) ||len(C)$, which contains the lengths of AAD and the ciphertext. 
+- The result of encrypting the initial IV, depicting Counter 0, is $XOR'd$ with the $H$ result of the final synthetic block, yielding the tag (we take the most significant bits via $MSB_t$, taking the $t$ most significant bits).
+- Note that the tag generation is logically separate from the encryption, but uses its results and the IV. 
+- The receiver takes the IV, ciphertext $C$, AAD A, and lengths len(A), len(C) and recomputes the expected tag and comapres it to the received tag
+	- Tag is often appended or stored as a separate field. 
+	- So if the attacker has altered the ciphertext, we will know because the threat model we defend against is that the attacker can modify what is sent over the wire; compute $T'$ at the other end, will see that $T' \neq T$ and reject.
+
