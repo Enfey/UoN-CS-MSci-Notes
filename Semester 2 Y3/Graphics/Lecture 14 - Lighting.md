@@ -88,4 +88,8 @@
 	6. Linear attentuation, $att_l$ 
 	7. Quadratic attenuation, $att_q$ 
 	![](Pasted%20image%2020260307181335.png)
-- To calculate if the fragment at position $p$ 
+- To calculate if the fragment at position $p$ is lit by the spot light, we need to calculate the dot product of the vector pointing toward the light with the vector of the direction of the light, which is derived from the middle of the cone. 
+- The angle $\phi$ is a half-angle to the midpoint, and is equal for both arms of the cone as they are symmetric. 
+- We then check if the computed angle is smaller than the cut-off angle cos $\phi$, which of course is equal for both sides. We take $-l$ as the direction vector to perform cross-product with, as can be seen below. 
+	![](Pasted%20image%2020260307213418.png)
+- Phong's model can be used to calculate the total illumination of a fragment by a spot light in a manner similar to calculating the total illumination of a fragment by a positional light. The only difference is that if the fragment is not hit by the spotlight according to the cutoff angle calculation, then the calculation is just $i_{phong} = i_{amb} * attenuation$ 
