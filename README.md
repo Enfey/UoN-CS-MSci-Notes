@@ -5,18 +5,11 @@ Personal notes for the University of Nottingham Computer Science MSci program, a
 ## Planned Future Modules
 Below is a list of modules I plan to take in upcoming semesters.
 
-### Year 3
-- **Semester 2**  
-  - Games 
-  - Graphics
-  - Cryptography
-  - Cyber Security
-
 ### Year 4
 - **Semester 1**  
-  - Individual Research Dissertation
-  - Group Dissertation
-  - Symbolic AI
+  - Individual Research Dissertation - binary/hardware exploitation
+  - Group Dissertation - polyhedral compilation or superoptimisation
+  - Small study group - advanced computer architecture
   - Advanced Algorithms and Data Structures
 
 - **Semester 2**  
