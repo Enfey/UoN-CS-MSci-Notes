@@ -103,19 +103,74 @@
 	- **No Authentication** - ARP replies carry no cryptographic proof that the send legitimately owns the IP address they're claiming, any machine can send an ARP reply claiming any IP.
 	- **Unsolicited replies are accepted** - a machine updates its ARP cache upon receiving a reply even if it never sent a corresponding request. There is no mechanism to distinguish legitimate replies from fabricated ones. 
 - Attacker positions themselves between a router and a victim, intercepting all traffic between them. 
-- Attacker sends two unsolicited fake ARP replies, faking the IP address but providing the attacker's MAC address, so all traffic flows through the attacker. 
+- Attacker sends two unsolicited fake ARP replies, faking the IP address (of both the router and the victim, and sends them correspondingly) but providing the attacker's MAC address, so all traffic flows through the attacker. 
 	- The attacker enables IP forwarding so packets are still forwarded to real destinations after inspection, meaning communication still works normally from both parties' perspective.
+		![](Pasted%20image%2020260308173939.png)
 - ARP cache entries expire every few mins, must continously re-send fake replies. 
 
 #### ARP Cache Poisoning protection
-- 
+- Static ARP entries - manually configure ARP entries for critical devices such that they cannot be overwritten by any received ARP reply - legitimate or otherwise. Highly effective for a small number of critical addresses, particularly the default gateway.
+	- This is because poisoning the gateway is the most common attack vector. 
+	- Doesn't scale
+- Some OSs ignore unsolicited ARP replies by default such as OpenBSD.
+- Tools like **ARPwatch** monitor all ARP traffic on a network segment, maintain database of known IP->MAC mappings and alert on anomalies
+	- Alerts triggered by:
+		- IP changing MAC address(could be legitimate e.g., changing NIC, or could be poisoning attack)
+		- New MAC address appearing on network segment
+		- MAC address claiming multiple IPs
+		- Unsolicited ARP reply received.
 
 #### DNS
+- Application layer protocol, facilitates communication by translating human-readable domain names into IP addresses. 
+- DNS uses UDP on port 53 for speed usually
+	- This is because a DNS exchange is a single question and single answer, typically under 512 bytes each, a 3 way handshake and teardown would add more overhead than the query itself. 
+	- UDP is stateless and connectionless - there is no established session, no sequence numbers, no built-in verification that a response corresponds to a request etc.
+	- Any machine on the network can send a UDP packet claiming to be a DNS response. 
+- **Resolution + Caching**
+	- When we query `google.co.uk` machine asks local resolver - typically router or ISP's DNS server. That resolver either returns a cached answer or queries upstream until it reaches the authoritative nameserver for that domain. 
+		- The host has no knowledge of the authortative name server IP. DHCP configuration; usually maintain a DNS resolver IP, and sends all DNS queries to that resolver.
+		- DNS queries upstream are all independent brand new queries e.g., 
+			![](Pasted%20image%2020260308175659.png)
+			Presuming no caching, and then fills `google.co.uk` in DNS cache of each resolver when returning. 
+	- The response travels back down the chain, with each resolver caching it for the record's TTL duration (a successfully poisoned cache entry will affect users until it expires).
 #### DNS spoofing
+- DNS spoofing corrupts the mapping between a domain name and a legitimate IP. 
+- The victim's resolver returns the attacker's IP instead of the real one.
+- The victim then connects to the attacker server believing it's the legitimate destination.
+- **Method one: Cache Poisoning**
+	- UDP has no session, no handshake etc. 
+	- When a response is returned, a resolver only checks two things to check whether a response is legitimate:
+		- Does destination port match where I sent my query from?
+		- Does the transaction ID in the response match the one in my query? (part of DNS protocol)
+	- This turns DNS cache poisoning into a race condition - the attacker must send a matching response to the resolver first, and the resolver will cache it and discard subsequent responses. 
+	- Attacker is on a different network, not in MiTM position. The port is usually 53, but must cycle through all 65536 transaction IDs, and then forge the rest of the request as they see fit. 
+		- Can usually send all 65536 responses within milliseconds. 
+- **Method two: Man-in-the-middle spoofing**
+	- Doesn't need to guess anything, as they can see the traffic difrectly. 
+	- Establish MiTM position through ARP cache poisoning. 
+	- DNS queries are UDP and plaintext with no encryption whatsoever, so can just read the packet and forge the DNS request with no issues. 
 
-#### DNS protection
-
+#### DNS spoofing protection
+- DNSSEC adds cryptographic authenticity to DNS, so that forged responses are defeated. 
+	- But inconsistent across internet
+- DNS over TLS wraps DNS in a TLS session (DoT), DNS over HTTPS (DoH), booth prevent eavesdropping, and spoofing attacks are impossible as there is no way to see the transaction ID or source port (see below). DoH makes DNS traffic indistinguishable from regular traffic. 
+- Source port randomisation - makes forged responses harder to match.
+- Hardening DNS server e.g., open resolvers are DNS servers that respond to queries/responses from any IP rather than only intended clients. 
 #### TCP Sequence prediction attack
-
+- TCP provides reliable ordered delivery over IP's unreliable unordered service.
+- The mechanism that makes this possible is **sequence numbers** - each byte of data in a TCP stream has a sequence has a sequence number, and both sides track what they've sent and received. 
+- The three way handshake establishes sequence numbers:
+	1. SYN seq = 1000
+	2. SYN-ack seq = 5000, ack 1001
+		- Received byte 1000, send 1001 next
+	3. ACK seq = 1001, ack = 5001.
+	Server maintains window of acceptable sequence numbers it will accept, anything outside this window is rejected - either duplicate or replay. 
+- Attack:
+	- If an attacker can determine or predict the current sequence number of an existing TCP session between a victim and a server, they can inject packets the server accepts as legitimate, as will be accepted by the window size. 
+	- Need victim IP, server IP (easily discovered without tunnel-mode IPSec), source port of victim, current sequence number.
+	- Can learn sequence numbers (early implementations used predictable counters), DOS victim, and inject forged packets. 
 #### Defense against TCP prediction attack
-
+- Randomised sequence numbers
+- Firewall configuration.
+- IPSec, hide IP addresses and port numbers. 
+- Not common, but still motivates safeguards. 
