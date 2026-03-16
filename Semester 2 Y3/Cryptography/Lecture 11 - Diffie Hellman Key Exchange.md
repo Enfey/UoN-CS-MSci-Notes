@@ -129,9 +129,10 @@ Closed, associative, neutral element, inverse, commutativity of $\circ$.
 	- $O(√|G|)$ and requires roughly $√|G|$ space.
 	- Instead of doing $g^x$, do $g^{mx + c}$ 
 		- Precompute all $mx$, then can solve for the constant?
-- **Pollard's Rho**
-- **Pohlig-Hellman**
-- **Index Calculus** really effective for discrete logarithms, and is the reason that Elliptic Curve groups are so much more efficient. 
+- **Pollard's Rho** time = $O(√|G|)$ , but does not require the space as it does not store a list. Still defeated by large primes. 
+- **Pohlig-Hellman** - based on the prime factorisation of $|G|$ 
+	- Subgroups yielded by orders are exactly the divisors of $|G|$. Pohlig Hellman solves the discrete log for $g$  inside of each of the subgroups, and then combines the answers. 
+- **Index Calculus** really effective for discrete logarithms, and is the reason that Elliptic Curve groups are so much more efficient (EC group elements aren't integers). Exploits structure unique to integers and attacks $\mathbb{Z}^*_p$ directly.
 
 
 ### Which prime?
