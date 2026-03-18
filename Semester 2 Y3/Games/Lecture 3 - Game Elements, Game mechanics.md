@@ -108,7 +108,7 @@
 		- Player rolls repeatedly
 - Identify **primitives**
 	- List all distinct player actions observed e.g., move, attack, dodge, heal, retreat
-	- Identify objects, attributes, states, e.g., enemies, weapons, health, stamina, alive, hostil, idle
+	- Identify objects, attributes, states, e.g., enemies, weapons, health, stamina, alive, hostile, idle
 - Apply **Schell's Taxonomy**
 	- Write only what is supported by observation
 	- Identify/infer rules
