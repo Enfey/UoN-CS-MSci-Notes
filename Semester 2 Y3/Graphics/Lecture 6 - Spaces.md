@@ -1,6 +1,6 @@
 ## Projecting from 3D to 2D
 - 3D rendering is the process of drawing 3D images on a 2D screen.
-- 3D renedering requires vertices, a camera with location and direction, and a display to draw assembled triangles which are visible to the camera. 
+- 3D rendering requires vertices, a camera with location and direction, and a display to draw assembled triangles which are visible to the camera. 
 	![](Pasted%20image%2020260214185615.png)
 - A vertex does not go directly from 3D to 2D, it passes through a series of co-ordinate systems ("Spaces") each with a specific purpose, keeping modeling, scene layout, screen mapping etc clearly separated. This is called **projection**.
  - 3D space has 3 dimensions; a position in this space is specified with a cartesian co-ordinate  $p=(x, y, z)$ which is a vector in $\mathbb{R}^3$ 
