@@ -21,8 +21,9 @@ Closed, associative, neutral element, inverse, commutativity of $\circ$.
 - The group $\mathbb{Z}^*_n$ consists of the integers $\{1, 2, \dots, n - 1\}$ for which $gcd(i, n) = 1$ where $i \in \mathbb{Z}^*_n$. 
 	- That is the set of integers that are co-prime to $n$, form an abelian group under multiplication $mod \ n$.
 - The identity element, naturally, is one. 
-- In the majority of cases, we use a prime number as the modulus by which the operation $\circ$ is governed:$$\mathbb{Z}^*_{p} = \{1, 2, \dots, p-1\}$$
-- This is because every number below a prime is automatically coprime to it. 
+- We often use a prime number as the modulus by which the operation $\circ$ is governed to 
+- This ensures that the group is closed, and ensure that all group elements are co-prime to $p$:$$\mathbb{Z}^*_{p} = \{1, 2, \dots, p-1\}$$
+	- This is because every number below a prime is automatically coprime to it. 
 
 ## Group Cardinality
 - The cardinality of a group is the number of elements in that group:
@@ -54,7 +55,7 @@ Closed, associative, neutral element, inverse, commutativity of $\circ$.
 	- Powers of $2$ hit every single element in the group before cycling back to the neutral element. 
 	- This means that $ord(2) = k = 10 = |\mathbb{Z}^*_p| = p-1$, the maximum possible order, as this is **equivalent to the group cardinality**
 ### Cyclic Group definition
-- Any group that contains an element $g$ which has maximum order is called a cyclic group
+- Any group that contains an element $g$ which has **maximum order** (equivalent to the cardinality of the prime group) is called a cyclic group
 - This element is called a **generator**.
 - For example, 2 is a generator of $\mathbb{Z}^*_{11}$, whilst $3$ is not, as $ord(3) = 5$. 
 
@@ -71,13 +72,13 @@ Closed, associative, neutral element, inverse, commutativity of $\circ$.
 	2. $ord(a)$ divides $|G|$ 
 		- The order of any element is a divisor of the group's cardinality.
 - For $\mathbb{Z}^*_p$ ,  we have multiple **cyclic subgroups**
-- Each element raised to the power of an order generates a cyclic subgroup that corresponds directly to that order.
+- Each element raised to a power generates a cyclic subgroup that corresponds directly to that element's maximal order.
 	- For example:
 		![](Pasted%20image%2020260309213540.png)
 		![](Pasted%20image%2020260309213548.png)
 		Element $10$ generates $\{1, 10\}$ under $mod$ $11$, so the order 2 has the cyclic subgroup $\{1, 10\}$ 
 	- The number of distinct cyclic subgroups corresponds directly to the orders/factors of $\mathbb{Z}^*_p$.
-	- The largest order's subgroup is equivalent to the entire group. This is important for diffie hellman, as choosing a generator with this order generates the entire group as its cyclic subgroup when used as an exponent for $a$. 
+	- The largest order's subgroup is equivalent to the entire group. This is important for diffie hellman, as choosing a generator with this order generates the entire group as its cyclic subgroup.
 
 
 ### Diffie Hellman
