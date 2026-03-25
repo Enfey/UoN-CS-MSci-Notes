@@ -78,10 +78,115 @@
 	- Depth buffer
 	- Shader code
 	- Etc
+- The colour buffer is a 2D array in VRAM with one entry per pixel on the display that stores the RGBA value interpolated across multiple different stages, (though usually formulated mostly at depth testing, transparency, texture mapping, and fragment shading stages) for the current frame. 
+	- Typically maintain two colour buffers, 1 for the currently displayed buffer, and 1 that is currently being interpolated into by the GPU.
+	- Swaps when a frame has finished rendering.
+		
 
 ## Video Display Controller
-- 
+- The video display controller is a dedicated hardware block on the GPU responsible for reading the colour buffer in VRAM and sending it to the display. 
+- The display controller reads the front buffer at a fixed-rate dictated by the display's refresh rate usually either 60, 144, or 240 times per second
+	- This happens on a completely fixed schedule without reference to the actual contents of the back or front buffer, it simply wants a fresh image regardless of what that image is. 
+- Refresh rate formally is the amount of times per second the display controller reads the colour buffer. It is a property of the monitor hardware.
+- The frame rate is how fast the GPU produces a finished frame, which is variable.
+	- If the GPU produces frames - that is, a complete colour buffer (and corresponding depth buffer), faster than the refresh rate, it is considered wasteful as some frames never appear on the screen, they will be overwritten before the display controller can read them. 
+- If the GPU writes to the front buffer while the display controller is mid-way through reading it, that is the GPU replaces front buffer with back buffer contents you get screen-tearing.
+	- The tears are horizontal due to how the colour buffer is read.
+	- This happens in systems where:
+		- GPU writes often to the frame buffer, faster than the display can read it
+		- VSync is disabled, so the GPU swaps buffers immediately after finishing the frame, instead of matching the rate at which frames are completed to the rate at which they are read by the display controller.
+			- But usually adds latency by having to wait for the frame to be rendered where the FPS is much higher than the refresh rate.
+				![](Pasted%20image%2020260324230617.png)
+- GSync is a monitor technology that dynamically alters the monitor refresh rate to match the FPS in real-time, eliminating both tearing and stuttering. 
+- HDMI 2.1 supports data transfer rates including 8K at 60hz and 4K at 120hz.
+	- For each pixel on screen, at each refresh cycle, the display controller must transmit colour data.
+		![](Pasted%20image%2020260324230937.png)
+	- HDMI 2.1 has a bandwidth of 48 Gbps, 6 GB/s
 
 ## Following a triangle through the GPU
+- CPU runs the application code, which uses a graphics API to load vertex data to GPU memory via PCIe and issues draw calls via `glDrawArrays()` or equivalent.
+- The PCIe bus carries the draw call and other data e.g., textures to the GPU
+- The vertex shader programs run on GPU shader cores
+- A multiprocessor can process both vertex warps and pixel warps in a concurrent manner, executing portions of a shader program, one instruction a time, across many shader cores, all responsible for different data. SIMD.
+- After vertex shader programs are executed, a specialised piece of hardware close to the multiprocessor assembles and clips the triangles and performs viewport transformation. 
+- Each triangle is rasterised on another specialised piece of hardware, which isn shared between several multiprocessors. There are multiple of these rasterisation hardware components on a GPU and each is responsible for a region of the display area. The specific one which processes a triangle depends on where the screen the triangle is located and a single triangle may be processed by many units.
+- After rasterisation, fragments are generated which are processed by the fragment shader on the ALUs which calculate the fragment colour. 
+- Depth testing and merging of fragment colours with the frame buffer is done on a final specialised hardware component, of which there are many on the GPU, with each one handling a subset of pixels in the buffer.
 
 ## RTX 3070
+
+### GigaThread Engine
+- Global scheduler for the entire GPU
+- Receives draw calls from the CPU via PCIe
+- Breaks work down into thread blocks
+- Handles context switching at the GPU level.
+- Handles load balancing. 
+### Graphics Processing Clusters (GPCs)
+- The RTX 3070 has 6 GPCs.
+- Each GPC is a self-contained unit capable of running the entire rendering pipeline independently.
+	- They contain:
+		- 1x Raster engine
+		- 16x Render Output Units
+		- 6x TPCs
+			- Each TPC contains:
+				- 1x polymorph engine
+				- 2x streaming multiprocessors
+					- Which contain:
+						- 128x shader cores
+						- 4x texture units
+						- 1x RT core.
+- The reason for division into GPCs is to permit scaling for different products e.g., low-end consumer card vs high-end consumer card.
+- Each one is independently connected to memory controllers and shared L2 cache, meaning they can largely operate in parallel without interference.
+### Raster engines
+- Each GPC has one Raster engine. 
+- The raster engine performs rasterisation.
+- A display area is split into quads which are each assigned to a raster engine:
+	![](Pasted%20image%2020260324233154.png)
+- A raster engine is responsible for rasterising any triangle which partially covers its screen quad, thus the specific raster engine which processes a triangle depends on where the screen the triangle is located.
+	- Note that large triangles are rasterised by multiple raster engines simultaneously.
+- Perform the edge testing, hierarchal rasterisation (first test large tiles, then subdivide only tiles that are partially covered, then test individual pixels), much faster than brute force, calculates interpolation gradients and generates fragments. All hardware.
+
+### Render Output Units
+- Handle depth testing and colour buffer merging.
+- This is the final stage of the rendering pipeline for each fragment.
+- When a fragment shader completes on given SMs, and produces colour into a colour buffer, those colours go to ROPs, which perform depth testing with regard to the depth buffer and then blends or overwrites the colour buffer accordingly (or does nothing, if fragments fail the depth test).
+- The resulting colour is written back to VRAM at the correct pixel location. 
+- Each ROP is responsible for certain pixel locations. 
+
+### Texture Processing Clusters (TPCs)
+- Each GPC has 6 TPCs yielding 36 across the entire GPU. 
+- Each TPC contains a PolyMorph Engine and 2 Streaming Multiprocessors
+	- The PolyMorph Engine runs before the vertex shader can run; it reads the vertex buffer, gathers the attributes for each vertex (position, normal, colour, UV, etc) and organises them ready for shader execution. 
+	- It further organises vertices into warps of 32 and dispatches them to the SM's shader cores.
+	- After the vertex shader outputs clip space co-ordinates, the PolyMorph engine performs perspective division; this is done on dedicated hardware to avoid wasting shader core cycles as it can be done faster here.
+	- It further is responsible for clipping triangles that extend outside the view frustrum, which may result in new vertices, but we don't need to know about this trust.
+	- Maps NDC co-ordinates to screen space using `glViewport()` settings.
+	- Being inside the TPC, next to SMs is deliberate, as vertex data fetched from VRAM for the ALUs does not have to travel far to be processed by the polymorph engine and vice-versa.
+
+### Streaming Multiprocessors
+- 46 SMs on the RTX 3070 (some GPCs have slightly fewer) 
+- Has 4 processing blocks, and each block contains:
+	- 32x FP32 ALUs
+		- Each one can perform FMA per clock cycle, and run the actual shader code.
+		- 32 of them in sync form one warp, and so have 4 warps actively executing simultaneously in a single SM.
+	- 16x INT 32 units
+		- Integer units run in parallel with floating point units e.g., array index calculations
+		- This is opposed to competing for the same execution units
+	- 1x Tensor Core
+		- Matrix multiplication acceleration
+	- 4x LD/ST units (load/store - register access)
+		- 4 units per block, handle reading from and writing to the register file, which is extremely fast shared storage that shader variables live in.
+		- 4 is sufficient to keep up with typical shader workloads; not every instruction needs a memory access.
+	- 1x SFU (special function unit)
+		- Polynomial approximations of sin, cos, exp, log etc.
+		- Interpolating vertex attributes?
+	- Warp scheduler
+		- Schedules 48 resident warps, selecting ready ones, and context switching stalled warps to hide latency.
+
+### Texture Units
+
+### RT Cores
+- Ray-triangle intersection, confirming hit point is inside the triangle.
+- Use BVH, see next lecture.
+
+### Cache and Controllers
