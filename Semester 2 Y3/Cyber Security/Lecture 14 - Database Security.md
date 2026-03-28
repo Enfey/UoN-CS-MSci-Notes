@@ -143,7 +143,7 @@ WITH CHECK OPTION
 
 ### SQL Injection
 - It is common for user input to be read e.g., in web or application form as part of search, and then used within an SQL query
-- Unexpected and potentially malicious user input is able to completely malform the query
+- Unexpected and potentially malicious user input is able to therefore able to completely malform the query, which can have catastrophic results.
 - An SQL injection attack bears striking similarity to XSS attacks.
 - A typical vulnerable search query may look like:
 ```SQL
@@ -161,11 +161,46 @@ SELECT * FROM Products WHERE pName LIKE '%'; DROP TABLE Products;-- %'
 	- `--` - Comment, both used to nullify the remaining parts of an SQL query so it doesn't cause a syntax error.
 
 #### In-Band SQL Injection
+- Most common form of SQL injection attack
+- In-band SQL Injection is a type of SQL injection where the attacker receives the result as a direct response using the same communication channel to launch the attack. 
+- The simplest type of in-band SQL injection is when the attacker is able to modify the original query and receive the direct results of the modified query. 
+	![](Pasted%20image%2020260327011607.png)
+- An error-based in-band SQL injection is a subtype of in-band SQL injections where the result returned to the attacker is a database error rather than just raw data/results. 
+	- The consequences of this may be that the attacker can use the received error string to get information about type and version of database to try different attack techniques for specific schemas
+	- Get information about the specific schema
+	- May be able to manipulate the errors to exfiltrate data from the database
+- A Union-based SQL Injection is a subtype of in-band SQL injection where the attacker uses the UNION SQL clause to receive a result that combines legitimate information with sensitive data.
+	- The attacker must first determine the number and type of columns in the original query, then craft a matching `UNION SELECT` to extract arbitrary table data.
+		- `UNION` permits another SELECT queries and appends the results to the original query
+		- For a `UNION` query to work, naturally the individual queries must return the same number of columns, and the data types in each column must be compatible
+
 
 #### Blind SQL Injection
+- No data is returned directly to the application, so the attacker instead infers information by observing application behaviour. 
+- **Boolean-based blind injection** sends queries that evaluate to true or false, watching for differences in the page response. 
+	![](Pasted%20image%2020260327011753.png)
+- **Time-based blind injection** is used where the only observable side-channel is response time, where conditional expressions such as `1 AND IF(SUBSTRING(password,1,1) > 'm', SLEEP(5), 0)` "Is the first char of the admin password > 'm'"
+	- Usually need to know database being used and version.
 
-#### Union-Based SQL injection
 
 #### Second Order SQL Injection
+- Distributes the attack across separate moments in time
+- An attacker utilises the database to store malicious data which is then intended to be used in further queries, typically used when know a lot about the processes, and data entry points are fairly sanitised for things like search
+- E.g.,
+	![](Pasted%20image%2020260327020207.png)
+	![](Pasted%20image%2020260327020218.png)
+	Then use update password on this:
+	![](Pasted%20image%2020260327021043.png)
+	The quote nullifies the original and ensures uniqueness, as well as the comment, so the actual password for the admin account is what is reset. This shows that sanitisation at entry is not the only thing necessary; one needs sanitisation regardless where input comes from. 
 
+### Database Fingerprinting
+- This refers to how an attacker figures out which database engine they're talking to.
+- If injection is possible, an attacker can `UNION_SELECT` the version string (which each engine exposes via a different function e.g., @@version).
+- Watching for errors triggered with certain syntax specific to DBMS will slowly reveal the DBMS and version in use.
+- Format of error messages and the wording, and even error numbers, can point directly to the DBMS being used.
 #### Preventative measures
+- Parameterised queries
+- Stored procedures
+- Input validation
+- Least privilege database accounts
+ 
