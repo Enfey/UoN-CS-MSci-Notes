@@ -192,6 +192,8 @@ SELECT * FROM Products WHERE pName LIKE '%'; DROP TABLE Products;-- %'
 	Then use update password on this:
 	![](Pasted%20image%2020260327021043.png)
 	The quote nullifies the original and ensures uniqueness, as well as the comment, so the actual password for the admin account is what is reset. This shows that sanitisation at entry is not the only thing necessary; one needs sanitisation regardless where input comes from. 
+	
+	Note: the original quote is escaped as a double quote, but during queries, is parsed as a single quote
 
 ### Database Fingerprinting
 - This refers to how an attacker figures out which database engine they're talking to.
@@ -199,8 +201,27 @@ SELECT * FROM Products WHERE pName LIKE '%'; DROP TABLE Products;-- %'
 - Watching for errors triggered with certain syntax specific to DBMS will slowly reveal the DBMS and version in use.
 - Format of error messages and the wording, and even error numbers, can point directly to the DBMS being used.
 #### Preventative measures
-- Parameterised queries
-- Stored procedures
-- Input validation
-- Least privilege database accounts
- 
+- **Parameterised queries**
+	- Single most effective defence against SQL injection.
+	- The core idea is to separate the SQL structure from the data
+	- The query 'template' is received by the database engine, compiled, and then user-supplied values are slotted in afterward so they cannot be interpreted as SQL logic whatsoever.
+	- Different SQL dialects use differing syntax for *placeholders* instead of directly adding the input values into the query text.
+	- E.g., some use ?, some use @
+		`SELECT * FROM users WHERE username = '" + userInput + "'`
+		Becomes
+		`SELECT * FROM users WHERE username = ?`
+		The query structure becomes fixed, and attacks can only change what data the query operates on (thus not preventing second-order SQL injection)
+- **Stored procedures**
+	- Named block of SQL that lives inside the database itself and is called by name from application code.
+	- When written correctly, they offer similar protection to parameterised queries because the SQL logic is pre-compiled and stored server-side with parameters being passed in separately.
+		- The security comes from parameterisation within the procedure, not by simply by nature of being stored
+		- Have additional benefit of creating abstraction layer between the application and database schema.
+- **Input validation**
+	- Check user-supplied data that is intended to be used in queries against a stringent set of rules before it ever reaches the query.
+	- Whitelist validation defines exactly what is acceptable, e.g., only allow alphanumeric characters and underscores, up to 30 characters. Anything else is rejected outright.
+	- Blacklist validation is less preferred, we try to detect and block known dangerous patterns, stripping out single quotes, the word `DROP`, comment sequences, and so on. This is inherently weaker because if there is an exploit one does not know about, it can be used. Best used a secondary layer.
+	- Should never be used on its own, as it is easy to miss an attack vector and validation logic in one part of the application may not protect data that enters via another route.
+- **Least privilege database accounts**
+	- Database account(s) used by application(s) should have the *minimum permissions necessary to do its job*.
+	- Web app does not need to DROP tables, create new schemas, peel back views etc.
+	- A well-designed system may use *multiple* database accounts with different privilege levels depending on the operation being performed.

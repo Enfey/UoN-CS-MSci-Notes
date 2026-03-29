@@ -1,5 +1,5 @@
-## RSA
-- Asymmetric encryption algorithm introduced in 197, and is the most popular public key algorithm in the world.
+rs## RSA
+- Asymmetric encryption algorithm introduced in 1997, and is the most popular public key algorithm in the world.
 - RSA uses two mathematically linked keys - a public and a private key. What the public key encrypts, only the private key can decrypt. 
 - This solves a fundamental problem with symmetric cryptography; we no longer need to share a secret key in advance. 
 - Encryption performed by the public key can only be reversed using the private key:
