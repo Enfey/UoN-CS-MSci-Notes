@@ -72,6 +72,7 @@ rs## RSA
 - $d = 107$, $107 \cdot 3 = 321$, $321 (mod \ 160) = 1$ 
 
 The public key is $n$ and $e$, and the private key is $p, q, (\Phi(n)), d$, but we just take $d$.
+	NOTE: to break RSA, must compute totient, and need p and q for this, given only $n$, computing the totient is equivalent to factoring $n$ for all primes. So breaking RSA amounts to factoring $n$, which for large primes is impossible. After finding $p$ and $q$, then $d$ is computed via EEA.
 
 ## RSA - Encryption
 - Now that we have a a public key $(3, 187)$ and a private key $107$ 
@@ -105,7 +106,7 @@ The public key is $n$ and $e$, and the private key is $p, q, (\Phi(n)), d$, but 
 - For example:
 	- $x^8$ requires $7$ multiplications
 		![](Pasted%20image%2020260309191911.png)
-	- But it can be shortened by repeatedely squaring:
+	- But it can be shortened by repeatedly squaring:
 		- $x \cdot x = x^2$ 
 		- $x^2 \cdot x^2 = x^4$ 
 		- $x^4 \cdot x^4 = x^8$ 
