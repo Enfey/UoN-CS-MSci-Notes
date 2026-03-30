@@ -121,6 +121,73 @@ The security of cryptographic signing is now essentially predicated not only on 
 
 ## PKCSv1.5
 - PKCSv1.5 is a standard that defines a precise encoding for the padded message before signing. 
-- 
+	![](Pasted%20image%2020260329202953.png)
+- The first component $0x00$ is a leading zero byte to ensure the encoded message is numerically less than $n$, preventing modular arithmetic from wrapping.
+- The second component $0x01$ signals that this is a private key operation. Block type $0x02$ is used for encryption. Ensures interpreted as signature
+- $0xFF...FF$ - Padding string, must be at least 8 byes of $0xFF$. This serves multiple purposes:
+	- Adds constrained bits to reduce forgery probability.
+	- Helps in ensuring the total length of the message $m$ prior to signing is less than the modulus size.
+- $0x00$ separator marking the end of padding, used to locate where the hash begins.
+- **Hash Algorithm Header**  specifies exactly which hash algorithm was used.
+	- This further adds more constrained bytes an attacker must match(malleability+existential forgery prevention)
+- $H(m)$ is the actual message hash computed using the specified hash algorithm.
+
+### Signing and Verification under PKCSv1.5
+- **Signing**
+	- Compute $H(m)$ 
+	- Construct the padded encoding as observed above $EM$
+	- Compute $s = EM^d \ mod \ n$ 
+	- Send $(m, s)$ 
+- **Verification**
+	- Compute $EM' = s^e \ mod \ n$ 
+	- Check the padding bytes are all $0xFF$
+	- Find and check $0x00$ separator
+	- Extract and verify hash algorithm header.
+	- Compute $H(m)$ independently
+	- Compare with the extracted hash value from $EM'$
+
+
+### Problems
+- Has no formal security proof; was designed heuristically. Its security is based on the apparent difficulty of constructing valid encodings, not a computationally hard problem. 
+- Identical messages always produce identical signatures under this scheme, completely deterministic. Can enable attacks.
 
 ## RSASSA-PSS
+- *Rsa Signature Scheme with Appendix* aims to address some of the shortcomings of PKCSv1.5
+	- With appendix simply means that $m$ and $s$ are sent separately and $m$ (or $H(m)$) is used to compare against the the signature when verifying, rather than just fully deriving the message from the signature.
+	- All modern schemes do this, dont even bother thinking about the alternative!
+- Has a formal security proof
+- Has a probabilistic signature scheme that adds a random salt to the process meaning that repeated signatures on the same document produce different results.
+
+### Signing
+![](Pasted%20image%2020260329210824.png)
+- $mHash = H(m)$ 
+- Concatenate eight zero bytes (padding), hash, and salt(freshly generated random value) to create $m'$ 
+	- Destroys determinism by hashing in next step.
+- Hash $m'$ into final hash $h$
+- Append zero padding of specific length and a separator to the salt to create data block DB. 
+	- The length of the zero padding is chosen so that $DB$ has exactly the right length to fill the available space when combined with $H$ and $0xBC$ in the final output.
+	- Stores the salt, extracted via use of the separator.
+- Expand $H$ using $MGF$
+	- $MGF$ is a **mask generation function** that takes $H$ and expands it to the same length as $DB$.
+	- Deterministic
+- Calculate $DB \oplus MGF(H)$ to create a $maskedDB$
+	- Every bit of $maskedDB$ depends on both $DB$ containing the salt, and $H$ which depends on the message.
+- Output is $maskedDB, H,$ and a constant $0xBC$
+- Apply RSA to this output and then send.
+
+### Verification
+- Apply RSA public key to obtain the unsigned version of the signature
+- Check the length and that the 0xBC constant is present
+- Split the signature into MaskedDB and H 
+	- Known lengths of hash function output and key size
+- Recover DB from MaskedDB by XOR'ing $MGF(H)$
+- Check DB padding is present
+- Extract the salt
+- Recreate $M'$ from the padding, message hash, and salt
+- Calculate $H(M')$
+- Verify $H(M') = H$ 
+
+### Why it is more secure than PKCSv1.5
+- Salt is cryptographically locked into the signature at 2 points, and is discoverable only through one of those paths
+	- A forger who tries to construct a valid $(m, s)$  pair without knowing $d$ must simultaneously produce a correctly structured pre-signature message, satisfy the RSA equation, and ensure that $H(m') = H$ where $M'$ involves the message, the salt, and the hash of the original message.
+	- The security proof shows that doing this is computationally equivalent to inverting RSA itself, making forgery computationally difficult.
