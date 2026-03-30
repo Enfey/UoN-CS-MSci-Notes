@@ -76,6 +76,56 @@
 
 
 ## Merkle-Damgard
+- Hash functions need to accept arbitrarily long inputs but produce a fixed sized output. 
+- A merkle damgard construction is a method used to build a collision-resistant hash function from a smaller component called a **compression function**
+- It is the design principle behind many popular hashing algorithms. 
+- The message $x = \{x_1, x_2, \dots , x_{n}\}$ is split into **fixed-size blocks** and processed **sequentially**
+- A compression function $f$ takes two inputs:
+	- The current message block $x_i$ 
+	- The previous hash state $H_{i-1}$ 
+- This function then produces the next hash state $H_i$. The final state after all blocks is the hash output $H(x)$ 
+- The key theoretical result is if the compression function $f$ is collision resistant for fixed-size inputs, then the entire Merkel-Damgard construction is collision resistant for arbitrary length inputs.
+	- This means if you want to break the hashing algorithm, you must break the compression function. 
+	![](Pasted%20image%2020260330031417.png)
+
+## SHA-256
+- Concrete instantiation of Merkle-Damgard with specific parameters.
+	- **Message block size**: 512 bits
+	- **Internal state size**: 256 bits
+	- **Output size**: 256 bits
+	- **Rounds per message block**: 64
+- Before any hashing begins, the message must be padded to a multiple of 512 bits. The padding structure is:
+	 ![](Pasted%20image%2020260330031702.png)
+	- The message $x$: $l$ bits long
+	- The single $1$ bit: marks where the message ends. 
+	- The zero padding fills space so the total reaches a multiple of 512 bits, length determined by this formula $y \equiv 512 - l - 1 - 64 \mod 512$. If the result would be negative and there would not be enough space, then expand to 1024 bits.
+		- Need at least 65 bits of padding (1 terminator, zero zeroes, 64 bits describing $l$ of $x$)
+		- So anything close to $512$ will wrap around and require multiple blocks. 
+	- The 64 bit length field: Encodes $l$, the original message length in bits. This prevents length-extension attacks where an attacker continues the Merkle-Damgard construction with their own data, as they know $H(x)$ but not $x$, so they cannot compute the accurate length of the new message block yeah idk lol.
+- The compression function mixes 512 bit blocks of the message into the current state $H_{i-1}$ to produce a new state $H_i$ 
+- It achieves this through two stages: the **message schedule** and **64 rounds**
+
+
+### Message Schedule
+- The compression function runs 64 rounds, and each round needs a fresh 32-bit value from the message to mix in. 
+- The message block is only 16 x 32 bit words, enough for 16 rounds
+- The message schedule expands these 16 words into 64 words for each round. 
+- The 512-bit message block $x_i$ is simply split into sixteen 32 bit words; words 0 to 15
+- Words 16 to 63 are computed from previous words:$$W_{i} = W_{i-16} + \sigma_{0}(W_{i-15}) + W_{i-7}+\sigma_{1}(W_{i-2}) $$
+	- Pick 2 older words, and apply a rotation and shift to the more recent of them
+	- Pick a middle word and a recent word, and apply rotations and shifts to that
+- The $\sigma$ functions are:
+	- $\sigma_0(W) = (W >>> 7) \oplus (W >>> 18) \oplus (W >> 3)$ 
+	- $\sigma_1(W) = (W >>> 17) \oplus (W >>> 19) \oplus (W >> 10)$ 
+	$>>>$ is the circular right rotation
+	$>>$ is the logical right shift.
+	$\oplus$ is the xor.
+	- We use the rotation to spread every bit of the word across multiple positions. Rotating by different amounts and then XORing means every bit of the input influences many different bits of the output. 
+	- The logical shifts introduce asymmetry; it is not reversible because information is lost by introducing zeroes. Contributes to the non-invertible property. 
+	- Use of four different source words means each expanded word depends on a spread of previous words.
+- The net effect is that the message schedule coming into the round function is a pseudorandom expansion of the original message, but the messages are completely determined equally by the original 16 words.
+### Round Function
 - 
+
 
 
