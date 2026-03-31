@@ -152,15 +152,15 @@
 ##### S-box design
 - S-boxes need to be highly non-linear given that they introduce the non-linearity after XOR to prevent simple systems of linear equations being modelled to recover internal system state to predict output and break ciphers
 - Key design principles include the following:
-	1. No output bit should be too close to a linear combination of input bits
+	1. **No output bit should be too close to a linear combination of input bits**
 		Can become system of linear equations.
-	2. 1 bit change in input should lead to at least 2 bits change in output
+	2. **1 bit change in input should lead to at least 2 bits change in output**
 		Local avalanche.
-	3. If only the middle 4 bits change, each output must occur exactly once
+	3. **If only the middle 4 bits change, each output must occur exactly once**
 		Essentially, fix the row, vary the column through all 16 values, output must be a perfect permutation of 0-15
-	4. If the first two bits are different but the last two are identical, the output must differ. 
-	5. If two inputs differ by delta, their outputs should rarely differ by the same delta, differential cryptanalysis resistance.
-	6. A collision is only possible for 3-adjacent S-boxes?
+	4. **If the first two bits are different but the last two are identical, the output must differ.** 
+	5. **If two inputs differ by delta, their outputs should rarely differ by the same delta, differential cryptanalysis resistance.**
+	6. **A collision is only possible for 3-adjacent S-boxes?**
 
 #### Permutation
 ![](Pasted%20image%2020260211004224.png)

@@ -98,10 +98,11 @@
 	 ![](Pasted%20image%2020260330031702.png)
 	- The message $x$: $l$ bits long
 	- The single $1$ bit: marks where the message ends. 
-	- The zero padding fills space so the total reaches a multiple of 512 bits, length determined by this formula $y \equiv 512 - l - 1 - 64 \mod 512$. If the result would be negative and there would not be enough space, then expand to 1024 bits.
+	- The zero padding fills space so the total reaches a multiple of 512 bits, length determined by this formula $y \equiv 512 - l - 1 - 64 \mod 512$. If the result would be negative and there would not be enough space, then the padding spills over into a completely new block. 
 		- Need at least 65 bits of padding (1 terminator, zero zeroes, 64 bits describing $l$ of $x$)
-		- So anything close to $512$ will wrap around and require multiple blocks. 
-	- The 64 bit length field: Encodes $l$, the original message length in bits. This prevents length-extension attacks where an attacker continues the Merkle-Damgard construction with their own data, as they know $H(x)$ but not $x$, so they cannot compute the accurate length of the new message block yeah idk lol.
+		- So anything close to $512$ will wrap around and a new block containing 448 zeroes (maybe the separator bit of the final block was exactly 512) and $l$.
+	- The 64 bit length field: Encodes $l$, the original message length in bits. This prevents length-extension attacks, discussed next lecture.
+	- ONLY THE FINAL BLOCK CONTAINS THE SEPARATOR
 - The compression function mixes 512 bit blocks of the message into the current state $H_{i-1}$ to produce a new state $H_i$ 
 - It achieves this through two stages: the **message schedule** and **64 rounds**
 
@@ -125,7 +126,56 @@
 	- Use of four different source words means each expanded word depends on a spread of previous words.
 - The net effect is that the message schedule coming into the round function is a pseudorandom expansion of the original message, but the messages are completely determined equally by the original 16 words.
 ### Round Function
-- 
+- The 256 bit state $H_{i-1}$ is split into eight 32-bit variables named: $a, b, c, d, e, f, g, h$ 
+- These eight variables are what are transformed across the 64 rounds to produce $H_{i}$ 
+- Each round takes the current $a$ through $h$, mixes in one message word $W_i$ and one round constant $K_i$ and produces a new $a$ through $h$.
+- The round constants $K_i$ 
+	- 64 fixed constants, one per round. These are derived from the fractional parts of the cube roots of the first 64 prime numbers.
+	- For example $^3\sqrt3{2} = 1.2599210 ... \to 0.2599210... \to K_0 = 0x428a2f98$
+	- Their purpose is to break symmetry between individual rounds on a particular block of message; without them, all 64 rounds would perform relatively identical operations, making the structure much weaker.
+- There are 4 operations per round:
+	- **Choose** $$Ch(e, f, g) = (e \wedge f) \oplus (\neg e \wedge g)$$
+		- For each bit position independently:
+			- If the bit of $e$ is $1$, then take the bit from $f$
+				- $1 \wedge f = f$ 
+				- $\neg 1 \wedge g = 0$ 
+				- $Ch = f \oplus 0$ 
+			- If the bit of $e$ is 0, then take the bit from $g$
+				- $\neg 0 \wedge g = g$ 
+				- $0 \wedge f = 0$ 
+				- $Ch = 0 \oplus g = g$ 
+			![144](Pasted%20image%2020260330205526.png)
+			The formula is provably a bit selector in all cases.
+			The output depends on the value of $e$ in a way that cannot be expressed as a simple linear combination. 
+	- **Majority** $$Maj(a, b, c) = (a \wedge b) \oplus (a \wedge c) \oplus (b \wedge c)$$
+		- For each bit position, outputs whichever value appears in at least two of the three inputs.
+			![](Pasted%20image%2020260330210045.png)
+		- Also nonlinear, as the output depends on combinations of three inputs that cannot be easily expressed.
+	- $\sum_0$ and $\sum_1$ 
+		- ![](Pasted%20image%2020260330210231.png)
+		- Rotate their input by three different amounts and XOR the results
+		- The purpose is to provide diffusion whilst the other two steps provide confusion. 
+		- Rotating by three different amounts which are spread far apart ensures that every bit $a$ influences many different output bits, and then $XOR'ing$ those results ensures full influence.
 
+
+![](Pasted%20image%2020260330210131.png)
+- Note that in future rounds, the newly computed $a$ and $e$ will diffuse across the state due to the shift of values at the end of the round.
+	- Such that the $H_i$ yielded at the end of round 63 is sufficiently diffused with the different values computed by the diffusion+confusion round functions. 
+- After round 63, the output is added back to the original input state to that round $H_{i-1}$
+	- This is a key part of what makes this construction non-invertible.
+	- Even if you were able to run the rounds backwards, you would need to know $H_{i-1}$ to undo the addition. 
+- The state is updated as follows:
+	- $T_1 = h + \sum_1(e) + Ch(e, f, g) + K_i + W_i$ 
+	- $T_2 = \sum_0(a) + Maj(a, b, c)$ 
+	![](Pasted%20image%2020260330211325.png)
+
+ 
+
+### $H_0$ 
+- The very first block has no previous state $H_{i-1}$ to use.
+	![](Pasted%20image%2020260330210720.png)
+- SHA-256 defines fixed starting values for $a$ through $h$:
+	![](Pasted%20image%2020260330210735.png)
+- These are derived from the **fractional parts of the square roots of the first 8 prime numbers**
 
 
