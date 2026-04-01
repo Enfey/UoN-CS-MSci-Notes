@@ -67,12 +67,10 @@
 #### Finished messages and Application data
 - After all key exchange and authentication, both sides send a `Finished` message
 - This is a hash (digest) of the entire handshake transcript
-	- That is, the hash computed over every message exchanged from `Hello` onward is encrypted with the newly derived symmetric key
-- This serves two purposes:
+	- That is, the hash computed over every message exchanged from `Hello` onward
+- Provides an:
 	1. **Integrity Check**
 		- If the handshake, or any of its contents were tampered with in transit (and this wasn't bidirectional, as it usually is impossible to do so) then the hash will not match the locally computed hash over the transcript when decrypting
-	2. **Key Confirmation**
-		- The fact that the finished message decrypts correctly proves both sides derived the same symmetric key.
 - After the Finished messages, the handshake layer steps aside, and the record layer takes over entirely. 
 - All subsequent communication is:
 	- Plaintext -> AES-128-GCM encryption -> ciphertext on wire and vice versa for decryption, over application data.
@@ -180,7 +178,7 @@
 	- When a root certificate is added to trust store, there is blanket trust for all of these CAs
 	- If a trust store contains a malicious/compromised root certificate, and someone can run a proxy between your machine and the internet, then we have a problem!
 	- The proxy completes a normal TLS handshake with the internet server, and can now decrypt its traffic and forward it to you.
-	- The proxy also completes a TLS handshake with you, but presents a false certificate for the internet server signed by the compromised root CA private key, which is then verified using the public key because it was properly signed.
+	- The proxy also completes a TLS handshake with you, but presents a false certificate for the internet server signed by the compromised root CA private key, which is then verified using the public key of the root CA.
 	- The proxy can now decrypt and encrypt on both sides and forward the traffic; seeming like nothing is wrong, but is able to read all traffic.
 		![](Pasted%20image%2020260328205152.png)
 - **Private key compromise**
