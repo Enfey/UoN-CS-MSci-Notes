@@ -77,7 +77,6 @@ $$
 	- Grovers works like so:
 		- We use 128 qubits which can represent $2^{128}$ basis states
 		- We prepare the qubits in equal superposition. 
-			![](Pasted%20image%2020260331235937.png)
 			- All keys exist simultaneously in the quantum state
 		- We send the qubits to an oracle, which based on a function, flips the phase(sign) of the amplitude of the correct key's basis state. Each grover iteration increases the amplitude of the correct state, making final measurement likely to get the correct answer.
 			![](Pasted%20image%2020260401000033.png)
@@ -137,10 +136,62 @@ $$
 - Equivalent lattices *can* be produced by different bases (that is, the two bases can reach every single one of the same points under $q$, and some bases can only reach some of the same lattice points/co-ordinates in $m$ dimensional space, and thus form a **sub-lattice**) but some bases are 'easier' to use than others, take for example the below which is able to describe the same point, but requires greater integer coefficients:
 	![](Pasted%20image%2020260401020611.png)
 ### Lattice problems
-- 
+- **Closest Vector Problem** (CVP)
+	- Foundational NP-hard optimisation problem
+	- Involves finding the lattice point $p$ within a lattice $\mathcal{L}$ that is closest to some target vector $t$ (which may not necessarily be $\in \mathcal{L}$, but may reside in the outer vector space $R^m$ )
+	- This is NP-hard with a bad basis.
+		- A bad basis consists of long, nearly parallel vectors.
+		- The hardness comes from the fact that not only would one need to acquire a basis that can reach the closest point on the lattice to point in vector space, but would then also need to actually compute said point.
+			- The attacker cannot efficiently navigate the lattice; and even if they knew which lattice point was closest e.g., the integer coefficients, they would still need to actually compute the co-ordinates in real space.
+- **Shortest Vector problem**
+	- Given a lattice $\mathcal{L}$ with basis $B = \{b_1, b_2, \dots, b_n\}$ spanning an ambient space $R^m$ find the shortest non-zero point on the lattice $p$ such that $p = \sum^n_i x_i b_i, \ x_i \in Z, \ \ p \neq 0$ 
+	- The structural difference is that the target is the origin, which is $\in \mathcal{L}$ but the solution is constrained to be a non-trivial lattice point. 
+	- This is also NP-hard with a bad basis, for the exact same reasons as above.
+		- One would need to acquire a basis that can actually reach the closest lattice point to the origin (may not even generate a sub-lattice), but would also need to then compute said point. 
+			- Cannot efficiently navigate the lattice without correct bases.
+			- For thousands of dimensions and decently sized $q$, computing this lattice point with no information on bases is nigh-on impossible.
+- Note that in practice, lattices usually contain thousands of dimensions, and we do not know all the lattice points without computing them, that is, we cannot simply enumerate the lattice points and use a distance metric $M$ to solve our problem.
+- The CVP is a generalistion of the SVP, and given an oracle for the CVP one can solve the SVP by making some queries to the oracle.
+- We usually choose bases randomly for high likelihood of difficulty.
+	- The LLL algorithm is a basis reduction algorithm that attempts to find shorter, more orthogonal basis vectors that span the same lattice.
+	- In low dimensions, LLL gets close enough to be dangerous, which motivates the high-dimensionality of lattice-based cryptography.
 
 ### Kyber, Falcon, and Dilithium
+- Utilise a shared primitive:
+	- **Learning with errors** - represents a secret as an equation with errors.
+		- Let $\mathbb{Z}_q$ denote the ring of integers modulo $q$ and let $\mathbb{Z}^m_q$ denote the set of $m$-vectors over $\mathbb{Z}_q$. 
+		- Pick a secret vector $s \in \mathbb{Z}^m_q$, that can be thought of as the integer coefficients in the linear combination of A's columns
+		- Generate a random matrix $A \in \mathbb{Z}^{m \times n}_q$ representing the basis column vectors of the lattice and compute: $$b = As + e \ (mod \ q)$$
+			Where:
+			- $e$ is a small error vector
+			- $As$ is a point on the lattice
+		- $b \in Z^m_q$ is a vector that is close to, but not on the lattice $\mathcal{L}(A$), as the $e$ term perturbs $As$ off the lattice.
+		- $e \in \mathbb{Z}^m$ is sampled from a discrete Gaussian Distribution ensuring that $e$ is small and does not push $b$ too far from any lattice point.
+- The public key then is $A, b$. The hardness assumption is that given $A, b$, recovering the secret $s$ is computationally infeasible. The error vector pushes $b$ off the lattice defined by $A$, instantiating CVP hardness as the lattice would need to find the closest lattice point to $b$ under bad basis. 
+![](Pasted%20image%2020260401060729.png)
 
 
 ## Hash-Based signatures
+- Hash functions like SHA-256 and SHA-3 have been subjected to decades of cryptanalysis by the entire cryptographic community
+- This is in stark contrast to lattice-based assumptions
+- Building signatures purely from hash functions therefore gives a reliable security foundation
+- All schemes are built around this premise:
+	"*Prove you authored a message by revealing hashed pre-images that you committed to earlier*"
+- This works because of two hash function properties
+	- **Pre-image resistance**: given $y = H(x)$, you cannot invert and find $x$
+	- **Second pre-image resistance**: given $x$ and $H(x)$, cannot find $x' \neq x$ such that $H(x') = H(x)$ 
+- Publishing $y = H(x)$ is a commitment, as you have bound yourself to $x$ without revealing it.
+	- Later revealing $x$ proves you knew it before publishing $y$.
+		- Assuming the hash properties above, that is.
 
+
+### One-Time Signatures
+- 
+
+### Winternitz OTS
+
+### Merkle Trees
+
+### SPHINCS+
+
+## Hybrid Schemes
