@@ -108,3 +108,10 @@ $$
 This is yielded naturally. The scalar multiplication comes from e.g., double and add to perform multiplication of a point by a scalar value.
 Changing the contents e.g., how to perform scalar multiplication, of one layer will not affect the things above, the inherent structure is what matters.
 ## Implementation
+### Point Compression
+
+### Projective Co-ordinates
+
+### Standard Curves
+
+### Duel_EC_DRBG

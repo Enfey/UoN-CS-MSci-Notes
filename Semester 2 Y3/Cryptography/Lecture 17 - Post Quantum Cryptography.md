@@ -172,7 +172,7 @@ $$
 
 
 ## Hash-Based signatures
-- Hash functions like SHA-256 and SHA-3 have been subjected to decades of cryptanalysis by the entire cryptographic community
+- Hash functions like SHA-256 and SHA-3 have been subjected to decades of cryptanalysis by the entire cryptographic community.
 - This is in stark contrast to lattice-based assumptions
 - Building signatures purely from hash functions therefore gives a reliable security foundation
 - All schemes are built around this premise:
@@ -186,12 +186,107 @@ $$
 
 
 ### One-Time Signatures
-- 
+- Cryptographic digital signature scheme designed to sign only a single message per key pair
+	- A signature needs to convince a signer of two things:
+		- **Authenticity** - the message has not been altered since it was signed
+		- **Integrity** - message hasn't been altered since it was signe
+	- Traditionally this is achieved via public key mathematics, with a private key signing and a public key verifiying, with security resting on the discrete logarithm problem (or lattice-problems).
 
+#### OTS - Formally
+- For an $n$ bit message, create $2n$ independent uniformly random secrets: $$x_{b, i}, \text{ for } b \text{ in } \{0, 1\}, i \in \{0, \dots n-1\}$$
+- Compute the public commitment by hashing every secret: $$y_{b, i} = H(x_{b, i})$$
+- Let $SK = \{x_{b, i}\}$ be the **secret key** and let $PK = \{y_{b, i}\}$ be the **public key**
+- **Signing**
+	- Let $m$ be a **hashed message** with bits $m_0, m_1 \dots, m_{n-1}$, reveal the secret selected by each bit:
+		$$SIG = (x_{m_{0}, 0}, x_{m_{1}, 1}, \dots x_{m_{n-1}, n-1})$$
+	- E.g., if hash bit position 0 was 0, then select $x_{0, 0}$ 
+	- This is published along with the message
+- **Verification**
+	- Hash the message.
+	- For each position $i$ in the hashed message $m$:
+	- Use the bits in the hash to pick out hashes in the public key, predicated on the bit value.
+	- Hash each of the random numbers in the signature, and determine that the hashes match the hashes selected from the public key.
+		$H(x_{m_{i}, i}) =^? y_{m_{i}, i}$
+See https://en.wikipedia.org/wiki/Lamport_signature
+
+
+#### Benefits
+- Security reduces entirely to pre-image resistance and second preimage resistance of $H$. If $H$ is cryptographically secure, then the scheme is sound. 
+- The construction is elementary.
+#### Drawbacks
+- **Strictly single use**. 
+	- Signing two messages $m \neq m'$ that differ at any position $i$ require revealing both $x_{0, i}$ and $x_{1, i}$ across the two signatures, revealing a pair of the private key. 
+- **Each pair encodes exactly one bit.** 
+	- Signing the 256 bit hash of a message requires 512 secret values.
+- Large keys and signatures:
+	- For an $n$ bit message with $k$ bit secrets: $$\vert SK \vert = 2nk, \vert PK \vert = 2nk, \vert \sigma \vert = nk$$
 ### Winternitz OTS
+- Winternitz offers an alternative OTS scheme which offers 1 secret per 2 bits of the message, quartering the number of required secrets.
+- We group the message $m$ into **hash chains** of length $w$ starting from secret $x_i$, which corresponds to a block $b$ of the message., and we reveal secrets from within a chain:$$x \overset{H}{\rightarrow} H(x) \overset{H}{\rightarrow} H_{2}(x) \overset{H}{\rightarrow} \dots \overset{H}{\rightarrow} H_{w-1}(x) $$
+- The **public key** is the chain end for each secret $y_i = H_{w-1}(x_i)$ 
+- For block $b_{i}$ with binary value $v_{i}$, reveal $H_{v}(x_i)$ to be the **signature**
+	 ![](Pasted%20image%2020260401224435.png)
+	E.g., $01 = 1$ and thus the result of chain position $1$ is selected as the secret to be revealed.
+- **Verification** =  apply $H$ a further $w-1-v$ times until the chain end is reached, and check it equals $y_i$ the public key, proving the publisher knew the secrets.
+- An additional signed checksum is required; because if an attacker sees the signature for $m$ holds $H_{v_{i}}(x_i)$ for each block $b$ they can apply $H$ again to obtain $H_{v_{i+1}}$ which would be a valid signature for a block value that is larger.
+	- The checksum is the sum of the remaining chain lengths after signing. 
+		![](Pasted%20image%2020260401225732.png)
+	- It is appended to the message as additional blocks and also signed.
+	- By increasing the value of any block and forward computing the hash, $c$ decreases.
+#### Benefits + Drawbacks
+- Dramatically reduces the number of key pairs needed, for a 256 bit message, need 128 secrets, with $w$ = 3, but i believe this is configurable? can change block size, but also changes chain size as the binary value for the block increases, meaning that more hash evaluations are needed for signing and verification. 
+- Every single key-pair is single use, meaning one has to distribute a fresh public key to every verifier before each use.
 
 ### Merkle Trees
-
+- Even with WOTS, every key-pair is single use, meaning one has to distribute a fresh public key to every verifier before each use.
+	- This is completely impractical
+- Merkle trees overcome this by letting us verify an arbitrarily large collection of OTS key pairs under a single, fixed public key that is distributed once and never changes.
+- We organise all OTS public keys as the leaves of a binary hash tree.
+- We hash the concatenation of sibling leaves together until a single root value remains.
+- That root is the scheme's public key, which commits to all public keys.
+	![](Pasted%20image%2020260401232617.png)
+- **Signing**
+	1. Pick leaf index $i$, typically the next unused leaf, which corresponds to an OTS key pair.
+	2. Sign the message $m$ using the OTS private key $sk_i$ producing an OTS signature. 
+		- Signing will depend on OTS scheme
+	3. Compute the path from leaf $i$ to the root with regard to sibling nodes, and transmit the path, and the root node..
+- **Verification**
+	Verifier holds only the single public key, the root. 
+	1. Use the OTS signature and the message $m$ to recompute $Y_i$, for Winternitz this amounts to applying the appropriate number of hash iterations.
+	2. Compute the hash of the public key
+	3. Walk up the tree and combine at each level with the provided sibling (remember only that path has been revealed)
+	4. Check the recomputed root against the received root.
+- If an attacker substitutes a fraudulent public key derived from a key pair they control, the resulting hash will not produce the correct root without finding a hash collision. 
 ### SPHINCS+
+- Sphincs+ is a merkle tree scheme in which stateful leaf tracking (i.e., selecting an OTS key pair that has not been used) is replaced with fully deterministic leaf selection, which is stateless.
+- The leaf $i$ is selected by a $PRF(sk\_seed, m)$; the same seed and message $m$ would select the same OTS key pair. 
+- OTS instances are replaced by a **few-times variant** (FORS) which can be used a few times (lol), but after too many signatures, security eventually fails
+	- This prevents against collision under deterministic leaf selection weakening security of construction. 
+- Everything is computed deterministically only when needed, which leaves us with substantial cost; each signing operation requires recomputing large portions of the tree on demand, producing tens to hundreds of thousands of hash evaluations per signature.
+- Practical wherever signatures are infrequent; considered the ultimate backstop as its security rests only on hash function properties.
 
 ## Hybrid Schemes
+#### What do we Know
+- Symmetric crytography and hash functions remain robust.
+- There is no known algorithm besides grovers, which provides a quadratic speedup for unstructured search halving effective key length, that threatens symmetric and invertible cryptographic primitives. 
+- Grover's is mitigated by simply doubling key sizes. AES 256 provides 128 bit post-quantum security, which is considered sufficient. 
+- Modern Asymmetric schemes cannot be broken today, and remain computationally secure against all known classical attacks. 
+- Nation states are very likely to be harvesting at scale.
+- A successful quantum attack within the next 30 years would be catastrophic - sensitive data has a long confidentiality lifetime, state secrets, medical records, intellectual property, financial information etc
+	- IF quantum attacks arise in 20 years, traffic encrypted today needs to remain confidential until then and beyond. 
+
+#### What we don't know
+- There is no consensus on how long it will be before a practical attack is realised - if ever. Quantum error correction at the scale needed for Shor's algorithm represents an engineering challenge of extraordinary difficulty.
+- Whether any new post-quantum schemes have classical weaknesses; they have not be subject to the same scrutiny as the constructions they aim to replace. A breakthrough could potentially break a lattice scheme without any quantum computer being involved. Several top-tier candidates were in fact broken classically during the NIST standardisation process.
+- Whether nation states already have cryptographically relevant quantum capability. The possibillity cannot be ruled out.
+- Whether quantum development will be gradual, or sudden. Progress has historically come in discrete jumps; a sudden breakthrough in error correction, qubit coherence etc could compress the timeline. 
+
+#### Harvest Now, Decrypt later
+- The threat of harvest now, decrypt later specifically targets key exchange and key encapsulation, the protocols that establish shared secrets for symmetric encryption. 
+- The handshakes are stored, and the adversary can use Shor's to recover the classical shared secret from the recorded key exchange, permitting retroactive decryption. 
+- Given this landscape, the rational response is to combine both approaches
+	![](Pasted%20image%2020260402001653.png)
+- Must break both components to recover the session key. 
+	- So if quantum breaks X25519, MLKEM still protects the session key
+	- If MLKEM has an undiscovered classical weakness, then X25519 still protects the session key
+	- Only if both fail, does the construction fail. 
