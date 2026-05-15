@@ -28,7 +28,7 @@
 - The number of generated points, and therefore the number of small lines rendered, is a parameter, with more evaluations resulting in a smoother curve and also a more computationally expensive process. 
 	![](Pasted%20image%2020260325180941.png)
 
-### De Casteljau's algorithm for Bezier Curves#
+### De Casteljau's algorithm for Bezier Curves
 - Points along a curve can be produced via this algorithm:
 ```C
 EvaluateBezierCurve(ctrl_points, num_evaluations)
