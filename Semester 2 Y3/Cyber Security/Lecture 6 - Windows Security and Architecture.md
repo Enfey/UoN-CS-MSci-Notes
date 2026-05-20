@@ -59,7 +59,7 @@
 	![](Pasted%20image%2020260219002845.png)
 
 ## Access control
-- Access is granted based on the **principal**'s access token and the object's security descriptor
+- Access is granted based on the **principal**'s **access token** and the object's security descriptor
 - Access control in windows treats more than just files, if an object can have **ownership**, **permissions**, and **auditing**, then is is a **securable object**
 	- Each **securable object** has a **security descriptor** containing:
 		- Owner SID
@@ -74,7 +74,7 @@
 
 
 ### Principal
-- A principal is an entity that can be assigned permissions:
+- A principal is an **entity that can be assigned permissions:**
 	- Local users
 	- Domain users
 	- Groups
@@ -176,6 +176,3 @@
 		- Client then presents service ticket, and server verifies that, and access is granted. 
 		- Tickets expire, and scales well, mutual authentication of client and server (when present service ticket, must be valid).
 	- Replaces SAm with a domain controller, and by extension, an Active Directory within that domain controller to authenticate the domain principal.
-
-### Interatctive logon
-- The windows interactive logn
