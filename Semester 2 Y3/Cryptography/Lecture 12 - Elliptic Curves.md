@@ -1,5 +1,6 @@
 ## A recap of $\mathbb{Z}^*_p$ 
-- The group $\mathbb{Z}^*_p$ forms a cyclic group with the group operation $\circ$ as $\times$ 
+- The group $
+mathbb{Z}^*_p$ forms a cyclic group with the group operation $\circ$ as $\times$ 
 - We can use this to create cryptographic systems like Diffie-Hellman based on the 'hardness' of the Discrete Logarithm Problem. $$g^a = g \circ g \circ \dots \circ g$$
 	$a$ times. Need to reverse the exponentiation to find $a$ to uncover the shared secret, which is visible in the last lecture. Computing the exponentiation forward is cheap, but there is no quick way reverse to this for large primes. 
 - We'd like to find another mathematical structure where we can define another similar "easy forward, hard backward" operation.
