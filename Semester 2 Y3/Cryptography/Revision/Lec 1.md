@@ -44,4 +44,28 @@ The integer ring $Z_m$ consists of:
 
 
 ### Modular inversion
-- 
+- A **multiplicative inverse** permits us to divide by a number and retrieve the neutral element for that algebraic structure
+- Not all numbers in a ring have an inverse, you can determine if one exists iff:
+	$gcm(a, m) = 1$ 
+- Then an inverse exists where $a  \cdot x \equiv 1 \ (mod \ m)$ 
+- EA
+
+### Shift cipher
+- We can formalise the shift cipher via modular arithmetic:
+	$E(k) = y \equiv x + k \ (mod \ m)$ 
+	$D(k) = x \equiv y - k \ (mod \ m)$ 
+- For the alphabet this takes the form $x, y, k \in \mathbb{Z}_{26}$ 
+
+### Frequency analysis
+- **A method of breaking substitution ciphers by exploring letter frequency patterns**
+- Longer ciphertext, easiier becomes, some letters appear more than others, can match high-freq letters, break the key
+- Shift cipher is vulnerable to this type of cryptanalysi as it preserves the shape of the frequency distribution
+- Affine ciphers also vulnerable, still just a substitution with no transposition or expansion; preserve the shape entirely.
+
+
+### Affine Ciphers
+- We can extend shift ciphers with modular multiplication:
+	- Let $x, y, a, b \in \mathbb{Z}_26$
+		- $E(k) = y \equiv a \cdot x + b \ (mod \ m)$ 
+		- $D(k) = x \equiv a^{-1} \cdot (y - b) \ (mod \ m)$ 
+			![](Pasted%20image%2020260521123929.png)

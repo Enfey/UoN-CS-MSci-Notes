@@ -49,7 +49,7 @@ $$
 #### S-box properties
 - The s-box is bijective and is therefore an invertible 1:1 mapping. 
 - It maintains no fixed points via the affine transformation and rounds, i.e., no $A_i$ for which $S(A_i) = A_i$ 
-- No inverse fixed points, that is $S(A_i) \oplus A_i = FF$, aka $A_i$ should not be its own bitwise complement (1's reveal the difference) under the $S-box$.
+- No inverse fixed points, that is $S(A_i) \oplus A_i = FF$, aka $A_i$ should not be its own bitwise complement (1's reveal the difference) under the $S-box$.****
 	- Example:
 		- $x = 01010101$ 
 		- $FF = 11111111$ 

@@ -1,6 +1,6 @@
 ## Modular Inversion
 - In general arithmetic, the inverse of $a$ means we want a number $a^{-1}$ such that: $$a \cdot a^{-1} = 1$$
-- In modular arithmetic, and more specifically, in Rings and prime fields(as a result of being constituted of a multiplicative group), a multiplicative inverse may exist such that: $$a \cdot a^{-1} \equiv 1 \ (mod \ p)$$
+- In modular arithmetic, and more specifically, in Rings and prime fields(as a result of being constituted of a multiplicative group), a multiplicative inverse will exist(for a field, at least) such that: $$a \cdot a^{-1} \equiv 1 \ (mod \ p)$$
 - Modular inverses exist when $gcd(a, p) = 1$ (particularly important for prime fields).
 	- For prime fields, $gcd(a, p) = 1$, $\forall a \neq 0 \in GF(p)$.
 - The **Euclidean Algorithm** can calculate $gcd(a,b)$, the **Extended Euclidean Algorithm** can calculate $a^{-1}$.
