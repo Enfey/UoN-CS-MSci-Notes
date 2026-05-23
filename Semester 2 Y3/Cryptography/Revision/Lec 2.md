@@ -1,17 +1,17 @@
 ## Stream cipher
-- A **stream cipher** encrypts bits one at a time, for as long as is necessary. 
+- A **stream cipher**<mark style="background: #FFF3A3A6;"> encrypts bits one at a time</mark>, for as long as is necessary. 
 - **Conceptually**:
 	![](Pasted%20image%2020260127222041.png)
 - Each plaintext bit $x_i$ is combined with keystream bit $x_i$ to yield one ciphertext bit $y_i$ 
-- Stream ciphers encrypt using **modulo 2** addition:
+- Stream <mark style="background: #FFF3A3A6;">ciphers encrypt using **modulo 2**</mark> addition:
 	- Let $x, y, z \in \{0, 1\}$
 	- $e_{si} = y \equiv x + s_i \ (mod \ 2)$ 
 	- $d_{si} = x \equiv y + s_i \ (mod \ 2)$ 
-- The encryption and decryption operations for a stream cipher are identical under this modular arithmetic, as due to the properties of XOR under binary prime field(s), it behaves as its own inverse. 
+- The<mark style="background: #FFF3A3A6;"> encryption and decryption operations for a stream cipher are identical under this modular arithmetic</mark>, as due to the properties of XOR under binary prime field(s), it behaves as its own inverse. 
 	![](Pasted%20image%2020260127222826.png)
 
 ### Modulo 2 - XOR
-- **XOR** *is a binary operator that returns true if either one of the input is true, but not both*
+- **XOR** *is a <mark style="background: #FFF3A3A6;">binary operator that returns true if either one of the input is true, but not both*</mark>
 - For example: 
 	- $x_0, \dots, x_7 = 01010001 \oplus s_0, \dots, s_7 = 10010100$
 	- Yields:
@@ -20,40 +20,40 @@
 
 
 ### Security of XOR
-- In and of itself, XOR provides no security beyond the secrecy of the keystream
-- The **security of a stream cipher** depends entirely on the keystream
-- If the keystream is predictable then the cipher will be broken
-- If the keystream is **truly random** then each bit $x_i$ can be encrypted to either a 0 or 1 with equal chance and the output would not reveal anything about the keystream or input. 
-- The problem becomes keystream generation: how can we generate a random, and thus secure, keystream? 
+- In and of itself, <mark style="background: #FFF3A3A6;">XOR provides no security beyond the secrecy of the keystream</mark>
+- The <mark style="background: #FFF3A3A6;">**security of a stream cipher** depends entirely on the keystream</mark>
+- If the <mark style="background: #FFF3A3A6;">keystream is predictable </mark>then the cipher <mark style="background: #FFF3A3A6;">will be broken</mark>
+- If the keystream is **<mark style="background: #FFF3A3A6;">truly random</mark>** then <mark style="background: #FFF3A3A6;">each bit</mark> $x_i$ can be <mark style="background: #FFF3A3A6;">encrypted</mark> to either a <mark style="background: #FFF3A3A6;">0 or 1 </mark>with<mark style="background: #FFF3A3A6;"> equal chance</mark> and the output would not reveal anything about the keystream or input. 
+- The p<mark style="background: #FFF3A3A6;">roblem becomes keystream generation</mark>: how can we generate a random, and thus secure, keystream? 
 
 
 ### Randomness
-- True randomness is impossible, to create,  by chance, generated via unpredictable physical processes e.g., thermal noise, radioactive decay, hardware noise such as clock drift, but these are hard to generate and slow to do so
-- We approximate randomness via formulae to generate sequences that look random but are actually deterministic
+- <mark style="background: #FFF3A3A6;">True randomness</mark> is impossible, to create,  by chance, generated via unpredictable physical processes e.g., thermal noise, radioactive decay, hardware noise such as clock drift, but these are hard to generate and slow to do so
+- <mark style="background: #FFF3A3A6;">We approximate randomness</mark> via formulae to generate sequences that look random but are actually deterministic
 
 ### Pseudorandom number generators
 - A **PRNG** takes:
-	- A small **seed** value
-	- Produces long sequence of numbers predicated on seed
-	- Is deterministic, but appears random
+	- A <mark style="background: #FFF3A3A6;">small **seed</mark>** value
+	- <mark style="background: #FFF3A3A6;">Produces long sequence of numbers predicated on seed</mark>
+	- Is <mark style="background: #FFF3A3A6;">deterministic</mark>, but<mark style="background: #FFF3A3A6;"> appears random</mark>
 - **Linear congruential generator**
 	- $s_0 = 12345$ 
 	- $s_{i+1} \equiv 1103515245 \cdot s_i + 12345 \ mod \ 2^{32}$ 
-		- Predicated on initial seed value, and prior inner state $s_i$ wrapped to 32 bits.
-- This is not suitable for cryptography; given enough output (ciphertext and possibly some plaintext), the internal state can be recovered. 
-	- Future bits become predictable given they are formed according to prior internal state bits. 
-	- If $s_i$ and other key values are known in the generator (often selected from the literature), all future keystream output can be predicted
+		- Predicated on initial seed value, and <mark style="background: #FFF3A3A6;">prior inner state $s_i$</mark> wrapped to 32 bits.
+- This is <mark style="background: #FFF3A3A6;">not suitable for cryptography;</mark> <mark style="background: #FFF3A3A6;">given enough output</mark> (<mark style="background: #FFF3A3A6;">ciphertext</mark> and <mark style="background: #FFF3A3A6;">possibly some plaintext</mark>), the <mark style="background: #FFF3A3A6;">internal state can be recovered. </mark>
+	- F<mark style="background: #FFF3A3A6;">uture bits become predictable</mark> given they are fo<mark style="background: #FFF3A3A6;">rmed according to prior internal state bits</mark>. 
+	- If $s_i$ a<mark style="background: #FFF3A3A6;">nd other key values are known in the generator</mark> (often selected from the literature), <mark style="background: #FFF3A3A6;">all future keystream output</mark> can be predicted
 	- Don't need many samples to do this
-- We want a PRNG with the additional requirement that observing its output should not be able to allow one to predict its future output. 
+- <mark style="background: #FFF3A3A6;">We want a PRNG</mark> with the <mark style="background: #FFF3A3A6;">additional requirement</mark> that <mark style="background: #FFF3A3A6;">observing its output</mark> <mark style="background: #FFF3A3A6;">should not be able to allow one</mark> to <mark style="background: #FFF3A3A6;">predict its future output</mark>. 
 	- The next bit should not be predictable given all prior output. 
 
 ### Cryptographically Secure CSPRNGs
-- A **PRNG** with the requirement that given all previous output it should be computationally infeasible to deduce the next bit. 
-- The output looks random, and is **unpredictable** and security holds even if attacker sees a lot of keystream. 
+- A **PRNG** <mark style="background: #FFF3A3A6;">with the requirement </mark>that given <mark style="background: #FFF3A3A6;">all previous output</mark> it should be <mark style="background: #FFF3A3A6;">computationally infeasible</mark> to <mark style="background: #FFF3A3A6;">deduce</mark> the <mark style="background: #FFF3A3A6;">next bit</mark>. 
+- The <mark style="background: #FFF3A3A6;">output looks random</mark>, and is **unpredictable** and <mark style="background: #FFF3A3A6;">security holds even </mark>if attacker sees a lot of <mark style="background: #FFF3A3A6;">keystream. </mark>
 	![](Pasted%20image%2020260127230030.png)
 	Answer should be NO for CSPRNG.
-- For a **secure** CSPRNG the probability of guessing the next keystream bit $s_{i+1}$ should be extremely close to 0.5:$$Pr[x = s_{n+1} < 0.5 + \epsilon]$$
-	- Where $\epsilon$ is a neglibly small advantage which is determined for the specific CSPRNG. An advantage of even $0.01$ would be far too large and indicates that the CSPRNG is not secure. 
+- For a **secure** CSPRNG <mark style="background: #FFF3A3A6;">the probability</mark> of <mark style="background: #FFF3A3A6;">guessing the nex</mark>t keystream bit $s_{i+1}$ should be extremely <mark style="background: #FFF3A3A6;">close to 0.5</mark>:$$Pr[x = s_{n+1} < 0.5 + \epsilon]$$
+	- Where $\epsilon$ is a<mark style="background: #FFF3A3A6;"> neglibly small advantage</mark> which is determined for the specific CSPRNG. An advantage of even $0.01$ would be far too large and indicates that the CSPRNG is not secure. 
 
 
 
@@ -61,17 +61,17 @@
 > **A cryptosystem is unconditionally secure or information theoretically secure if it cannot be broken even with infinite computational resources.**
 
 ### Perfect secrecy
-- A **cipher** has perfect secrecy if the ciphertext reveals no information about the plaintext.
+- A **cipher** has <mark style="background: #FFF3A3A6;">perfect secrecy</mark> if the <mark style="background: #FFF3A3A6;">ciphertext</mark> <mark style="background: #FFF3A3A6;">reveals no information</mark> about the plaintext.
 - $\forall m_0, m_1 \in M where \ \vert m_0 \vert = \ \vert m_1 \vert \ and \ \forall c \in C$ 
 - $Pr[E(k, m_0) = c] = Pr[E(k, m_1) = c]$ 
-	- That is, the probability of encrypting $m_0$ to any given ciphertext $c$ is exactly equal to the probability of encrypting $m_1$ to ciphertext $c$. This means that if the ciphertext is intercepted it reveals no information about whether the original input was $m_0$ or $m_1$ as both inputs are equally as likely to have produced the ciphertext observed
+	- That is, the <mark style="background: #FFF3A3A6;">probability of encrypting</mark> $m_0$ to any given ciphertext $c$ is exactly equal to the probability of encrypting $m_1$ to ciphertext $c$. <mark style="background: #FFF3A3A6;">This means that if the ciphertext is intercepted</mark> it reveals<mark style="background: #FFF3A3A6;"> no information about whether the original input</mark> was $m_0$ or $m_1$ as both inputs are <mark style="background: #FFF3A3A6;">equally as likely to have produced the ciphertext observed</mark>
 - Very strong property in aid of **UNCONDITIONAL SECURITY**
 
 ### One-time pad
 - Does not see practical use anymore
-- Truly random keystrream generated by a **TRNG** same length as the message
-- The keystream is only known to communicating parties
-- Every keystream bit is used exactly once for encryption, and decryption, respectively. 
+- <mark style="background: #FFF3A3A6;">Truly random keystrream generated </mark>by a **TRNG** same length as the message
+- The <mark style="background: #FFF3A3A6;">keystream is only known to communicating parties</mark>
+- Every<mark style="background: #FFF3A3A6;"> keystream bit is used exactly once for encryption</mark>, and decryption, respectively. 
 - Achieves **perfect secrecy**
 	![](Pasted%20image%2020260127232427.png)
 	- The key $k$ is chosen uniformly from the set of $K$ keystreams, we say that for given $k, m, c$: what is the probability that given $k$ produces $c$. For a one-time pad, the top half of the formula is $1$ meaning that only one key $k$ could have produced $c$.
@@ -81,15 +81,15 @@
 	- There is also the issue of key delivery.
 
 ## Modern stream ciphers
-- Modern stream ciphers aim to approximate the one time pad.
+- <mark style="background: #FFF3A3A6;">Modern stream ciphers</mark> aim to <mark style="background: #FFF3A3A6;">approximate the one time pad</mark>.
 - Use an initial seed key (128 bit/256 bit) to generate an *infinite psuedorandom keystream* (typically via a **CSPRNG**) and then use **XOR** exactly like OTP.
 - The aim is to approximate $OTP$ whilst ensuring practical usability:
 	![](Pasted%20image%2020260127233113.png)
-	The difference is, initialised by seed key via some deterministic construction to get the pseudorandom keystream that cannot have its next bit(s) $s_{n+1}$ predicted and then $XOR$ to yield the ciphertext. The person on the other side has the same $CSPRNG$ and same seed and just xors again to cancel out the keystream. 
+	<mark style="background: #FFF3A3A6;">The difference is</mark>, <mark style="background: #FFF3A3A6;">initialised by seed key via some deterministic construction to get the pseudorandom keystream that cannot have its next bit</mark>(s) $s_{n+1}$ predicted and then $XOR$ to<mark style="background: #FFF3A3A6;"> yield the ciphertext</mark>. The person on the other side has the same $CSPRNG$ and same seed and just xors again to cancel out the keystream. 
 
 
 ### Keystream reuse
-- Reusing a keystream catastrophically breaks a cipher, as they are equivalent, you can XOR the ciphertexts to yield their constituent parts and because that XOR is associative (it is just addition in an integer ring)  the keystream cancels out, giving the XOR of both plaintext messages.
+- <mark style="background: #FFF3A3A6;">Reusing a keystream</mark> catastrophically breaks a cipher, as they are equivalent, you can XOR the ciphertexts to yield their constituent parts and because that XOR is associative (it is just addition in an integer ring)  the keystream cancels out, giving the XOR of both plaintext messages.
 - This happens only by having $C_1$ and $C_2$ 
 	![](Pasted%20image%2020260127233749.png)
 - They can acquire $M_1 \oplus M_2$ , which does not tell them what the message is, but they are not far off.
@@ -111,9 +111,9 @@
 - Easy to automate on modern PCs and can break stream ciphers.
 
 ### Nonce
-- Thus, we have to seed based on another random initialiser to prevent keystream reuse.
+- <mark style="background: #FFF3A3A6;">Thus, we have to seed based on another random initialiser</mark> to <mark style="background: #FFF3A3A6;">prevent keystream reuse.</mark>
 - A **nonce** is an additional seed added to a **CSPRNG**
-- This aids keystream reuse - one fixed secret key $k$ is kept, and the keystream is altered depending on the nonce value
+- This<mark style="background: #FFF3A3A6;"> aids keystream reuse </mark>- <mark style="background: #FFF3A3A6;">one fixed secret key</mark> $k$ is kept, and the <mark style="background: #FFF3A3A6;">keystream is altered depending on the nonce value</mark>
 	- Gen diff keystream bits for each message. 
-- Nonce usually not secret, and generated based on set of deterministic rules. 
-- Unique security requirement is a unique key+nonce pair, rather than just unique key; combine key with nonce at encryption/decryption time, rather than just using the plain key, to reduce the potential for keystream reuse. 
+- <mark style="background: #FFF3A3A6;">Nonce usually not secret,</mark> and generated based on set of deterministic rules. 
+-<mark style="background: #FFF3A3A6;"> Unique security requirement</mark> is a unique<mark style="background: #FFF3A3A6;"> key+nonce pair,</mark> rather than just unique key; combine key with nonce at encryption/decryption time, rather than just using the plain key, to reduce the potential for keystream reuse. 

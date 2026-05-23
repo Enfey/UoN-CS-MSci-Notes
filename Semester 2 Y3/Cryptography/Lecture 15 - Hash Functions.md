@@ -76,9 +76,9 @@
 
 
 ## Merkle-Damgard
-- Hash functions need to accept arbitrarily long inputs but produce a fixed sized output. 
-- A merkle damgard construction is a method used to build a collision-resistant hash function from a smaller component called a **compression function**
-- It is the design principle behind many popular hashing algorithms. 
+- Hash functions need to accept <mark style="background: #FFF3A3A6;">arbitrarily long inputs</mark> but produce a f<mark style="background: #FFF3A3A6;">ixed sized output. </mark>
+- A <mark style="background: #FFF3A3A6;">merkle damgard construction </mark>is a method used to build a <mark style="background: #FFF3A3A6;">collision-resistant hash function</mark> from a smaller component called a **<mark style="background: #FFF3A3A6;">compression function</mark>**
+- It is the <mark style="background: #FFF3A3A6;">design principle</mark> behind <mark style="background: #FFF3A3A6;">many popular hashing algorithms</mark>. 
 - The message $x = \{x_1, x_2, \dots , x_{n}\}$ is split into **fixed-size blocks** and processed **sequentially**
 - A compression function $f$ takes two inputs:
 	- The current message block $x_i$ 

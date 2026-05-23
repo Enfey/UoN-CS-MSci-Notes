@@ -1,58 +1,58 @@
 ## Block ciphers
-- One of the two main classes of symmetric encryption ciphers
+- One of the t<mark style="background: #FFF3A3A6;">wo main classes of symmetric encryption ciphers</mark>
 - Operates on **fixed-size blocks of plaintext** and transforms each block into a ciphertext block of the same size, using a secret key.
-- More common than stream ciphers.
+- <mark style="background: #FFF3A3A6;">More common than stream ciphers</mark>.
 	- Versatile primitives; used for other cryptographic methods e.g., MAC, hash constructions. 
 - For a given key $k$ the encryption function: 
 	$$E(k) : \{0,1\} \to \{0,1\}^n$$
 	Must be **deterministic** and **invertible** 
 
-- Block ciphers are combined with **modes of operation** to securely encrypt data of variable length.
+- <mark style="background: #FFF3A3A6;">Block ciphers are combined</mark> with **modes of operation** to s<mark style="background: #FFF3A3A6;">ecurely encrypt data of variable length.</mark>
 - Doesn't use the same key all the time - depends on rounds and the mode of operation
 
 
 ### Pseudorandom permutations
 - A **block cipher** is meant to behave like a **pseudorandom permutation** over $\{0, 1\}^n$ 
-- This is a function that cannot be distinguished from a random **permutation** 
-	- The output size equals the input size, and this is bijective, whereas CSPRNGs expand a short seed into a pseudrandom keystream to be computationally indgistinguihable from true randomness. 
+- This is a <mark style="background: #FFF3A3A6;">function that cannot be distinguished from a random</mark> **permutation** 
+	- <mark style="background: #FFF3A3A6;">The output size equals the input size</mark>, and <mark style="background: #FFF3A3A6;">this is bijective</mark>, whereas CSPRNGs expand a short seed into a pseudrandom keystream to be computationally indgistinguihable from true randomness. 
 - Maps a set of values $\{0, 1\}^n \times \{0,1\}^n \to \{0, 1\}^n$ 
-	- For any key $k$ this function $F$ is a bijection(every plaintext has exactly one ciphertext, and every ciphertext comes from exactly one plaintext)
-		- Otherwise decryption would be impossible
-		- And if some plaintexts collide or some ciphertexts not possible, instantly gives away info. 
+	- For any key $k$ this function $F$ is a bijection(e<mark style="background: #FFF3A3A6;">very plaintext has exactly one ciphertext</mark>, and <mark style="background: #FFF3A3A6;">every ciphertext comes from exactly one plaintext</mark>)
+		- <mark style="background: #FFF3A3A6;">Otherwise decryption would be impossible</mark>
+		- <mark style="background: #FFF3A3A6;">And if some plaintexts collide</mark> or <mark style="background: #FFF3A3A6;">some ciphertexts not possible</mark>, instantly <mark style="background: #FFF3A3A6;">gives away info. </mark>
 	- There is an efficient algorithm to calculate $F(m, k) = c$ for all keys and all messages.
-- This is what we attempt to approximate, rather than a CSPRNG predicated on a small seed key. 
+- <mark style="background: #FFF3A3A6;">This is what we attempt to approximate</mark>, rather than a CSPRNG predicated on a small seed key. 
 
 
 ### Terminology
 - **Confusion**
-	- *Obscure the relationship between the **plaintext**, **key** and **ciphertext***
-		- Confusion is often achieved in block ciphers via things like substitution tables and often involves injecting non-linearity
-		- Things like word-wise adding in ChaCha20, the operations in the quarter round to permute bits etc.
+	- <mark style="background: #FFF3A3A6;">*Obscure the relationship</mark> between the **plaintext**, **key** and **ciphertext***
+		- <mark style="background: #FFF3A3A6;">Confusion is often achieved in block ciphers via things like substitution tables</mark> and often<mark style="background: #FFF3A3A6;"> involves injecting non-linearity</mark>
+		- Things like <mark style="background: #FFF3A3A6;">word-wise adding </mark>in ChaCha20, the <mark style="background: #FFF3A3A6;">operations in the quarter round</mark> to permute bits etc.
 - **Diffusion**
 	- *Spread the influence of each input bit across many output biots*
-		- Usually achieved via permutation e.g., swapping or otherwise mixing bits or bytes.
+		- <mark style="background: #FFF3A3A6;">Usually achieved via permutation</mark> e.g.,<mark style="background: #FFF3A3A6;"> swapping or otherwise</mark> <mark style="background: #FFF3A3A6;">mixing bits or bytes.</mark>
 - Ciphers which repeatedly apply these ideas are called **product ciphers**
 	- Apply rounds of subtitution and permutation sequentially to yield a ciphertext $c$ 
 
 ## Feistel Networks
-- The feistel network is introduced, general construction method for block ciphers
-- Uses round function, takes 2 inputs $L, R$, and a key $k$ and returns output same size as the data block
-- In each round, the round function runs on half of the data to be encrypted and the round key, and the output of the round function is XORed with the other half
+- The feistel network is introduced, g<mark style="background: #FFF3A3A6;">eneral construction method for block ciphers</mark>
+- Uses <mark style="background: #FFF3A3A6;">round function</mark>, takes <mark style="background: #FFF3A3A6;">2 inputs</mark> $L, R$, and a <mark style="background: #FFF3A3A6;">key</mark> $k$ and <mark style="background: #FFF3A3A6;">returns output</mark> <mark style="background: #FFF3A3A6;">same size as the data block</mark>
+- In<mark style="background: #FFF3A3A6;"> each round,</mark> the<mark style="background: #FFF3A3A6;"> round function</mark> runs on <mark style="background: #FFF3A3A6;">half of the data to be encrypted </mark>and the <mark style="background: #FFF3A3A6;">round key</mark>, and the <mark style="background: #FFF3A3A6;">output of the round function</mark> is <mark style="background: #FFF3A3A6;">XORed with the other half</mark>
 	![](Pasted%20image%2020260521203303.png)
-- This repeats a fixed number of times, with keys $k$ different for each round
-- The last round performs a final swap
-- A major advantage compared to say SP networks is that the entire operation is guaranteed to be invertible even if the round function is **non-invertible**
+- This <mark style="background: #FFF3A3A6;">repeats a fixed number of times</mark>, with keys $k$ different for each round
+- <mark style="background: #FFF3A3A6;">The last round performs a final swa</mark>p
+- A <mark style="background: #FFF3A3A6;">major advantage</mark> compared to say SP networks is that the<mark style="background: #FFF3A3A6;"> entire operation</mark> is <mark style="background: #FFF3A3A6;">guaranteed to be invertible</mark> <mark style="background: #FFF3A3A6;">even if the round function</mark> is **non-invertible**
 	- Can be arbitrarily complicated. 
-- Encryption and decryption are very similar; just reverse the key schedule.
+- <mark style="background: #FFF3A3A6;">Encryption and decryption</mark> are very similar; just<mark style="background: #FFF3A3A6;"> reverse the key schedule.</mark>
 
 
 ### Feistel Round
 - During each round, only **half of the block is encrypted**
 - Take subkey $k$ and $R_i$ to produce $f(k_i, R_i)$ 
 - This output is $XORed$ with $L_i$ yielding $L \oplus f(k_i, R_i)$ 
-- The function f should behave as a pseudorandom function:
+- <mark style="background: #FFF3A3A6;">The function f should behave as a pseudorandom</mark> function:
 	$F_k : \{0,1\}^n \to \{0,1\}^m$ 
-	Takes key and input and yields block size (where n is k+b)
+	<mark style="background: #FFF3A3A6;">Takes key and input</mark> and <mark style="background: #FFF3A3A6;">yields block size</mark> (where n is k+b)
 
 ### Feistel cipher encryption
 - Start with $L_i, R_i$ 
@@ -63,34 +63,34 @@
 
 ### Feistel cipher decryption
 -  Start with $L_i = R_i \oplus f(L_i \oplus f(R_i, k_i), k_{i+1}), R_{i} = L_i \oplus f(R_i, k_i)$  
-	- After the initial function applied to the RHS, would XOR with LHS, but would yield $R_i$ because XOR is its own inverse
-	- Thus, it does not matter whether the round function is invertible because thw wider structure it exists in is.
+	- After the initial function applied to the RHS, <mark style="background: #FFF3A3A6;">would XOR with LHS</mark>, but <mark style="background: #FFF3A3A6;">would yield</mark> $R_i$ because <mark style="background: #FFF3A3A6;">XOR is its own inverse</mark>
+	- <mark style="background: #FFF3A3A6;">Thus,</mark> it <mark style="background: #FFF3A3A6;">does not matter whether the round function is invertible</mark> because <mark style="background: #FFF3A3A6;">thw wider structure it exists in is.</mark>
 
 ### Feistel network design
-- 1 or 2 rounds not sufficient to yield cipher
-	- 1 round still has plaintext
-	- 2 round is further distinguishable as both have been confused and diffused.
-- Proved that if round function $f$ applied to one of the two halves behaves like a secure **pseudorandom function** then a 3-round feistel gives you a $PRF$, meaning it stays psuedorandom even if an adversay can query both encryption and decryption
-	- A cipher is a **PRP** if an attacker who can query only encryption cannot tell whether they are talking to block cipher or random permutation
-	- A cipher is a **strong PRP** if this is the same for encryption and decryption.
+- 1<mark style="background: #FFF3A3A6;"> or 2 rounds not sufficient to yield cipher</mark>
+	- <mark style="background: #FFF3A3A6;">1 round still has plaintext</mark>
+	- <mark style="background: #FFF3A3A6;">2 round is further distinguishable as both have been confused and diffused.</mark>
+- <mark style="background: #FFF3A3A6;">Proved that if round function</mark> $f$ <mark style="background: #FFF3A3A6;">applied to one of the two halves behaves like</mark> a secure **pseudorandom function** then a<mark style="background: #FFF3A3A6;"> 3-round feistel</mark> gives you a $PRF$, <mark style="background: #FFF3A3A6;">meaning it stays psuedorandom</mark> <mark style="background: #FFF3A3A6;">even if an adversay</mark> can <mark style="background: #FFF3A3A6;">query both encryption</mark> and <mark style="background: #FFF3A3A6;">decryption</mark>
+	- A cipher is a **PRP** if an attacker who can <mark style="background: #FFF3A3A6;">query</mark> <mark style="background: #FFF3A3A6;">only encryption</mark> <mark style="background: #FFF3A3A6;">cannot tell</mark> whether they are<mark style="background: #FFF3A3A6;"> talking to block cipher</mark> or <mark style="background: #FFF3A3A6;">random permutation</mark>
+	- <mark style="background: #FFF3A3A6;">A cipher</mark> is a **strong PRP** <mark style="background: #FFF3A3A6;">if this is the same</mark> for <mark style="background: #FFF3A3A6;">encryption and decryption.</mark>
 - **Balanced feistel network**
 	- L and R are equal sizes
 - **Unbalanced feistel network**
 	- They are not
 - **Skipjack**
-	- Block cipher using feistel like structure but heavily exceeds minimum 4 rounds, remains secure under very strong attack models
+	-<mark style="background: #FFF3A3A6;"> Block cipher using feistel like structure but heavily exceeds minimum 4 rounds, remains secure under very strong attack models</mark>
 - **OAEP**
 	- Padding/encoding scheme for RSA
 	- Structurally similar to unbalanced Feistel network, mixes short random seed and long message block
 	- Feistel ideas useful outside of symmetric encryption.
 
 ## Data Encryption Standard
-- Symmetric key algorithm for encryption.
-- Block cipher
+- <mark style="background: #FFF3A3A6;">Symmetric key algorithm for encryption</mark>.
+- <mark style="background: #FFF3A3A6;">Block cipher</mark>
 - 56 bit key length (8 parity bits, makes 64, one in each byte for error detection in keygen, distribution, and storage)
 - Block size of 64 bits
-- 16 round feistel network
-	- Guarantees invertbility
+<mark style="background: #FFF3A3A6;">- 16 round feistel network</mark>
+	<mark style="background: #FFF3A3A6;">- Guarantees invertbility</mark>
 	- Can reuse same round function for encryption and decryption.
 
 ### Overall structure 
@@ -137,14 +137,14 @@
 
 ##### S-box application
 - Split the 6 bits into row bits and column bits
-	- The first and last bit form the row bits.
-	- The middle bits form the column bits. 
+	- <mark style="background: #FFF3A3A6;">The first and last bit form the row bits.</mark>
+	- <mark style="background: #FFF3A3A6;">The middle bits form the column bits. </mark>
 	![](Pasted%20image%2020260211002025.png)
 	![](Pasted%20image%2020260211002043.png)
 	ROW, THEN COL BITS
 
 ##### S-box design
-- Need to be highly non-linear, they introduce non-linearity and confusion after XOR to prevent breaking the cipher down to a system of linear equations; permitting retrieveal of internal state and ability to discover key.
+- <mark style="background: #FFF3A3A6;">Need to be highly non-linear</mark>, they introduce<mark style="background: #FFF3A3A6;"> non-linearity and confusion after XOR</mark> to <mark style="background: #FFF3A3A6;">prevent breaking the cipher down to a system of linear equations</mark>; permitting retrieveal of internal state and ability to discover key.
 - Key design principles:
 	1. **No Output bit should be too close to a linear combination of input bits**
 	2. **1 bit change in input should lead to at least 2 bit change in output**
@@ -152,11 +152,13 @@
 	3. **If only the middle 4 bits change each output must occur exactly once**
 		- Necessitates 0-15; if the row is fixed, make the output equally likely. 
 	4. **If the first two bits are different but the last two are identical, the output must differ**
-	5. If two inputs differ by delta, their outputs should rarely differ by the same delta
+	5. I<mark style="background: #FFF3A3A6;">f two inputs differ by delta, their outputs should rarely differ by the same delta</mark>
 	6. A collision is only possible for yeahn idk
+
+linear COMB, DELTA, MIDDLE BITS, LOCAL AVALANCHE. 
 
 #### Permutation
 - ![](Pasted%20image%2020260211004224.png)
-- Given the feistel equations $L_i = R_i$, $R_i = L_i \oplus f(R_i, k)$ the permutation $P$ is inside $F$
-- The 32 bit output from $S-boxes$ are rearranged according to a fixed permutation, the $P-box$ 
-- This is designed such that the output of the independent S-boxes are spread across multiple different S-boxes in the next round, and that they do not stay isolated, enabling both confusion and diffusion. 
+- <mark style="background: #FFF3A3A6;">Given the feistel equations $L_i = R_i$, $R_i = L_i \oplus f(R_i, k)$ the permutation $P$ is inside $F$</mark>
+- <mark style="background: #FFF3A3A6;">The 32 bit output </mark>from $S-boxes$ are<mark style="background: #FFF3A3A6;"> rearranged according to a fixed permutation</mark>, the $P-box$ 
+- This is<mark style="background: #FFF3A3A6;"> designed such that the output of the independent S-boxes are spread across multiple different S-boxes in the next round, and that they do not stay isolated,</mark> enabling both confusion and diffusion. 

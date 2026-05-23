@@ -90,7 +90,7 @@
 - The solution to the aforementioned weaknesses, particularly malleability and existential forgery, is to enforce strict formatting rules on the message $m$ prior to signing.
 - If valid messages must follow a specific structure, then randomly generated forged messages from either malleability or the traditional method to achieve existential forgery are unlikely to conform to this structure
 - We include a $y$ bit padding field for every message $m$
-	![](Pasted%20image%2020260329194808.png)
+		![](Pasted%20image%2020260329194808.png)
 - For a generated message $m' = s^e \ mod \ n$ it must contain all valid $y$ bits to be treated as a proper message.
 - The probability that any $bit_y$ is a correct bit is $\frac{1}{2}$ which when multiplied $y$ times yields:
 	![](Pasted%20image%2020260329195058.png)

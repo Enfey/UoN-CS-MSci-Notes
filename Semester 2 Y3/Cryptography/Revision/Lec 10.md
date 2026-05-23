@@ -130,6 +130,7 @@ COMPUTE D via EEA
 - $![](Pasted%20image%2020260309193703.png)
 - Square = left shift
 - Multiplication = add 1
+DONE ONTO THE XS
 ### Comp complexity of large bit exponentiatiton
 - 1.5T operations in theory; for every 0 have to do a square, for every 1 have to do a multiply. 
 
