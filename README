@@ -7,12 +7,13 @@ PLANNED FUTURE MODULES
 
 YEAR 4
     Semester 1
-      - Individual Research Dissertation - binary/hardware exploitation
-      - Group Dissertation - polyhedral compilation or superoptimisation
-      - Small study group - advanced computer architecture
+      - Individual Research Dissertation - formal verification of warp-collective lowering across major vendors in MLIR
       - Advanced Algorithms and Data Structures
+      - Handling Uncertainity with Fuzzy Sets and Fuzzy Systems
+      - Communication and Collaboration Technologies
 
      Semester 2
-      - Individual Research Dissertation
-      - Group Dissertation
+      - Individual Research Dissertation(cont.)
       - Malware Analysis
+      - Programs, Proofs, and Types
+      - Project in Advanced Algorithms and Data Structures
