@@ -188,4 +188,13 @@ Work more on the inductive proofs.
 	- $log_2 n = k$
 - As such, there are $n$ computation steps per level, with $log_2n$ levels, leaving us with $n \ log \ n$ 
 #### Master Method
-- 
+- Method to determine the time complexity of recursive algorithms without having to expand and solver their recurrence relation manually
+- The master theorem applies to recurrence relations of the form $T(n) = aT(n/b) + f(n)$ 
+- The number of children for each node of a recursion tree will be $a$ 
+- The number of arguments at level $j$ = $n / b^j$ 
+- The height of the tree $h = log_b n$
+- The intuition is then:
+	*Which levels of the call tree contribute the most work?*
+	1. **Bottom Heavy**
+	2. **Balanced**
+	3. **Top-Heavy**
