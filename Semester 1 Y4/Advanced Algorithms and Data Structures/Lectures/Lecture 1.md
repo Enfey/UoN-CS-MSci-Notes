@@ -135,7 +135,57 @@
 	- $T(n) = 2T(n/2) + \Theta(n)$ 
 
 ### Solving Recursive Equations
- - **Substitution Method**
-	 - 
- - **Recursion Tree Method**
- - **Master Method**
+- Three methods to solve a recursive equation that expresses algorithm runtime recursively in terms of $n$:
+	- **Substitution Method**
+		- Proof technique based on induction
+		- We make a guess on how quickly the recurrence grows, and substitute that in the original recurrence to determine whether it is mathematically consistent
+		- May suspect merge sort has a runtime of $O(n \ log\  n)$ 
+			- This method allows us to demonstrate that this is indeed an upper bound. 
+	- **Recursion Tree Method**
+		- Instead of guessing the complexity and proving it, we expand the recurrence into a tree that represents all the recursive function calls made during execution.
+		- Observe how total work accumulates as the recursion progresss.
+		- The idea is that the total runtime is the sum of the work performed at every node in the recursion tree, where a node is an invocation of the recursive function. 
+	- **Master Method**
+		- General mathematical result/theorem that allows us to determine the asymptotic complexity of certain recurrence relations without explicitly expanding the recursion tree or constructing an inductive proof.
+		- Depends on the form of the equation however. 
+
+#### Substitution Method
+- Say we start with $T(n) = 2T(n/2) + n$ 
+- Suppose we believe that $T(n) = O(n \ log_2 \ n)$ 
+- By definition of the $O$ notation there exists positive constants $c$ and $n_0$ such that $T(n) \leq c \ n \ log_2 n$ for every $n \geq n_0$ 
+- We are claiming that beyond some sufficiently large input size, the running time is always bounded by a constant multiple of $n \ log \ n$ 
+- To verify this:
+	- $T(n) = 2T(n/2) + n \leq c \ \frac{n}{2} log_2 \frac{n}{2} + n$ 
+	- $T(n) \leq 2(c \ \frac{n}{2} \log_2 \frac{n}{2}) + n$
+	- $T(n) \leq cn \ log_2 \frac{n}{2}+n$
+	- $T(n) \leq cn \ (log_2 n-1) + n$ 
+	- $T(n) \leq cn \ log_2 n - cn + n$ 
+	- $T(n) \leq cn \ log_2n + (-c+1)n$ 
+- If we choose $c = 1$ then the last term evaluates to $0$ 
+	- $T(n) \leq cn \ log_2n$
+
+- The base case is more problematic
+- We have $T(1) = 1$, we can't prove $T(1) \leq c1 \ log \ 1 = 0$ 
+- We can choose any starting point $n_0$ however:
+	- For example:
+		- $T(2) = 2T(1) + 2 = 4 \leq c2 log_2 2 = 2c$, pick $c \geq 2$ 
+
+
+Work more on the inductive proofs.
+
+#### Recursion Trees
+- We construct a tree of recursive calls, labelled with arguments.
+- The root is $T(n)$. For divide and conquer e.g., merge sort, we have 2 calls e.g., 2 children with arguments $n/2$ 
+	![](Pasted%20image%2020261016004938.png)
+- The number of nodes at level $j$ is equal to $2^j$, for perfect binary tree.
+- The argument/size of argument at level $j$ is $n/2^j$ 
+- The total work at level $j$ is therefore $2^j \times n / 2^j = n$ (the $2^j$ factors cancel)
+- As such, there are total of $n$ computation steps at each level.
+- The height of the tree:
+	- At level $j$ the problem size is $n / 2^j$.
+	- If the tree has height $k$, the leaf nodes satisfy $n / 2^k = 1$ 
+	- $n = 2^k$
+	- $log_2 n = k$
+- As such, there are $n$ computation steps per level, with $log_2n$ levels, leaving us with $n \ log \ n$ 
+#### Master Method
+- 
