@@ -178,6 +178,7 @@ Work more on the inductive proofs.
 - The root is $T(n)$. For divide and conquer e.g., merge sort, we have 2 calls e.g., 2 children with arguments $n/2$ 
 	![](Pasted%20image%2020261016004938.png)
 - The number of nodes at level $j$ is equal to $2^j$, for perfect binary tree.
+	- $b^j$ 
 - The argument/size of argument at level $j$ is $n/2^j$ 
 - The total work at level $j$ is therefore $2^j \times n / 2^j = n$ (the $2^j$ factors cancel)
 - As such, there are total of $n$ computation steps at each level.
@@ -190,11 +191,45 @@ Work more on the inductive proofs.
 #### Master Method
 - Method to determine the time complexity of recursive algorithms without having to expand and solver their recurrence relation manually
 - The master theorem applies to recurrence relations of the form $T(n) = aT(n/b) + f(n)$ 
-- The number of children for each node of a recursion tree will be $a$ 
+- The number of children for each node of a recursion tree will be $a$, the **branching factor/arity**
 - The number of arguments at level $j$ = $n / b^j$ 
-- The height of the tree $h = log_b n$
+- The height of the tree $h = log_b n$ (via the above)
+	- Because $b^h = n$ so invert the square with logarithm of $b$.
 - The intuition is then:
 	*Which levels of the call tree contribute the most work?*
 	1. **Bottom Heavy**
+		Most of the work takes place at the leaves. Each level does not progressively work more than the previous one
+		$a^{log_bn} = n^{log_ba}$ 
 	2. **Balanced**
+		Every level contributes roughly the same amount of work: number of levels $log_bn$ multiplied by work at each level, which will roughly be $f(n)$ by $b^j = a, \times  n/a = n$
 	3. **Top-Heavy**
+		Most of the work happens near the root. Each level does progressively less work. Dominated by first few levels $\to f(n)$ 
+	- Total work per level:
+	- 1 node at level 0 with work $f(n)$ 
+	- $a$ nodes at level 1 with work $af(n/b)$ 
+	- $a^2$ nodes at level 2, with work $a^2f(n/b^2)$ 
+	- $a^j$ nodes at level $j$ with work $a^jf(n/b^j)$ 
+	- $a^h$ nodes at level $h$ with work $a^hf(n/b^h) = O(a^h)$, because $f(n/b^h)$ = $f(1)$ = $O(1)$
+	- We can use log laws to rewrite $a^h = a^{log_bn}$ 
+	![](Pasted%20image%2020261016201734.png)
+	Learn these at a later point.
+##### Master method: Cases
+- Let $c = log_ba$, that is, the 'critical exponent'
+- Let $d$ describe the growth of non-recursive work in terms of $n^d$ 
+- We have three cases based on $c$ and $f(n)$ 
+	1. $f(n) = O(n^{c-\epsilon}) \to T(n) = n^c$ 
+	2. $f(n) = \Theta(n^c log^k \ n) (inc \ k=0)$ $\to T(n) = n^c log^{k+1} \ n$ 
+	3. $f(n) = \Omega(n^c+\epsilon) \to T(n) = f(n)$
+- The total work at level $j$ is $W_j = a^jf(n/b^j)^d$ 
+	- $W_j = a^j (n^d/b^{jd})$ 
+	- $W_j = a^j(n^d/(b^d)j)$ 
+	- $W_j = n^d(a^j/(b^d)j)$ 
+	- $W_j = n^d(a/b^d)j$ 
+
+##### Merge Sort
+- We have $T(n) = 2T(n/2) + n$ 
+- $a = 2, b = 2, f(n) = n$ 
+- Calculate $c = log_b(a) = log_2(2) =1$ 
+- Therefore $n^1 = n$ leaves, equivalent to $f(n)$ done at the root, and is thus not case $1$ because $f(n)$ grows at an equivalent rate $n^c$, the work done at the leaves.
+- Case 2, choose $k=0$, $n^clog^0n = n^1 \times 1 = n$ 
+- We know that $f(n) = n$, so case 2 applies as we are tighltly bounded, sub in $c = 1$ and $k = 0$ and get $\Theta(n \ log \ n)$ 
