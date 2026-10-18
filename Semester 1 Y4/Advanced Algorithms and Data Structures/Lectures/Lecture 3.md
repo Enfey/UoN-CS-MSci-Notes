@@ -125,19 +125,69 @@
 		If every node is a 2-node then we reach the maximum possible height for that number of keys when we reach equality.
 		If some nodes can be 3-nodes, the tree may accommodate more keys without increasing its height.
 	- We also have the opposite, saying the tree must have a certain height given $n$ keys, but that  is not important here.
+- Worst case height is that we have all 2 nodes, best case is all 3 nodes.
 
 ### 2-3 Trees: Operations
 
 #### Searching
+- Searching is very similar to BST:
+	- 2-nodes behave the same way as in a BST, LR comparison
+	- For 3-nodes, we also need to consider that the searched key may be between $x$ and $y$, recurse to middle child
+		- Also must check both keys
+		- So there is 2 extra checks done on a 3-node
+- Cost: in both cases, one level traversed each step, so complexity is $O(h)$ but naturally, the structure preserves that $h$ is roughly $log n$.
+	![](Pasted%20image%2020261018020751.png)
 
 #### Insertion
+- Again, similar to a BST but we must restore the invariant i.e., protect the balance of the tree. 
+- We add the key in the **correct terminal node**
+	- If the node was a 2-node, make it a 3-node and we're done.
+		![](Pasted%20image%2020261018021224.png)
+	- If the node was a 3-node, temporarily make it a 4-node
+		![](Pasted%20image%2020261018021901.png)
+##### Insertion: 3 node - Splitting
+- 3-node terminal nodes that we temporarily turn into 4 nodes must be split
+- There are 2 cases:
+	1. Parent is a 2 node
+		- We move the middle key of the 4 node to the parent node, making the parent node a 3-node.
+		- We also move the element that maintains the 'in-between relationship' to be the middle child of the new 3 node we have created
+			![](Pasted%20image%2020261018022647.png)
+			For the right-subtree, we would move the middle key up regardless to get $py$ but instead placing $x$ as the middle child because $z$ exceeds $y$ and therefore doesn't preserve the relative ordering rule.
+	2. Parent is a 3 node:
+		- Move the middle key of the 4-node to the parent, making it a 4 node. 
+		- Continue this action until we reach a 2 node, which in the worst case is the root.
+			![](Pasted%20image%2020261018023418.png)
+			Would be the same for right subtree; promote y to get $pqy$ and then make $x$ the middle child of $qy$ as we know it is less than $y$ but must be greater than $q$.
+		- This case is recursive unlike case 1, so case 1 becomes our base case.
+		- The only way the height of the overall tree can increase is case 1 being applied to the root (which is always a 2 node)
 
-
-#### Splitting
+We ask the following questions:
+1. Is the invariant conserved?
+	- Yes, there are only 2 nodes and 3 nodes with this strategy with the insertion ensuring the sorting order is respected, and all terminal nodes remain at the same level. 
+2. What is the cost? 
+	- In the worst case, insertion requires us to apply case 2 up until the root and is thus $O(h)$ and because we are preserving the invariant $O(logn)$ 
 
 #### Lazy Deletion
+- First idea is a lazy approach
+	- Search for the key and mark it with a special tag ("tombstone") signifying a key has been deleted here
+	- Such keys are ignored in future searches
+	- When inserting, can replace tombstone with key to be inserted if it fits
+- Pros:
+	- Does not require modifying the structure, which is cheap
+	- Future insertions may be cheaper/easier to compute
+	- Very easy to implement, just augment the search with some replacement code
+- Cons:
+	- Does not reduce the size of the tree, if you have a lot of deletions too, you can speed up searches perhaps(technically) too as you can avoid the tombstone checks.
 
+#### Laziness
+- The notion of Laziness is deferring the completion of some operation or computing of a result until it is absolutely necessary
+- This a strategy employed in certain data structures for amortised cost guarantees, and better performance in some cases
+- Lazy deletion in **2-3 trees** is *sometimes* efficient in practice, but theoretically breaks our complexity bounds.
 #### Eager Deletion
+
+
+##### Bubble-up
+
 
 ### Last words on 2-3 Trees
 
