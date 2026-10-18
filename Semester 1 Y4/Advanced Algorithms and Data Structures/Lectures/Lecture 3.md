@@ -73,7 +73,7 @@
 - A tree is called **balanced** if its absolute difference between the left and right subtrees for every single node is at most $1$
 	- Each node has auxiliary info $d$ (or at least, on paper it does) which determines the height difference of its left and right subtree
 		- If this exceeds one for any node, then the tree is **not balanced.**
-- A balanced tree strives to reduce $h$; we modify the tree-shape on insertion/deletion to maintain **some invariant**
+- A balanced tree strives to reduce $h$; we modify the tree-shape on insertion/deletion to maintain **some invariant** 
 
 ### Balanced Trees
 - There exist a lot of different variants of that maintain an invariant to ensure the tree-shape is balanced throughout operations that mutate the tree.
@@ -94,6 +94,7 @@
 #### Defining property of 2-3 Tree
 - **All terminal nodes are at the same level**: the tree is thus **balanced**
 	- Note that it may not be complete as this would require all nodes to have the same amount of children i.e., all nodes either by 3 nodes or 2 nodes.
+	- Specifically, it is balanced within 0 levels as every single leaf node ends at $h$. if this is not true, then the tree is not a proper 2-3 tree.
 - **All keys are in sorted order**
 	- Keys in 3-nodes are sorted
 	- Keys in left-subtree are smaller
@@ -168,8 +169,8 @@ We ask the following questions:
 	- In the worst case, insertion requires us to apply case 2 up until the root and is thus $O(h)$ and because we are preserving the invariant $O(logn)$ 
 
 #### Lazy Deletion
-- First idea is a lazy approach
-	- Search for the key and mark it with a special tag ("tombstone") signifying a key has been deleted here
+- First idea is a **lazy** approach
+	- Search for the key and mark it with a special tag ("**tombstone**") signifying a key has been deleted here
 	- Such keys are ignored in future searches
 	- When inserting, can replace tombstone with key to be inserted if it fits
 - Pros:
@@ -178,20 +179,118 @@ We ask the following questions:
 	- Very easy to implement, just augment the search with some replacement code
 - Cons:
 	- Does not reduce the size of the tree, if you have a lot of deletions too, you can speed up searches perhaps(technically) too as you can avoid the tombstone checks.
+		- Thus, this operation does not actually maintain the height property we require for search to stay roughly $log$ $n$, as it relies on amortising the cost over an equivalent amount of insertions.
 
 #### Laziness
 - The notion of Laziness is deferring the completion of some operation or computing of a result until it is absolutely necessary
 - This a strategy employed in certain data structures for amortised cost guarantees, and better performance in some cases
 - Lazy deletion in **2-3 trees** is *sometimes* efficient in practice, but theoretically breaks our complexity bounds.
 #### Eager Deletion
+- There are a number of ways we can perform *eager* deletion, only cover one option here
+- Similar to BST deletion, but just like with insertion, we may break the invariant(s), and we must therefore ensure we preserve it:
+- Note that by invariants, we refer not only to the tree height, but also to the node structure, the sorted order, and that the tree is height balanced.
+	- IF:
+		- **Key in terminal 3-node**: make it a 2-node.
+		- **Key in terminal 2-node**: create a temporary placeholder node (we cannot directly delete, as the parent is required to have 2 children), we call this node a ***bubble***
+		- **Key in internal node:** like in BST deletion, we find the immediate predecessor (which will be terminal), delete the predecessor from the terminal and replace the key in parent with the predecessor to preserve the ordering property.
 
 
 ##### Bubble-up
+- **Case 1:**
+	- Parent is a **2-node**, sibling is a **2-node**
+	- The solution is to redistribute.
+	- We combine the sibling and parent to form a 3-node by moving the parent down into the sibling:
+		![](Pasted%20image%2020261018180907.png)
+		Naturally this process begins at a terminal node where $A$, $B$ and $C$ will be empty subtrees.
+		- This is valid because we know that $A \lt p \lt B \lt s \lt C$, and this redistribution preserves that logic
+			- Note this is naturally symmetric.
+		- We 'push the bubble-up' the tree until we can find a place where we can eliminate it with the following cases.
+	- Only case where bubble moves up; if the bubble becomes root, merely eliminate it ($h$ decreases?)
+- **Case 2:**
+	- Parent is a 2-node, sibling is a 3-node:
+		![](Pasted%20image%2020261018181205.png)'
+		- Simply redistribute to respect the order, replacing the bubble by taking out whatever from the 3-node can become the parent 2-node, and moving the original parent to where the parent is.
+- **Case 3:**
+	- Parent is a 3-node, sibling is a 2-node. 
+	- Parent has 3 children:
+		![](Pasted%20image%2020261018181327.png)
+		- Preserve ordering of $A \lt p \lt B \lt s \lt c \lt q \lt Z$ 
+- **Case 4:**
+	- Parent is a 3-node, sibling is 3-node
+	- We have $A \lt p \lt B \lt s \lt C \lt r \lt D \lt q \lt Z$ 
+		![](Pasted%20image%2020261018182646.png)
+MOVE NEXT LOWEST/NEXT HIGHEST THING TO BUBBLE AND PRESERVE ORDERING/INVARIANTS ACROSS REST OF THE TREE
 
+##### Questions
+- Is the invariant conserved?
+	- yes, we respect the sorting order of the respective internal and terminal nodes, the terminal nodes are kept at the same level and we ensure we only have 2 and 3 nodes in the tree.
+- The cost remains $O(log n$), our worst case is applying case $1$ $h$ times, up to the root, $O(h$) operations. 
 
 ### Last words on 2-3 Trees
+- Efficient and elegant solution to balance search trees
+- Technically, this is not a BST, but is what we call a **Multiway Search Tree**
+	- A BSt stores one key per node, with arity 2, and this is strict
+	- 2-3 keys permit 3-nodes also. 
+	- This makes the search space split inconsistently, with more comparisons (but generally more 'divisions' of said search space as a result, and with less $h$)
+	- It is called *multiway* because while the ordering principle is the same as BST, a node can direct us to more than two subtrees and naturally this flexibility is one part of how 2-3 trees maintain balance in operations. 
+		- As they can 'adopt' additional keys beyond what a BST can with the same amount of nodes with say, repeated insertions. 
+- There is a 1:1 mapping between 2-3 trees and **Left Leaning Red-Black trees**, which we will cover shortly.
+- 2-3 trees can be generalised $(a, b)$ trees, but 2-3 is the simplest and good enough for the properties we would like.
+	- We have between $(a, b)$ children, and a node with $k$ children contains $k-1$ keys.
+	- We would increase the branching factor because we can store more keys within fewer levels; naturally better given the upper bound for tree ops is $O(h)$ 
+- Can be configured to match system cache.
+
 
 ### Tree rotations
-
+- A ***tree rotation*** is an operation on an edge/link in a tree
+	![](Pasted%20image%2020261018185940.png)
+	A rotation is **right** around a key where the shift is right (not the link) and vice versa.
+- Naturally, the BST invariant must be preserved
+- Here that would mean preserving $A < B < C < D < E$ 
+- This gives the tree a different shape.
+- This operation can affect the height of the tree, for the example above:
+	- $left = h(D)= max(h_B, h_E) + 1 = max(h_A + 1, h_C + 1, h_E)+1$ 
+		- Replace $h_B$ with its own height formula.
+	- $right = h(B) = max(h_A, h_D) + 1 = max(h_A, h_C  + 1, h_E+1) +1$
+- The expansion is similar, except for the fact that the height of A has changed, and the height of E has changed. We change the height of the respective subtrees by one for any given rotation. 
+	- Rotation cost = $O(1)$ and we can use rotations to maintain balance to enforce $O(log n)$
 
 ### Red-black trees
+- A ***red-black tree*** is a BST with **additional colouring rules**
+- Each node contains:
+	- A key, as in an ordinary BST
+	- References to its left and right children, as in a BST
+	- A **colour**: red or black
+- The ordinary BST ordering property still applies:
+	- $LeftSubtree < Node < RightSubtree$ 
+- Additional colours help us maintain balance during insertion and deletion, without augmenting the node structure severely.
+- A red-black tree satisfies the following properties:
+	1. Every node contains an extra colour value: **Red** or **Black**
+	2. The root (and leaves) are **black**
+	3. The **children of a red node are black**(no consecutive red nodes)
+	4. For a given node, **every path from it to a leaf has the same number of black nodes.**
+- **Black-height** = # of black nodes in any path from node $n$ to leaf $l$.
+
+#### Red-Black Tree Example
+![](Pasted%20image%2020261018195015.png)
+- All root-leaf paths contain 2 black nodes: thus $black-height = 2$
+- It is important to note that a **leaf** in the formal red-black tree definition is actually a **NIL** node, representing an absent child rather than a terminal node containing a key. 
+	- The small black dots represent those NIL leaves.
+- We are permitted only $Black \to Black$, $Black \to Red \to Black$.
+	- This enforced alternation ensures a loose balance of the tree.
+	- The shortest path a to a leaf node consists entirely of black nodes, but naturally, we have to preserve the black height from the root, so we cannot just only add black nodes everywhere.
+		- Operations maintain this balance and make correct judgments on red/black placement to maintain the black-height invariant. 
+#### Red-Black Tree Height
+- For a red-black tree with height $h$
+	1. No two red nodes are consecutive, so every root-to-leaf path has at least $h /2$ black nodes $\to b \ge h/2$ 
+		- Along the longest path, at least approximately half of the nodes must be black, given the alternating colour rule and that we start from a black node.
+	2. A tree with maximum black height $b$ contains at least $2^b-1$ nodes.
+		- Just stick with this, the black height is the lower bound we're defining, as in, the lower bound is all black nodes as $h$.
+		- The tree isn't perfect either so we can't just directly use $2^h-1$, branches can have different lengths so long as the black height for the given node(s) is equal.
+- Thus:
+	- $n \ge 2^b-1$ 
+	- $n+1 \ge 2^b$ 
+	- $n + 1 \ge 2^{h/2}$ 
+	- $log_2(n+1) \ge h/2$ 
+	- $2log_2(n+1) \ge h$ 
+- Roughly, $h = O(log \ n)$ 
