@@ -19,8 +19,12 @@
  - This modification is so common that BSTs are generally said to have $O(1) min/max$ 
 
 #### Augmentation examples
-- **Linked list**
-- **Doubly linked list**
+- **Linked lists**
+	- **Tail pointer**
+		- Enables $O(1)$ append
+	- **Doubly Linked List**
+		- Previous pointer enables $O(1)$, though is still $O(n)$ to traverse the list to find the node if searching by value
+		- If directly given the node it is $O(1)$, compared to $O(n)$ in singly linked-list as you do not have to search from the head in order to find the prev node whose next pointer you must reassign to curr's next pointer.
 - **Hash table**
 - **Graph**
 
@@ -28,20 +32,116 @@
 
 
 
-### Balanced Trees
+### BST Height
+- The **height** of a BST is crucial to all of its operations. 
+- All of its operations are bounded by $O(h)$ 
+- On average, $h$ is $O(log n)$ as if the binary tree as on average each comparison will half the problem space $n$
+	- Specifically, the height is minimum for that $n$ when the tree is **complete** - all levels are filled except the lowest level, which is left-filled.
+- In the worst case, it can be up to $O(n)$ 
+	![](Pasted%20image%2020261017223535.png)
 
-#### BST Height
 
 #### Lemma for Number of Nodes in a Tree
+- We ask: What are the number of nodes in a ***complete*** tree of degree $d$?
+	- Degree of a tree is the maximum degree a node has within the tree.
+	- The following example uses $d = 3$ 
+- $n = 1$
+- $n = 1+3$
+	![](Pasted%20image%2020261017223915.png)
+- $n = 1 + 3 + 3^2 ...$ 
+	![](Pasted%20image%2020261017223942.png)
+- $n = \sum_{i=0}^{h-1}d^i$ 
+	- Degree/branching factor to the power of the level summed, starting from 0 to account from root node.
+		- We already know that $b^j$ OR $d^i$ gives the number of nodes at level $i$ / $j$
+	- We can write this summation as:
+		$S=1+d^1+... +d^{h-1}$
+		$dS = d + d^2 + ... +d^h$
+		$dS - S = d^h -1$ 
+		$dS-1S = d^h - 1$(so we can factor $S$ out)
+		$S(d-1) = d^h - 1$
+		$S = \frac{d^h-1}{d-1}$ 
+- Setting $n$ to 2 gives us a unique result in that the bottom half of the fraction resolves to $1$ giving us $2^h-1 = n$, where $n$ is the number of nodes in the tree.
+
 
 #### Tree height
+- Thus according to the above lemma a ***complete*** BST of height $h$ has $2^h-1$ nodes.
+- A $BST$ of $n$ nodes then, has at least $log$ $n$ height
+	- $n = 2^h-1$
+	- $n+1 = 2^h$ 
+	- $log_2(n+1) = h$ 
+- We want to get as close as possible to this.
+- A tree is called **balanced** if its absolute difference between the left and right subtrees for every single node is at most $1$
+	- Each node has auxiliary info $d$ (or at least, on paper it does) which determines the height difference of its left and right subtree
+		- If this exceeds one for any node, then the tree is **not balanced.**
+- A balanced tree strives to reduce $h$; we modify the tree-shape on insertion/deletion to maintain **some invariant**
 
-#### Balanced Trees
-
-
+### Balanced Trees
+- There exist a lot of different variants of that maintain an invariant to ensure the tree-shape is balanced throughout operations that mutate the tree.
+	- AVL trees, red-black trees, 2-3 trees, B trees etc.
+- All have different strategies, the differences are:
+	- **Ease of implementation**
+	- **Practical performance**
+	- **Historical usage**
 
 ### 2-3 Tree
+- A **2-3 Tree** is a **ternary tree**(can have up to 3 child-nodes) where nodes are either:
+	- **2-nodes**: contain 1 key and 2 children
+	- **3-nodes**: contain 2 keys and 3 children
+	- **Terminal**: have no children and one or two data elements.
+![](Pasted%20image%2020261017230521.png)
+
+
+#### Defining property of 2-3 Tree
+- **All terminal nodes are at the same level**: the tree is thus **balanced**
+	- Note that it may not be complete as this would require all nodes to have the same amount of children i.e., all nodes either by 3 nodes or 2 nodes.
+- **All keys are in sorted order**
+	- Keys in 3-nodes are sorted
+	- Keys in left-subtree are smaller
+	- Keys in right-subtree are larger
+	- For 3-nodes, keys in the middle subtree are between the two keys. 
+	![](Pasted%20image%2020261017230753.png)
+	$x < y$
+	$\forall a \in A: \ a < x$ 
+	$\forall b \in B: \ x \lt b \lt y$
+	$forall c \in C: \ c \gt y$ 
+- We naturally have the same sorting order imposed on a BST for a 2-node, where keys $\lt$ than key $k$ are in the left-subtree, and vice-versa for the right subtree.
+- Also naturally, the child of a 3 node may be another 3 node, or a 2 node.
+
+### Why 2-3 Tree properties establish $h = O(log n)$ 
+- Relatively easy to see:
+	- Maximum:
+		- The maximum amount of keys in a tree of height $h$ would mean all nodes are 3-nodes, so each node has 2 keys, perfect binary tree.
+		- $n^{max} = 2 \times \frac{3^h-1}{3-1} = 3^h-1$ 
+	- Minimum:
+		- The minimum amount of keys in a 2-3 key would require that all nodes are 2 nodes, i.e., have 1 key and 2 children, and thus devolve to a regular BST
+		- $n^{min} = \frac{2^h-1}{2-1} = 2^h-1$
+- $n = 2^h-1$ can be rearranged to $h = log_2(n+1)$, but this equality naturally only holds for the minimum. 
+- We need a more robust way of expressing the tree height for this structure with varying nodes.
+- We say that $2^h-1 \leq n \leq  3^h-1$:
+	- $2^h-1 \leq n$ 
+	- $2^h \leq n+1$
+	- $h \leq log_2(n+1)$ 
+		WE say here that given $n$ keys the tree cannot grow taller than a certain height e.g., 12 keys, h is at most 3.7, so at most 3.
+		If every node is a 2-node then we reach the maximum possible height for that number of keys when we reach equality.
+		If some nodes can be 3-nodes, the tree may accommodate more keys without increasing its height.
+	- We also have the opposite, saying the tree must have a certain height given $n$ keys, but that  is not important here.
+
+### 2-3 Trees: Operations
+
+#### Searching
+
+#### Insertion
+
+
+#### Splitting
+
+#### Lazy Deletion
+
+#### Eager Deletion
+
+### Last words on 2-3 Trees
 
 ### Tree rotations
+
 
 ### Red-black trees
