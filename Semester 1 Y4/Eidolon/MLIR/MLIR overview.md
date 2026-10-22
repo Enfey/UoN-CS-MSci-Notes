@@ -58,6 +58,12 @@ r.push(2);
 ### MLIR semantics
 - In MLIR there are no predefined instructions
 - There are what we call 'operations' that are like *opaque functions* from MLIR's perspective. 
+- An attribute is a compile-time immutable constant attached to an operation, block, or function.
+- We use a combination of attributes, functions, dataflow analysis, 
+
+	- One can implement semantics implicitly by defining a lattice that tracks the state of resources over one of MLIR's generalised solvers
+		- A lattice here is a structure representing a hierarchy of knowledge about some value of resource, defining the possible states a resource can be in.
+		- A lattice is organised from the least amount of information to most-specific information. 
 
 
 ####
