@@ -48,22 +48,10 @@ r.push(2);
 - `(%x)` = operand
 - followed by the types of the operand and the result type
 - The location specifier denotes where it came from in the source dialect definition, and every op carries one that points to its original definition.
-- Once an op has been concretely defined like so, it can also print in a custom form:
+- Once an op has been concretely defined, it can also print in a custom form:
 ```MLIR
 %t = mylang.transpose %x : tensor<4x8xf32> -> tensor <8x4xf32>
 ```
 
 - Naturally MLIR has no idea what transpose does; in MLIR there are no default instructions; an MLIR operation is like an opaque function to MLIR
 - If we switch on `--allow-unregistered-dialect` MLIR parses this without complaint.
-### MLIR semantics
-- In MLIR there are no predefined instructions
-- There are what we call 'operations' that are like *opaque functions* from MLIR's perspective. 
-- An attribute is a compile-time immutable constant attached to an operation, block, or function.
-- We use a combination of attributes, functions, dataflow analysis, 
-
-	- One can implement semantics implicitly by defining a lattice that tracks the state of resources over one of MLIR's generalised solvers
-		- A lattice here is a structure representing a hierarchy of knowledge about some value of resource, defining the possible states a resource can be in.
-		- A lattice is organised from the least amount of information to most-specific information. 
-
-
-####

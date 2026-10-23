@@ -1,5 +1,6 @@
 {
   "promptDelete": false,
   "readableLineLength": true,
-  "useMarkdownLinks": true
+  "useMarkdownLinks": true,
+  "alwaysUpdateLinks": true
 }
