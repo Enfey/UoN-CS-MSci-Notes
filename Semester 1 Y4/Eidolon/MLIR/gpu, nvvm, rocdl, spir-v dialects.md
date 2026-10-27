@@ -6,6 +6,16 @@
 ## `gpu` dialect
 ### `gpu.shuffle`
 - **Description**
+	- *Shuffles values within a subgroup*
+	- The **shuffle** op moves values across lanes in a subgroup. 
+	- The `width` argument specifies the number of lanes that participate in the shuffle, and must be uniform across all lanes. 
+	- Furthermore, the first `width` lanes of the subgroup must be *active*. 
+	- Returns the `shuffleResult` and `true` if the current lane id is smaller than `width`, and an unspecified value and `false` otherwise.
+- **Syntax**
+```
+operation ::= `gpu.shuffle` enum($mode) $value `,` $offset `,` $width attr-dict `:` type($value)
+```
+- **Example**
 #### TableGen
 #### Lowering
 ##### `nvvm`
