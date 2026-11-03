@@ -331,9 +331,112 @@ Because $g = A[3]$, $h(a_*) = 2$, and $@a_3 = 6$
 
 
 ###### Clustering and Cache Locality
+- CPUs fetch data from memory in **cache lines**
+- Often, memory operations are the bottleneck, so the fewer fetches of data the better
+- Perhaps then, for performance it is better to keep the probes localised; LP checks neighbouring bins, so several probes often cost a single memory fetch
+	- This is fast in practice then, despite the clustering we aimed to avoid by mutating our deletion operation
+- QP starts close, and then jumps far, giving us only secondary clustering.
+- DH jumps somewhere new on every probe, so each probe needs a new main memory read usually, especially if $N$ is large. 
+- The trade-off is that the less clustering one has, the less memory efficiency we have; it costs us memory locality. 
+- **Load factor** - if the table is full, an insert probes forever looking for an empty bin that doesn't exist. 
+	- Must grow and rehash before the table gets too full, not just a performance tweak.
+	- Usually can mutate the DS and keep track of percentage of fullness on insertions and rehash at say, 75% capacity.
 
 
 ##### Probing sequences are Permutations
+- Probing sequences must form a permutation of the $N$ table slots
+- That is, every slot/bin is visited exactly once before the sequence repeats
+	- This guarantees an insert will find a free bin, given that one exists. 
+		- We only get $N$ probes, thus a repeat means some other bin is never checked.
+- For $p_k(i) = h(k) + f(i) \ mod \ N$, $\forall$ $f(0), f(1)...f(N-1) \ mod \ N$ must be **distinct**
+	- The function we attach to the hashed position must explore every position, and this is our permutation.
+	- The offset/function attached to the hashed position must explore different positions in the table to guarantee a permutation. 
+- **Linear probing**
+	- Needs $gcd(N, c) = 1$, e.g., $c=1$
+- **Quadratic Probing**
+	- Uses $f(i) = c_1i + c_2i^2$ 
+	- Thus $p_k(i) = (h(k)+c_1i + c_2i^2) \ mod \ N$
+	- Depends on $c_1, c_2$ and $N$ e.g., $f(i) = i^2$ in fact never works
+		- $N = 8: i^2 \ mod \ N$ for $i = 0..7$ gives $0, 1, 4, 1, 0,1,4,1$, only 3 of the 8 bins yielded
+		- The reason:
+			- $f(i) = i^2$ 
+			- Consider $f(N-i) = (N-i)^2$ 
+				$=N^2 - 2Ni + i^2$
+				$=N^2 - 2Ni + i^2 \ mod \ N$ 
+				Because we have the modulo, the first two terms disappear entirely leaving us with $i^2$ 
+		- So no matter what, the offsets for $i$ and $N-i$ will be identical as the functions are equivalent. 
+		- Probes using these offsets with the same $h(k)$ will yield a duplicate and thus do not preserve the property that the offset must explore different positions/be unique. 
+		- Step $i$ and step $N-i$ always land on the same bin, and so the second half of the sequence just retraces the first half backwards; at most about half the offsets can be distinct for $N$ then. 
+		- With $N$ prime you get exactly $(N+1) / 2$  distinct offsets.
+		- *QP ONLY SAFE WHERE N IS PRIME AND THE TABLE IS LESS THAN HALF FULL*
+	- Other choices may work however; e.g., triangular probing, where $c_1 = c_2 = 1/2$ for any $N$ that is a power of two. 
+		CBA RN
+- Double hashing
+	- The probing formula is $p_k(i) = (h(k)+i \cdot h'(k)) \ mod \ N$ 
+	- Always okay assuming $gcd(N, h'(k)) = 1$
+	- We need this because our step size $s$(goes for linear too) must enumerate all of the bins with $N$ probes
+		- if we have $gcd(8,2) = 2$ we have $2, 4, 6, 0, 2, 4, 6, 0$ from $h(k)$, we only visit 4 of the 8 possible slots before repeating and thus do not have a permutation. 
+	- Different keys can have different step sizes because their second hash values can differ, which helps reduce secondary clustering; keys that hash to the same original position need not follow the same probing sequence. 
 
+#### Clustering Comparison
+![](Pasted%20image%2020261103023148.png)
+
+### Bucket Storage in Open Addressing
+- There are two predominant schools of thought when it comes to physically storing entries in an OA hash table
+- The distinction arises where $(k,v)$ is stored directly in the bucket, or we store a pointer to a $(k,v)$ pair externally (not SC)
+- **Flat Hash Maps**
+	- Flat hashmaps store $(k, v)$ pairs inline in buckets. 
+	- The actual key and value are stored directly in the bucket:
+		![](Pasted%20image%2020261103024801.png)
+	- When $h(k)$, we follow the probing sequence if necessary derived from the probing technique until we find an appropriate entry or an available slot. 
+	- Flat hash-maps have the advantage that upon accessing a bucket, nearby buckets are to be pulled as part of the cache line.
+		- Makes probing relatively efficient.
+- **Node-Based Hash Maps**
+	- Node-based hash maps store pointers that refer to $(k,v)$ pairs externally.
+	- These entries are stored elsewhere in memory, and their memory is allocated dynamically(usually).
+	- When we probe a bucket, we retrieve its pointer, dereference it, and equality check until we find the required key $k$ (for search)
+	- Each bucket still represents at most one entry, with the bucket holding a pointer to said entry.
+		![](Pasted%20image%2020261103025209.png)
+	- This pointer indirection can hurt lookup performance as the pointers are dynamically allocated and thus resultant memory addresses maybe sparse ( chosen by the allocator at runtime), but there are some advantages:
+		- Suppose an entry is stored inline in a flat hash table
+		- During rehashing, entries will be moved into a new dynamically allocated table, changing their memory addresses
+		- With node-based storage, the hash table can be rehashed, and the pointers can be held in this new table, but the pointers will remain exactly the same.
+		- This is useful where other parts of the program may hold references to a specific bucket for a period of time, and is *especially useful for concurrent/IPC/global implementations.* 
+			- Can ensure the memory address for k,v remains in the same location, without having to further mutate the hash table to be able to inform threads that the hash table has changed location/address by some other thread/process.
+		- Some programming language objects are expensive or difficult to move, which can increase the time it takes to rehash/reinsert at the new memory location
 
 ### Open Addressing vs Separate Chaining
+- **Separate chaining**
+	- **Simple to implement** (provided that secondary data structure is given)
+	- **Technically never out of room**
+		- A bucket can hold multiple entries, thus technically no need to rehash
+		- Though efficiency does degrade with increased occupancy/load factor $n/N$
+	- **Overhead due to pointers+secondary data structure**
+		- A linked list/secondary DS requires additional memory for pointers connecting its nodes
+			- Storage for key
+			- Storage for value
+			- Pointer to nexxt node
+			- Potentially additional metadata, alignment, etc.
+		- Can be significant when keys and values are smalls, and memory is constrained.
+- **Open Addressing**
+	- **Better time efficiency**
+		- For up to 80% occupancy
+		- No need to traverse linked lists, and can benefit from cache locality
+		- But as table fills, finding empty slot and probing can degrade very very quickly; performance depends on probing strategy and rehashing criteria.
+	- **Better space efficiency**
+		- Open addressing stores entries directly in array (flat hash maps, point is mute for node-based(even so, there is likely to be less pointers))
+			- Max $N$ pointers vs $n$ pointers.
+	- **Better cache locality**
+		- Cache lines, clustering. 
+	- **Has hard-requirement of re-hashing for higher occupancy**
+		- Probing sequence becomes infinite, so we must allocate a larger table, recalculate the hash table positions using the new $N$, and insert said keys, and discard the old table.
+		- This requires $n$ processing steps, which can be inefficient depending on the types/sizes/construction of key $k$ and value $v$
+	- **Insertions can take O(n)**
+		- An insertion that causes a rehash because the criteria is met e.g., $n/N = 0.75$ takes $O(n)$, but is amortised $O(1)$ 
+
+## Hash Tables vs Search Trees Takeaway
+- Hash tables dominate in practice because average constant time behaviour + cache efficiency
+	- Cache assuming flat OA. 
+- A BST must compare keys multiple times per operation; if key comparisons are expensive, this can make a huge difference
+- However, trees can support efficient min, max, order statistics, traversals etc while hash tables only really support exact key lookup. 
+	- Very adaptable implementation. 
