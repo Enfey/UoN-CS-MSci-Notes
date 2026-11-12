@@ -172,19 +172,168 @@ SURE!!!!
 ### zSlices
 - A $zSlice$ can be thought of like so:
 	- At each $x$, keep only the primary grades whose secondary grades are at least $z$: $$\tilde{A}_{z} = \{(x, u) : A_{x}(u) \geq z\}$$
-	- Each slice then, is an interval type-2 set, because everything that survives the cut is treated as having one grade; the secondary membership function for the primary grades that survive the cut is crisp.
+	- Each slice then, is an interval, because everything that survives the cut is treated as having one grade; the secondary membership function for the primary grades that survive the cut is **crisp** (0 or 1)
+		- Though, they may not be *perfect* intervals at the slices i.e., the contiguous $u's$  may not all have $A_x(u) \geq z$, may be one off, one on for example
+		- E.g., we may have $u_{1} = 0.7$, $u_2 = 0.1$ with $z = (0.4)$ and $A_x(u_1) = 0.4$ and $A_x(u_2) = 0.5$, but that doesn't mean the gap between $u_1$ and $u_2$ also has $A_x(u_{...}) \geq z$ 
+		- So we do not yet have a complete IT2. 
+		- For a discretised $J_x$, we take the hull of the $[min, max]$ of the survivors (where $min$ and $max$ are over the $u$'s of $J_x$) of the cut to then yield a proper interval. 
 - We choose some $z$ s.t. $0 \lt z \leq 1$
-- A general type-2 set then, is represented as a set of slices/IT2 at levels $0 \lt z_1 \lt z_2 \lt ... \lt z_X$.
+	- You can visualise $z$ as a horizontal cut across the *type 1 set* for a given $x$
+- A general type-2 set then, is represented as a set of slices where each $x$ maintains a crisp interval, (noting the hull we take above) giving us a type-2 interval set for a given $z$
 	- Note we fix a given $z$ across all $x$. 
-	- If some $x$ never reaches $z$, then the slice is simply empty at that $x$
-- Because each slice is an IT2, we can use everything we described prior; type-reduction becomes easier, union, other operations, and should we convert the entire general type-2 set to zSlices, we... 
-
+	- If some $x$ does not have a $u$ s.t. $A_{x}(u) \geq z$, $\forall u \in J_{x}$ then the slice is simply empty at that $x$
+- Then a general type-2 set is equivalent to the collection of an infinite number of $zSlices$, $0 \lt z \leq 1$ 
+#### Applying cuts
+- Each cut asks a yes/no question $\forall u \in J_x$
+- We may seek to nest cuts, such that a higher $z$ yields a subset of a lower $z$
+	- We can define this formally as $J_x^{Z_I} \subseteq \dots \subseteq J_x^{Z_1} \subseteq J_x^{Z_0}$  
+- Lower cuts tell us which primary membership values we should even consider at all
+- Higher cuts tell us specifically, which primary membership values are the most plausible
+- We may apply these repeatedly to make our judgement more specific
+	- Bearing in mind we can only lose information/set elements. 
+#### Operations
+- Operations are thus the same as they appear for an IT2, and we don't have to worry about the inner.
+- However instead of merely attaching $1$ much like we do for an IT2 to denote the primary membership degree, we attach $z_i$ instead. 
+- To describe say, the union operation, we take the pointwise max of the upper and lower MFs we've derived from applying the slice $z$ because the vertical slices (providing we take the hull from the min and max of the surviving $u$'s) describe an interval, and this is valid. 
 
 ## Comparison between General Type-2, Interval Type-2, Zlices
+- **Uncertainty modelling**
+	- **Type2**
+		- Shape of secondary MF represents plausibility of possible primary membership values
+	- **Interval Type-2**
+		- Secondary membership function is crisp; and thus the modelling is 'flat'.
+	- **zSLices**
+		- Is also 'flat' but has much higher granularity, as the overall shape depends on the selection and nesting of $z$
+- **Representation**
+	- **Type2**
+		- $A_x(u)$ for every $u$
+	- **Interval Type-2**
+		- Upper MF and lower MF implicitly describe the interval between which every $u$ has membership degree 1 in the inner crisp membership function.
+	- **zSLices**
+		- Similar to IT2, however there are $I$ nested intervals one may define by picking different $z_i$, each that have grade $z_i$, rather than membership degree $1$ (though the MF is still crisp)
+- **Operation cost**
+	- **Type2**
+		- $M^N$ where $M =$ average cardinality of $J$ (candidate membership degrees).
+	- **Interval Type-2**
+		- $2N$ - operation for the upper and lower MF each e.g., union is defined over upper and lower MF.
+	- **zSLices**
+		- $2NI$ - same as above, but now we have $I$ intervals for a given domain element.
+			- With I = 1 the cost is the same
+			- As $I$ tends toward infinity, we recover the general type-2 set.
+- **Type reduction cost**
+	- **Type2**
+		- Exponential
+	- **Interval Type-2**
+		- Karnik-Mendel
+	- **zSLices**
+		- Karnik-Mendel per interval (thus per $z$)
+- **Parallelism**
+	- **Type2**
+		- Limited.
+	- **Interval Type-2**
+		- None needed
+	- **zSLices**
+		- Slices are independent
+- **Limitation**
+	- **Type2**
+		- Extremely impractical beyond tiny examples
+	- **Interval Type-2**
+		- Cannot say which values are more plausible with any degree of granularity, whereas zSlices solves this problem as $z$ tells you which $u$'s have plausibility greater than $z$
+	- **zSLices**
+		- only convex sets work. also increases operation cost the more fine-grained you want to define your plausibility.
 
 ## K-Means Clustering
+- We have $n$ *unlabelled* points in $d$-dimensional space, and we want to split them into $K$ groups of points that are close together,
+### Initialisation
+- Randomly select $K$ initial cluster centroids from our data points. 
+- Let $X = \{x_1, x_2, \dots , x_n\}$ - a set of $n$ data points in $d$ dimensional space.
+- Let the set of initial cluster centroids be $C_0 = \{c_1, c_2, \dots, c_K\}, c_j \in \mathbb{R}^d$
+	- $j = 1, 2, ... k$ 
+	- $c_j = x_i$ 
+		- The choice of $x_i$ in this example is arbitrary (but distinct).
+
+### Assignment
+- For each data point in the data set, we calculate its distance to each of the $K$ centroids $\{c_1, c_2, ..., c_K\}$ 
+- We write this as: $$S_{j} = argmin_{j} \{ \lVert x_i - c_j \rVert \}$$
+	$i = 1, 2, ... , n$
+	$j = 1, 2, ... K$ 
+	Take the minimum distance of the $j$ index centroids (i.e., loop through them, and assign $x_i$ to the $c_j$ which has minimal distance from it).
+	Note this yields the index $j$ for given $x_i$. 
+
+### Update
+- Once all of the data points $x_1, x_2, ..., x_n$ have been assigned to clusters, we recalculate the centroids of each cluster.
+- We do this by taking the mean of all of the data points assigned to that cluster. 
+- We define the new position of the centroid as: $$c_j^{(t+1)} = \frac{1}{\vert S_{j} \vert}\sum_{i \in S_{j}}x_{i}$$
+	- Where $S_j$ is the cluster; the points assigned to centroid $c_j$ 
+		- Perhaps confusingly denoted above, where $S_j$ is really represented as the min
+- The new set of centroids then, is this which I can't be bothered doing the LaTeX for:
+	![](Pasted%20image%2020261111185518.png)
+### Repeat
+- Steps 2 and 3 are repeated iteratively until the clusters no longer change (fixpoint) OR some predetermined stopping criteria is met (such as maximum number of iterations)
 
 ## Fuzzy c-means
+- This can be considered an extension of the k-means algorithm that allows for a more flexible definition of cluster membership.
+- This means we can allow a data point $x_i$ to **belong to multiple clusters** simultaneously, with varying degrees of membership.
+- In FCM, each data point is assigned a membership value between $0$ and $1$ for each cluster $c_1, c_2, ..., c_j$ 
+- FCM is particularly useful when dealing with data that has a degree of ambiguity, or has **overlap** between clusters
+	- It has been applied to a variety of domains, including image segmentation, medical diagnosis, and pattern recognition. 
 
-### Fuzzy c-means vs K-means
+### Method
+#### Initialisation
+- First, we randomly (but uniquely) select $K$ initial cluster centroids from the dataset.
+- Let $X = \{x_1, x_2, \dots, x_n\}$ be a set of $n$ data points in $d$-dimensional space.
+- Let the initial set of cluster centroids be: $C_0 = \{c_1, c_2, \dots , c_K \}, c_j \in \mathbb{R}^d$
+	$c_j = x_i$, $j = 1, 2, \dots , k$ 
+#### Calculate the degree of membership
+- **Calculate the degree of membership** for each data point $x_i$ with respect to each cluster centroid.
+- The membership value indicates the degree of belongingness of each data point $x_i$ to a cluster $c_1, c_2, \dots, c_K$
+- We calculate this via: $$\mu_{ij} = \frac{1}{\sum_{k=1}^{K} \left(\dfrac{\lVert x_i - c_j \rVert}{\lVert x_i - c_k \rVert}\right)^{2/(m-1)}}$$
+	Where:
+	- $\mu_{ij}$ represents the degree of membership of the $i$-th data point with respect to the $j$-th cluster. It is a value between 0 and 1, with higher values indicating a stronger membership to the cluster.
+	- $x_i$ is the $i$-th data point in $\mathbb{R}^d$, represented as a $d$-dimensional column vector. $c_j$ is the $j$-th cluster center in $\mathbb{R}^d$. It is also represented as a $d$-dimensional column vector.
+	- $\vert x_i - c_j \vert$ is the Euclidean distance between the $i$-th data point and the $j$-th cluster centroid. It measures the *similarity* btween the data point and the cluster center.
+		- Same for $\vert x_i - c_k \vert$ where $c_k$ is any cluster centroid other than $j$.
+	- The division term of the denominator represents the degree of similarity between the $i$-th data point and the $j$-th cluster centre, with respect to the other cluster centres.
+	- The exponent $\frac{2}{m-1}$ is a weighting exponent that determines degree of fuzziness in the clustering. 
+		- If the ratio(division term) is above $1$, then the larger the exponent, the larger it gets. 
+		- If the ratio (division term) is below 1, then the larger the exponent, the smaller it gets.
+		- Selecting $m = 2$ for example gives us a square exponent, which gives higher weight (and thus membership) to large ratios i.e., $c_k$ is very far away. 
+		- As $m$ tends to 0, we gain uniformity, as $m$ tends to infinity, we gain crispness (either very very large, or very very small).
+#### Update cluster centres
+- We **update the cluster centroids** based on the new membership values $\mu_{ij}$ 
+- The cluster centre is calculated as the **weighted mean of all data points**, where the weights are the membership values.
+- We define this like so: $$c_j^{(t+1)} = \frac{\sum_{i=1}^{n} (\mu_{ij}^{(t)})^m\, x_i}{\sum_{i=1}^{n} (\mu_{ij}^{(t)})^m}$$
+	Where:
+	- $c_j$ is the $j$-th cluster centre in $\mathbb{R}^d$, represented as a $d$-dimensional column vector
+	- $\mu_{ij}$ is the degree of membership of the $i$-th data point with respect to the $j$-th cluster centre. Value between 0 and 1. Higher values indicate stronger membership to the cluster.
+	- $m$ is the fuzziness parameter, which determines the degree of fuzziness in the clustering. This is typically set to $2$.
+		- Magnify large, shrink small, but behaves slightly differently as the $m$ is over $\mu_{ij}$ directly; harsher for decimals generally. 
+	- $x_i$ is the $i$-th data point in $\mathbb{R}^d$ , represented as a $d$-dimensional column vector
+	- The term $\mu_{ij}^m x_i$ is a weighted term(forming the weighted sum $\forall i \in n$) of the data points that belong to the $j$-th cluster. The degree of membership $\mu_{ij}$ is raised to the power of $m$ to increase the weight of data points that strongly belong to the cluster, and decrease the weight of data points that weakly belong to that cluster.
+	- The numerator is the weighted sum of all data points that belong to the $j$-th cluster.
+	- The denominator is the sum of the membership grades of all data points for the $j$-th cluster, normalising the weighted sum.
 
+#### Repeat
+- Repeat steps 2 and 3 until convergence, which occurs when the change in the membership values and cluster centres is small, or when a maximum number of iterations is reached. 
+	![](Pasted%20image%2020261111194029.png)
+
+### Advantages and Disadvantages of Fuzzy c-means
+- **Advantages**
+	- **Soft clustering**
+		- Fuzzy c-means provides soft clustering, whereby data points are assignee a degree of membership to each cluster
+		- More fine-grained degree of membership, flexibility in capturing uncertainty, overlap, ambiguity compared to k-means
+	- **Flexibility in cluster shape**
+		- Fuzzy c-means allows for more flexible cluster shapes compared to traditional clustering methods
+		- Traditional methods often assume that clusters are spherical or have similar shapes, not appropriate for all data sets.
+	- **Outlier handling**
+		- Handles outliers better than low traditional clustering methods
+		- Outliers have low membership grade with respect to all clusters, rather than being assigned with equal degree of membership to a cluster whose other points may be practically sat on top of the cluster centroid.
+	- **Robustness**
+		- Less sensitive to noise due to soft membership assignments.
+- **Disadvantages**
+	- **Computationally intensive**
+		- Generally more computationally intensive due to traditional clustering methods e.g., mean of cluster is now weighted, and calculating degree of membership is also more expensive than merely computing distance from all the centroids.
+	- **Sensitivity to initialisation**
+		- Choice of initial membership grades and cluster centroids can affect final solution heavily.
+	- **Determination of the number of clusters**
+		- Number of clusters needs to be determined in advance; this is a challenge where the number of optimal clusters cannot be known, or the dataset is highly noisy etc.
